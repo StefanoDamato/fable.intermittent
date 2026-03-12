@@ -1,0 +1,32 @@
+Package: fable.intermittent
+Title: Forecasting Models for Intermittent Time Series
+Version: 0.0.1
+Authors@R: 
+    person("Stefano", "D'Amato", , "your.email@example.com", role = c("aut", "cre"))
+Description: Extends the 'fable' framework to support forecasting methods 
+    specifically designed for intermittent time series data, where demand 
+    occurs sporadically with many zero values.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+LinkingTo: Rcpp, RcppArmadillo
+Depends: 
+    R (>= 4.1.0),
+    fabletools (>= 0.3.0)
+Imports:
+    fable (>= 0.3.0),
+    tsibble (>= 1.0.0),
+    distributional (>= 0.3.0),
+    nloptr (>= 2.0.0),
+    rlang (>= 1.0.0),
+    tibble (>= 3.0.0),
+    Rcpp (>= 1.0.0)
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/yourusername/fable.intermittent
+BugReports: https://github.com/yourusername/fable.intermittent/issues
