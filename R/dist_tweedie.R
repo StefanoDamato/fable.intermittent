@@ -60,6 +60,7 @@ format.dist_tweedie <- function(x, digits = 2, ...) {
   )
 }
 
+#' @exportS3Method distributional::density
 #' @export
 density.dist_tweedie <- function(x, at, ...) {
   dtweedie(at,
@@ -70,6 +71,7 @@ density.dist_tweedie <- function(x, at, ...) {
   )
 }
 
+#' @exportS3Method distributional::log_density
 #' @export
 log_density.dist_tweedie <- function(x, at, ...) {
   dtweedie(at,
