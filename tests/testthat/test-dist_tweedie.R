@@ -90,7 +90,7 @@ test_that("dist_tweedie validates parameters", {
 })
 
 
-test_that("dtweedie returns finite vectors with expected size across argument combinations", {
+test_that("dtweedie returns the sme results as the tweedie package", {
 
   for (case in test_cases) {
     y <- case$x
@@ -122,6 +122,42 @@ test_that("dtweedie returns finite vectors with expected size across argument co
       })
     }
     expect_equal(density, density_alt)
+  }
+})
+
+
+test_that("ptweedie returns the same results as the tweedie package", {
+
+  for (case in test_cases) {
+    q <- case$x
+    mu <- case$mean
+    phi <- case$dispersion
+    rho <- case$power
+    n <- max(length(q), length(mu), length(phi), length(rho))
+    
+    # Check that the function runs without error
+    expect_no_error({
+      cdf <- ptweedie(q, mean = mu, dispersion = phi, power = rho, log = FALSE)
+    })
+    expect_length(cdf, n)
+    expect_true(all(is.finite(cdf)))
+    expect_true(all(cdf >= 0))
+
+    # Check the density is the same computed by the tweedie package
+    if (length(case$power) == 1) {
+      cdf_alt <- tweedie::ptweedie(q = q, xi = NULL, mu = mu, 
+                                   phi = phi, power = rho, verbose = FALSE)
+    } else {
+      q_long <- rep_len(q, n)
+      mu_long <- rep_len(mu, n)
+      phi_long <- rep_len(phi, n)
+      rho_long <- rep_len(rho, n)
+      cdf_alt <- sapply(1:n, function(i) {
+        tweedie::ptweedie(q = q_long[i], xi = NULL, mu = mu_long[i], 
+                          phi = phi_long[i], power = rho_long[i], verbose = FALSE)
+      })
+    }
+    expect_equal(cdf, cdf_alt)
   }
 })
 

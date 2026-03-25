@@ -91,6 +91,17 @@ generate.dist_tweedie <- function(x, times, ...) {
   )
 }
 
+#' @exportS3Method distributional::cdf
+cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
+  ptweedie(at,
+    mean = x[["mu"]],
+    dispersion = x[["phi"]],
+    power = x[["p"]],
+    lower.tail = lower.tail,
+    log.p = log.p
+  )
+}
+
 #' @export
 mean.dist_tweedie <- function(x, ...) {
   x[["mu"]]
@@ -135,4 +146,28 @@ rtweedie <- function(n, mean = 1, dispersion = 1, power = 1.5) {
 #' @keywords internal
 dtweedie <- function(x, mean = 1, dispersion = 1, power = 1.5, log = FALSE) {
   as.vector(tweedieDensity(x, mean, dispersion, power, log))
+}
+
+#' Compute Tweedie CDF
+#' 
+#' Evaluates the Tweedie cumulative distribution function via the Compound Poisson-Gamma 
+#' representation, dispatching to the C++ implementation `tweedieCDF`.
+#' 
+#' @param q The values the CDF is evaluated at.
+#' @param mean Mean parameter of the distribution.
+#' @param dispersion Dispersion parameter of the distribution.
+#' @param power Power parameter of the distribution.
+#' @param lower.tail Whether to return the lower tail probability.
+#' @param log.p Whether to return the logarithm of the probability.
+#' 
+#' @keywords internal
+ptweedie <- function(q, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
+  cdf <- as.vector(tweedieCDF(q, mean, dispersion, power))
+  if (!lower.tail) {
+    cdf <- 1 - cdf
+  } 
+  if (log.p) {
+    cdf <- log(cdf)
+  } 
+  cdf
 }
