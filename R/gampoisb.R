@@ -1,11 +1,11 @@
-#' Gamma--Poisson Bayesian Dynamic Model
+#' Gamma-Poisson Bayesian Dynamic Model
 #'
 #' Conjugate Bayesian dynamic model for count time series with a Poisson
 #' observation distribution and a Gamma prior on the rate parameter, following
 #' Harvey & Fernandes (1989). The Gamma prior is updated at each time step
 #' using a discount factor `w` that controls how quickly past information
-#' decays, yielding a closed-form predictive distribution (negative binomial)
-#' at every horizon.
+#' decays. The first-step forecast follows a Negative Binomial distribution, 
+#' and multi-step forecasts are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
 #' @param ... Not used.
@@ -20,7 +20,7 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_sample
+#' @importFrom distributional dist_sample dist_negative_binomial
 #' @importFrom nloptr nloptr
 #' @importFrom stats rgamma rpois
 #' @export
@@ -89,9 +89,20 @@ forecast.GAMPOISB <- function(object, new_data, specials = NULL, times = 10000, 
     abort("`times` must be a positive integer.")
   }
 
+  # Initialize Gamma parameters with forward propagation
+  a_forecast <- object$w * object$last_a + object$last_y
+  b_forecast <- object$w * object$last_b + 1
+  dist_first <- dist_negative_binomial(size = a_forecast, prob = b_forecast / (b_forecast + 1))
+
+  if (h == 1) {
+    return(dist_first)
+  }
+  
   sim <- gampoisb_simulate(object, h, times)
-  samples <- as.list(as.data.frame(sim))
-  dist_sample(samples)
+  samples_rest <- as.list(as.data.frame(sim[, -1, drop = FALSE]))
+  dist_rest <- dist_sample(samples_rest)
+  
+  c(dist_first, dist_rest)
 }
 
 #' @export

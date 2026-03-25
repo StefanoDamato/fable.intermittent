@@ -1,11 +1,11 @@
-#' Beta--Negative Binomial Bayesian Dynamic Model
+#' Beta-Negative Binomial Bayesian Dynamic Model
 #'
 #' Conjugate Bayesian dynamic model for count time series with a negative
 #' binomial observation distribution and a Beta prior on the success probability
 #' parameter. This extends the conjugate updating framework of Harvey &
-#' Fernandes (1989) to the Beta--Negative Binomial family. The Beta prior is
-#' updated at each time step using a discount factor `w`, and the predictive
-#' distribution is available in closed form.
+#' Fernandes (1989) to the Beta-Negative Binomial family. The Beta prior is
+#' updated at each time step using a discount factor `w`. Forecasts are available
+#' as samples simulating from the model forward in time.
 #'
 #' @param formula Model specification.
 #' @param ... Not used.
@@ -164,7 +164,7 @@ betanbb_optimize <- function(y) {
     b <- beta_params$b
 
     # Evaluate the negative log-likelihood of the model
-    mean(
+    -mean(
       lbeta(v + a, y + b) - lbeta(v, y + 1) -
         lbeta(a, b) - log(v + y)
     )
