@@ -71,17 +71,6 @@ density.dist_tweedie <- function(x, at, ...) {
   )
 }
 
-#' @exportS3Method distributional::log_density
-#' @export
-log_density.dist_tweedie <- function(x, at, ...) {
-  dtweedie(at,
-    mean = x[["mu"]],
-    dispersion = x[["phi"]],
-    power = x[["p"]],
-    log = TRUE
-  )
-}
-
 #' @exportS3Method distributional::generate
 generate.dist_tweedie <- function(x, times, ...) {
   rtweedie(times,
@@ -94,6 +83,17 @@ generate.dist_tweedie <- function(x, times, ...) {
 #' @exportS3Method distributional::cdf
 cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
   ptweedie(at,
+    mean = x[["mu"]],
+    dispersion = x[["phi"]],
+    power = x[["p"]],
+    lower.tail = lower.tail,
+    log.p = log.p
+  )
+}
+
+#' @exportS3Method distributional::quantile
+quantile.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
+  qtweedie(at,
     mean = x[["mu"]],
     dispersion = x[["phi"]],
     power = x[["p"]],
@@ -170,4 +170,28 @@ ptweedie <- function(q, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE
     cdf <- log(cdf)
   } 
   cdf
+}
+
+#' Compute the Tweedie quantile function
+#' 
+#' Evaluates the Tweedie quantile function via the Newton-Raphson method based on the CDF 
+#' and density function implementations, dispatching to the C++ implementation `tweedieInvCDF`.
+#' 
+#' @param p The probabilities the quantile function is evaluated at.
+#' @param mean Mean parameter of the distribution.
+#' @param dispersion Dispersion parameter of the distribution.
+#' @param power Power parameter of the distribution.
+#' @param lower.tail Whether `p` represents lower tail probabilities. 
+#' @param log.p Whether `p` is given as log-probabilities.  
+#'  
+#' @keywords internal
+qtweedie <- function(p, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
+  if (lower.tail == FALSE) {
+    p = 1 - p
+  } 
+  invcdf <- as.vector(tweedieInvCDF(p, mean, dispersion, power))
+  if (log.p) {
+    invcdf <- log(invcdf)
+  }
+  invcdf
 }

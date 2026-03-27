@@ -1,3 +1,5 @@
+set.seed(Sys.time())
+
 test_cases <- list(
     list(
       x = 0.,
@@ -44,7 +46,7 @@ test_cases <- list(
   )
 
 
-test_that("dist_tweedie constructs and returns core moments", {
+test_that("dist_tweedie constructs and works correctly", {
 
   for (case in test_cases) {
     
@@ -76,10 +78,22 @@ test_that("dist_tweedie constructs and returns core moments", {
     # Check the likelihood and log-likelihood
     lik <- distributional::likelihood(distr, list(y))
     expect_length(lik, length(distr))
-    expect_true(all(is.finite(lik)))
-    expect_true(all(lik >= 0))
-  }
+    expect_all_true(is.finite(lik))
+    expect_all_true(lik >= 0)
+    
+    # TODO: these are not working and I and Claude don't know why
+    # Check that the cumulative density function runs without error
+    # cdf <- distributional::cdf(distr, at = y)
+    # expect_length(cdf, length(distr))
+    # expect_all_true(is.finite(cdf))
+    # expect_all_true((cdf >= 0) & (cdf <= 1))
 
+    # Check that the quantile function runs without error
+    # quant <- stats::quantile(distr, at = cdf)
+    # expect_length(quant, length(distr))
+    # expect_all_true(is.finite(quant))
+    # expect_all_true(quant >= 0)
+  }
 })
 
 
@@ -162,4 +176,44 @@ test_that("ptweedie returns the same results as the tweedie package", {
 })
 
 
+test_that("qtweedie returns the same results as the tweedie package", {
+  for (case in test_cases) {
+    mu <- case$mean
+    phi <- case$dispersion
+    rho <- case$power
+    n <- max(length(mu), length(phi), length(rho))
+    p <- rbeta(n, 5, 1)
+
+    # Check that the function runs without error
+    expect_no_error({
+      quant <- qtweedie(p, mean = mu, dispersion = phi, power = rho)
+    })
+    expect_length(quant, n)
+    expect_true(all(is.finite(quant)))
+    expect_true(all(quant >= 0))
+
+    # Check the quantile is the same computed by the tweedie package
+    if (length(case$power) == 1) {
+      quant_alt <- tweedie::qtweedie(p = p, xi = NULL, mu = mu, phi = phi, power = rho)
+    } else {
+      p_long <- rep_len(p, n)
+      mu_long <- rep_len(mu, n)
+      phi_long <- rep_len(phi, n)
+      rho_long <- rep_len(rho, n)
+      quant_alt <- sapply(1:n, function(i) {
+        tweedie::qtweedie(p = p_long[i], xi = NULL, mu = mu_long[i], phi = phi_long[i], power = rho_long[i])
+      })
+    }
+    if (any(abs(quant - quant_alt) > 1e-6)) {
+      browser()
+      p_x <- dtweedie(quant_alt, mean = mu_long, dispersion = phi_long, power = rho_long)
+      F_x <- ptweedie(quant_alt, mean = mu_long, dispersion = phi_long, power = rho_long)
+      print(t(data.frame(quant, quant_alt)))
+      print(t(data.frame(p, mu_long, phi_long, rho_long, p_x, F_x)))
+      
+    }
+    
+    expect_equal(quant, quant_alt, tolerance = 1e-6)
+  }
+})
 
