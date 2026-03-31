@@ -11,6 +11,8 @@
 #'   `"nbinom"`, `"hsnb"`, or `"mixture"`.
 #' @param hot_start Logical. If `TRUE`, leading zeros are removed from the
 #'   time series before fitting.
+#' @param criterion Information criterion to use for model selection when `distr =
+#'   "auto"`. One of `"aic"` or `"bic"`.
 #' @param ... Not used.
 #'
 #' @references
@@ -22,12 +24,14 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort arg_match is_integerish
-#' @importFrom distributional dist_sample
+#' @importFrom distributional dist_poisson dist_negative_binomial log_likelihood parameters dist_sample
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
 #' @export
-STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"), hot_start = FALSE, ...) {
+STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"), 
+                        hot_start = FALSE, criterion = c("aic", "bic"), ...) {
   distr <- arg_match(distr)
+  criterion <- arg_match(criterion)
 
   staticdistr_model <- new_model_class(
     "STATICDISTR",
@@ -36,14 +40,15 @@ STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsn
       xreg = staticdistr_no_xreg
     )
   )
-  new_model_definition(staticdistr_model, {{ formula }}, distr = distr, hot_start = hot_start, ...)
+  new_model_definition(staticdistr_model, {{ formula }}, distr = distr, 
+                       hot_start = hot_start, criterion = criterion, ...)
 }
 
-train_staticdistr <- function(.data, specials, distr, hot_start = FALSE, ...) {
+train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by STATICDISTR.")
   }
-
+  
   y <- unclass(.data)[[measured_vars(.data)]]
 
   if (all(is.na(y))) {
@@ -52,72 +57,81 @@ train_staticdistr <- function(.data, specials, distr, hot_start = FALSE, ...) {
   if (anyNA(y)) {
     abort("Missing values are not supported by STATICDISTR.")
   }
+  
+  if (hot_start) {
+    start <- which(y > 0)[1]
+    y <- y[start:length(y)]
+  } else {
+    start <- 1
+  }
 
   # Identify the distributions to be fitted
   if (distr %in% c("auto", "mixture")) {
-    c("nbinom", "pois", "hsnb", "hsp")
+    to_eval <- c("nbinom", "pois", "hsnb", "hsp")
   } else {
-    distr
+    to_eval <- distr
   }
-
+  
+  
   # Apply Croston's decomposition
   decomp <- crostons_decomp(y)
   occurrence <- decomp$occurrence
   shifted_demand <- decomp$demand - 1
 
-  fit_results <- list()
-  if ("pois" %in% distributions) {
-    fit_results[["pois"]] <- staticdistr_fit_pois(y)
+  #Fit the distributions 
+  fit_distr <- list()
+  if ("pois" %in% to_eval) {
+    fit_distr[["pois"]] <- staticdistr_fit_pois(y)
   }
-  if ("hsp" %in% distributions) {
-    fit_results[["hsp"]] <- staticdistr_fit_hsp(y, occurrence, shifted_demand)
+  if ("hsp" %in% to_eval) {
+    fit_distr[["hsp"]] <- staticdistr_fit_hsp(occurrence, shifted_demand)
   }
-  if ("nbinom" %in% distributions) {
-    fit_results[["nbinom"]] <- staticdistr_fit_nbinom_result(y)
+  if ("nbinom" %in% to_eval) {
+    fit_distr[["nbinom"]] <- staticdistr_fit_nbinom(y)
   }
-  if ("hsnb" %in% distributions) {
-    fit_results[["hsnb"]] <- staticdistr_fit_hsnb(y, occurrence, shifted_demand)
+  if ("hsnb" %in% to_eval) {
+    fit_distr[["hsnb"]] <- staticdistr_fit_hsnb(occurrence, shifted_demand)
   }
-  fit_results
 
-  # Extrapolate the distribution via AIC or BIC
-  aic <- vapply(fit_results, function(x) x$aic, numeric(1))
-  bic <- vapply(fit_results, function(x) x$bic, numeric(1))
-  mles <- staticdistr_collect_mles(fit_results)
-  pred_distr <- if (distr == "mixture") to_eval else names(which.min(aic))
-  fitted_mean <- staticdistr_expected_value(pred_distr, fit_results)
-  fitted <- rep(fitted_mean, length(y))
+  # Select the distribution to use for forecasting
+  if (distr == "mixture") {
+    w <- rep(1/length(fit_distr), length(fit_distr))
+    pred_distr <- do.call(distributional::dist_mixture, c(fit_distr, list(weights = w)))
+    ic <- NULL
+  } else if (distr == "auto") {
+    ic <- vapply(fit_distr, staticdistr_information, y = y, criterion = criterion, numeric(1))
+    pred_distr <- fit_distr[[names(which.min(ic))]]
+  } else {
+    pred_distr <- fit_distr[[distr]]
+    ic <- NULL
+  }
+  
+  # Compute fitted values and residuals
+  init_na <- rep(NA, start - 1)
+  fitted <- c(init_na, rep(mean(pred_distr), length(y)))
+  residuals <- c(init_na, y) - fitted
 
   structure(
     list(
-      aic = aic,
-      bic = bic,
-      mles = mles,
-      fit_results = fit_results,
+      ic = ic,
       pred_distr = pred_distr,
       fitted = fitted,
-      residuals = y - fitted
+      residuals = residuals
     ),
     class = "STATICDISTR"
   )
 }
 
 #' @export
-forecast.STATICDISTR <- function(object, new_data, specials = NULL, times = 10000, ...) {
+forecast.STATICDISTR <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
-  if (!is_integerish(times) || times <= 0) {
-    abort("`times` must be a positive integer.")
-  }
-
-  sim <- staticdistr_simulate(object, h = h, times = as.integer(times))
-  dist_sample(as.list(as.data.frame(sim)))
+  rep(object$pred_distr, h)
 }
 
 #' @export
 generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
-  sim <- staticdistr_simulate(x, h = h, times = 1L)
-  new_data$.sim <- as.numeric(sim[1, ])
+  new_data$.sim <- unlist(distributional::generate(x$pred_distr, h))
   new_data
 }
 
@@ -136,206 +150,46 @@ model_sum.STATICDISTR <- function(x) {
   "STATICDISTR"
 }
 
-staticdistr_simulate <- function(object, h, times) {
-  iid_n <- h * times
-  preds <- object$pred_distr
-  fit_results <- object$fit_results
-
-  per <- floor(iid_n / length(preds))
-  rem <- iid_n %% length(preds)
-  counts <- rep(per, length(preds))
-  if (rem > 0) {
-    counts[seq_len(rem)] <- counts[seq_len(rem)] + 1L
-  }
-
-  samples <- numeric(0)
-  for (i in seq_along(preds)) {
-    di <- preds[[i]]
-    ni <- counts[[i]]
-    if (ni <= 0) {
-      next
-    }
-
-    samples <- c(samples, staticdistr_simulate_from_distribution(di, ni, fit_results))
-  }
-
-  if (length(preds) > 1) {
-    samples <- samples[sample.int(length(samples))]
-  }
-
-  matrix(samples, nrow = times, ncol = h, byrow = TRUE)
-}
-
-staticdistr_expected_value <- function(pred_distr, fit_results) {
-  means <- numeric(0)
-
-  for (di in pred_distr) {
-    means <- c(means, staticdistr_distribution_mean(di, fit_results[[di]]$params))
-  }
-
-  mean(means)
-}
 
 staticdistr_fit_pois <- function(y) {
-  params <- c(lambda = mean(y))
-  loglik <- sum(dpois(y, params[["lambda"]], log = TRUE))
-  staticdistr_new_fit_result("pois", params, loglik, length(y))
+  lambda <- mean(y)
+  distributional::dist_poisson(lambda)
 }
 
-staticdistr_fit_hsp <- function(y, occurrence, shifted_demand) {
-  params <- c(
-    pzero = mean(1 - occurrence),
-    lambda = if (length(shifted_demand) > 0) mean(shifted_demand) else 0
-  )
-  loglik <- sum(staticdistr_dhsp(y, params[["pzero"]], params[["lambda"]], log = TRUE))
-  staticdistr_new_fit_result("hsp", params, loglik, length(y))
+staticdistr_fit_hsp <- function(occurrence, shifted_demand) {
+  pzero = mean(1 - occurrence)
+  lambda = ifelse(length(shifted_demand) > 0, mean(shifted_demand), 0)
+  make_hurdle_shifted_distr(dist_poisson(lambda), pzero)
 }
-
-staticdistr_fit_nbinom_result <- function(y) {
-  params <- staticdistr_fit_nbinom(y)
-  loglik <- sum(dnbinom(y, params[["size"]], params[["prob"]], log = TRUE))
-  staticdistr_new_fit_result("nbinom", params, loglik, length(y))
-}
-
-staticdistr_fit_hsnb <- function(y, occurrence, shifted_demand) {
-  if (length(shifted_demand) > 0) {
-    nbinom_params <- staticdistr_fit_nbinom(shifted_demand)
-  } else {
-    nbinom_params <- c(size = 100, prob = 1 - staticdistr_epsilon)
-  }
-
-  params <- c(
-    pzero = mean(1 - occurrence),
-    size = nbinom_params[["size"]],
-    prob = nbinom_params[["prob"]]
-  )
-  loglik <- sum(staticdistr_dhsnb(y, params[["pzero"]], params[["size"]], params[["prob"]], log = TRUE))
-  staticdistr_new_fit_result("hsnb", params, loglik, length(y))
-}
-
-staticdistr_new_fit_result <- function(distribution, params, loglik, n_obs) {
-  n_params <- length(params)
-
-  list(
-    distribution = distribution,
-    params = params,
-    loglik = loglik,
-    aic = -2 * loglik + 2 * n_params,
-    bic = -2 * loglik + log(n_obs) * n_params,
-    n_params = n_params
-  )
-}
-
-staticdistr_collect_mles <- function(fit_results) {
-  setNames(
-    unlist(lapply(names(fit_results), function(dist_name) {
-      fit <- fit_results[[dist_name]]
-      setNames(unname(fit$params), paste0(dist_name, "_", names(fit$params)))
-    })),
-    unlist(lapply(names(fit_results), function(dist_name) {
-      fit <- fit_results[[dist_name]]
-      paste0(dist_name, "_", names(fit$params))
-    }))
-  )
-}
-
-staticdistr_distribution_mean <- function(distribution, params) {
-  if (distribution == "pois") {
-    return(params[["lambda"]])
-  }
-
-  if (distribution == "hsp") {
-    return((1 - params[["pzero"]]) * (1 + params[["lambda"]]))
-  }
-
-  if (distribution == "nbinom") {
-    return(params[["size"]] * (1 - params[["prob"]]) / params[["prob"]])
-  }
-
-  if (distribution == "hsnb") {
-    return((1 - params[["pzero"]]) *
-      (1 + params[["size"]] * (1 - params[["prob"]]) / params[["prob"]]))
-  }
-
-  abort(paste0("Unsupported distribution: ", distribution))
-}
-
-
-
 
 staticdistr_fit_nbinom <- function(y) {
-  if (length(y) == 0 || all(y == 0)) {
-    return(c(size = 100, prob = 1 - staticdistr_epsilon))
-  }
-
-  fit <- tryCatch(
-    nloptr(
-      x0 = c(max(mean(y), staticdistr_epsilon), 0.5),
-      eval_f = function(x) -mean(dnbinom(y, x[1], x[2], log = TRUE)),
-      lb = c(staticdistr_epsilon, staticdistr_epsilon),
-      ub = c(Inf, 1 - staticdistr_epsilon),
-      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
-    ),
-    error = function(e) NULL
-  )
-
-  if (is.null(fit) || is.null(fit$solution)) {
-    mu <- mean(y)
-    sigmasq <- var(y)
-    if (!is.na(sigmasq) && sigmasq > mu + staticdistr_epsilon) {
-      size <- (mu^2) / (sigmasq - mu)
-    } else {
-      size <- 100
-    }
-    prob <- min(size / (size + mu), 1 - staticdistr_epsilon)
-    return(c(size = size, prob = prob))
-  }
-
-  c(size = fit$solution[1], prob = fit$solution[2])
+  params <- fit_nbinom(y)
+  distributional::dist_negative_binomial(params[['size']], params[['prob']])
 }
 
-
-
-dhsp <- function(x, pzero = 0.5, lambda = 1, log = FALSE) {
-  if (log) {
-    ifelse(x == 0, log(pzero), log(1 - pzero) + dpois(x - 1, lambda, log = TRUE))
+staticdistr_fit_hsnb <- function(occurrence, shifted_demand) {
+  if (length(shifted_demand) > 0) {
+    params <- fit_nbinom(shifted_demand)
   } else {
-    ifelse(x == 0, pzero, (1 - pzero) * dpois(x - 1, lambda))
+    params <- c(size = 100, prob = 1 - staticdistr_epsilon)
   }
-}
-
-phsp <- function(q, pzero = 0.5, lambda = 1) {
-  ifelse(q < 0, 0, pzero + (1 - pzero) * ppois(q - 1, lambda))
-}
-
-qhsp <- function(p, pzero = 0.5, lambda = 1) {
-  ifelse(p <= pzero, 0, qpois((p - pzero) / (1 - pzero), lambda) + 1)
-}
-
-rhsp <- function(n, pzero = 0.5, lambda = 0.1) {
-  ifelse(runif(n) <= pzero, 0, 1 + rpois(n, lambda))
+  pzero = mean(1 - occurrence)
+  make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
 }
 
 
-
-dhsnb <- function(x, pzero = 0.5, size = 1, prob = 0.5, log = FALSE) {
-  if (log) {
-    ifelse(x == 0, log(pzero), log(1 - pzero) + dnbinom(x - 1, size, prob, log = TRUE))
+staticdistr_information <- function(distr, y, criterion){
+  loglik <- sum(distributional::log_likelihood(distr, y))
+  n_obs <- length(y)
+  n_params <- length(distributional::parameters(distr))
+  
+  if (criterion == "aic") {
+    -2 * loglik + 2 * n_params
+  } else if (criterion == "bic") {
+    -2 * loglik + log(n_obs) * n_params
   } else {
-    ifelse(x == 0, pzero, (1 - pzero) * dnbinom(x - 1, size, prob))
+    abort("Invalid criterion. Use 'aic' or 'bic'.")
   }
-}
-
-phsnb <- function(q, pzero = 0.5, size = 1, prob = 0.5) {
-  ifelse(q < 0, 0, pzero + (1 - pzero) * pnbinom(q - 1, size, prob))
-}
-
-qhsnb <- function(p, pzero = 0.5, size = 1, prob = 0.5) {
-  ifelse(p <= pzero, 0, qnbinom((p - pzero) / (1 - pzero), size, prob) + 1)
-}
-
-rhsnb <- function(n, pzero = 0.5, size = 1, prob = 0.5) {
-  ifelse(runif(n) <= pzero, 0, 1 + rnbinom(n, size, prob))
 }
 
 

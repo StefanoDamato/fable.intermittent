@@ -47,13 +47,17 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
     abort("Missing values are not supported by empdistr.")
   }
 
+  # Remove leading zeros for hot_start
+  start <- ifelse(hot_start, min(which(y != 0)), 1)
+  y_emp <- y[start:length(y)]
+  
   # Fit the model by simply repeating the mean
-  fitted <- rep(mean(y), length(y))
+  fitted <- rep(mean(y_emp), length(y))
   residuals <- y - fitted
 
   structure(
     list(
-      y = y,
+      y_emp = y_emp,
       fitted = fitted,
       residuals = residuals
     ),
@@ -62,19 +66,16 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
 }
 
 #' @export
-forecast.EMPDISTR <- function(object, new_data, specials = NULL, times = 10000, ...) {
+forecast.EMPDISTR <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
-  if (!is_integerish(times) || times <= 0) {
-    abort("`times` must be a positive integer.")
-  }
-  samples <- rep(list(object$y), h)
+  samples <- rep(list(object$y_emp), h)
   dist_sample(samples)
 }
 
 #' @export
 generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
-  sim <- sample(x$y, size = h, replace = TRUE)
+  sim <- sample(x$y_emp, size = h, replace = TRUE)
   new_data$.sim <- as.numeric(sim)
   new_data
 }
