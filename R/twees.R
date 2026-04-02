@@ -60,7 +60,7 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
   }
 
   # Optionally scale the series for numerical stability
-  scale_factor <- if (scaling && max(y) > 0) median(y) else 1
+  scale_factor <- if (scaling && max(y) > 0) median(y[y > 0]) else 1
   y_scaled <- y / scale_factor
 
   # Optimise parameters using Tweedie log-likelihood
@@ -112,7 +112,7 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
   mu_forecast <- max(mu_forecast, twees_epsilon)
   dist_first <- dist_tweedie(
     mean = mu_forecast * object$scale_factor,
-    dispersion = object$phi * object$scale_factor^object$power,
+    dispersion = object$phi * object$scale_factor^(2 - object$power),
     power = object$power
   )
 
@@ -161,26 +161,24 @@ twees_simulate <- function(object, h, times) {
   )
   mu_state <- pmax(mu_state, twees_epsilon)
 
-  sf <- object$scale_factor
-
   for (i in seq_len(h)) {
     # Sample from Tweedie on the original scale
     y_new <- rtweedie(
       times,
-      mean = mu_state * sf,
-      dispersion = object$phi * sf^object$power,
+      mean = mu_state,
+      dispersion = object$phi,
       power = object$power
     )
     forecast_samples[, i] <- y_new
 
     # Update the state on the scaled series
-    y_scaled_new <- y_new / sf
-    mu_state <- object$alpha * y_scaled_new +
+    mu_state <- object$alpha * y_new +
       object$theta * object$mean_y_scaled +
       (1 - object$alpha - object$theta) * mu_state
     mu_state <- pmax(mu_state, twees_epsilon)
   }
-
+  
+  forecast_samples <- forecast_samples * object$scale_factor
   forecast_samples
 }
 
