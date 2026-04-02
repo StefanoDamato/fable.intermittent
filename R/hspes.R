@@ -6,6 +6,8 @@
 #' components: a Bernoulli occurrence process (probability of non-zero demand)
 #' and a shifted Poisson demand-size process. Both components are driven by
 #' independent (optionally damped) exponential smoothing state equations.
+#' The first-step forecast follows an hurdle-shifted Poisson distribution, 
+#' multi-step forecasts are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
 #' @param damped Logical. If `TRUE` (default), both the occurrence and demand
@@ -62,9 +64,8 @@ train_hspes <- function(.data, specials, damped, ...) {
   # Croston's decomposition
   decomp <- crostons_decomp(y)
   occurrence <- decomp$occurrence
-  demand <- decomp$demand
   intervals <- decomp$intervals
-  shifted_demand <- demand - 1  # Shift for Poisson
+  shifted_demand <- decomp$demand - 1  
 
   # Optimize occurrence and demand components separately
   opt_occ <- hspes_optimize_occurrence(occurrence, damped)
@@ -247,7 +248,6 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
       ub = ub,
       opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
     )
-    opt$solution <- c(opt$solution, 0)
   } else {
 
     # In the damped case, specify the full parameter vector
@@ -265,6 +265,8 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
+
+  opt
 }
 
 hspes_optimize_demand <- function(shifted_demand, damped) {
