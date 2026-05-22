@@ -39,7 +39,7 @@ HSPES <- function(formula, damped = TRUE, ...) {
   new_model_definition(hspes_model, {{ formula }}, damped = damped, ...)
 }
 
-
+#' @importFrom utils tail
 train_hspes <- function(.data, specials, damped, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by HSPES.")

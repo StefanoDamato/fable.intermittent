@@ -42,6 +42,7 @@ TWEES <- function(formula, damped = TRUE, scaling = TRUE, ...) {
   new_model_definition(twees_model, {{ formula }}, damped = damped, scaling = scaling, ...)
 }
 
+#' @importFrom stats median
 train_twees <- function(.data, specials, damped, scaling, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by TWEES.")

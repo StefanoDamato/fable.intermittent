@@ -1,7 +1,6 @@
 # Test Data Helper for fable.intermittent
 # Single tsibble with 5 different time series stacked, keyed by "series" variable
 # Same test time series from probintermittent
-library(tibble)
 library(tsibble)
 
 set.seed(42)
