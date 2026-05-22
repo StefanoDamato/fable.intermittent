@@ -85,6 +85,7 @@ train_betanbb <- function(.data, specials, ...) {
   )
 }
 
+#' @importFrom fabletools forecast
 #' @export
 forecast.BETANBB <- function(object, new_data, specials = NULL, times = 10000, ...) {
   h <- nrow(new_data)
@@ -114,6 +115,7 @@ residuals.BETANBB <- function(object, ...) {
   object$residuals
 }
 
+#' @importFrom fabletools model_sum
 #' @export
 model_sum.BETANBB <- function(x) {
   "BETANBB"
