@@ -58,7 +58,7 @@ csv_paths <- vapply(dataset_specs, function(spec) spec$csv, character(1))
 stopifnot(all(file.exists(csv_paths)))
 
 datasets <- lapply(dataset_specs, function(spec) {
-  rowwise_csv_to_tsibble(
+  csv_to_tsibble(
     csv_path = spec$csv,
     start = spec$start,
     interval = spec$interval,

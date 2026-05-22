@@ -14,3 +14,4 @@
 ^tweedie_tester.R
 ^\.Rcheck$
 ^exp_tweedie$
+^data-raw$
