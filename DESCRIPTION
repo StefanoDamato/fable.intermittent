@@ -18,15 +18,13 @@ Depends:
     R (>= 4.1.0),
     fabletools (>= 0.3.0)
 Imports:
-    fable (>= 0.3.0),
     tsibble (>= 1.0.0),
     distributional (>= 0.3.0),
     nloptr (>= 2.0.0),
     rlang (>= 1.0.0),
-    tibble (>= 3.0.0),
     Rcpp (>= 1.0.0)
 Suggests: 
-    testthat (>= 3.0.0),
+    testthat (>= 3.3.0),
     tweedie,
     knitr,
     rmarkdown
