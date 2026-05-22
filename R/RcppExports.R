@@ -9,11 +9,19 @@ betaDynamic <- function(y, v, a0, b0, w) {
     .Call('_fable_intermittent_betaDynamic', PACKAGE = 'fable.intermittent', y, v, a0, b0, w)
 }
 
+dampedSES <- function(y, mu0, alpha, phi) {
+    .Call('_fable_intermittent_dampedSES', PACKAGE = 'fable.intermittent', y, mu0, alpha, phi)
+}
+
 tweedieDensity <- function(x, mean, dispersion, power, log) {
     .Call('_fable_intermittent_tweedieDensity', PACKAGE = 'fable.intermittent', x, mean, dispersion, power, log)
 }
 
-dampedSES <- function(y, mu0, alpha, phi) {
-    .Call('_fable_intermittent_dampedSES', PACKAGE = 'fable.intermittent', y, mu0, alpha, phi)
+tweedieCDF <- function(x, mean, dispersion, power) {
+    .Call('_fable_intermittent_tweedieCDF', PACKAGE = 'fable.intermittent', x, mean, dispersion, power)
+}
+
+tweedieInvCDF <- function(q, mean, dispersion, power) {
+    .Call('_fable_intermittent_tweedieInvCDF', PACKAGE = 'fable.intermittent', q, mean, dispersion, power)
 }
 

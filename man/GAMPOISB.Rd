@@ -2,7 +2,7 @@
 % Please edit documentation in R/gampoisb.R
 \name{GAMPOISB}
 \alias{GAMPOISB}
-\title{Gamma--Poisson Bayesian Dynamic Model}
+\title{Gamma-Poisson Bayesian Dynamic Model}
 \usage{
 GAMPOISB(formula, ...)
 }
@@ -19,8 +19,8 @@ Conjugate Bayesian dynamic model for count time series with a Poisson
 observation distribution and a Gamma prior on the rate parameter, following
 Harvey & Fernandes (1989). The Gamma prior is updated at each time step
 using a discount factor \code{w} that controls how quickly past information
-decays, yielding a closed-form predictive distribution (negative binomial)
-at every horizon.
+decays. The first-step forecast follows a Negative Binomial distribution,
+and multi-step forecasts are obtained by simulating from the model forward in time.
 }
 \references{
 Harvey, A. C., & Fernandes, C. (1989). Time series models for count or

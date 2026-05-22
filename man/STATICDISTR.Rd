@@ -8,6 +8,7 @@ STATICDISTR(
   formula,
   distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
   hot_start = FALSE,
+  criterion = c("aic", "bic"),
   ...
 )
 }
@@ -19,6 +20,8 @@ STATICDISTR(
 
 \item{hot_start}{Logical. If \code{TRUE}, leading zeros are removed from the
 time series before fitting.}
+
+\item{criterion}{Information criterion to use for model selection when \code{distr = "auto"}. One of \code{"aic"} or \code{"bic"}.}
 
 \item{...}{Not used.}
 }

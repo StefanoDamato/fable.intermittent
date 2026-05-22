@@ -23,15 +23,16 @@ A model specification.
 }
 \description{
 Exponential smoothing state space model for intermittent demand with a
-Tweedie observation distribution (D'Amato, Azzimonti & Corani, 2025). The
-conditional mean of the Tweedie is governed by a (optionally damped)
-exponential smoothing process on the log scale. The Tweedie family naturally
-produces exact zeros via its compound Poisson--Gamma mechanism, making it
-suitable for intermittent series without requiring an explicit
-occurrence/demand decomposition.
+Tweedie observation distribution. The conditional mean of the Tweedie
+is governed by a (optionally damped) exponential smoothing process.
+The power and dispersion parameter are estimated to maximise the likelihood.
+The Tweedie family naturally models both zeros and large spikes
+via its compound Poisson-Gamma nature. The first-step forecast follows
+a Tweedie distribution, and multi-step forecasts are obtained by simulating
+from the model forward in time. The model parameters are estimated by
 }
 \references{
-Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie
-exponential dispersion model densities. \emph{Statistics and Computing},
-15(4), 267--280.
+Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent
+time series with Gaussian Processes and Tweedie likelihood.
+\emph{International Journal of Forecasting}  xx(x), xxx--xxx.
 }

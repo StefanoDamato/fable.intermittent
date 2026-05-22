@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Stefano D'Amato \email{your.email@example.com}
+\strong{Maintainer}: Stefano Damato \email{your.email@example.com}
 
 }
 \keyword{internal}

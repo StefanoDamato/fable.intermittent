@@ -40,21 +40,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// tweedieDensity
-arma::vec tweedieDensity(arma::vec x, arma::vec mean, double dispersion, double power, bool log);
-RcppExport SEXP _fable_intermittent_tweedieDensity(SEXP xSEXP, SEXP meanSEXP, SEXP dispersionSEXP, SEXP powerSEXP, SEXP logSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< double >::type dispersion(dispersionSEXP);
-    Rcpp::traits::input_parameter< double >::type power(powerSEXP);
-    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
-    rcpp_result_gen = Rcpp::wrap(tweedieDensity(x, mean, dispersion, power, log));
-    return rcpp_result_gen;
-END_RCPP
-}
 // dampedSES
 NumericVector dampedSES(NumericVector y, double mu0, double alpha, double phi);
 RcppExport SEXP _fable_intermittent_dampedSES(SEXP ySEXP, SEXP mu0SEXP, SEXP alphaSEXP, SEXP phiSEXP) {
@@ -69,12 +54,57 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tweedieDensity
+arma::vec tweedieDensity(arma::vec x, arma::vec mean, arma::vec dispersion, arma::vec power, bool log);
+RcppExport SEXP _fable_intermittent_tweedieDensity(SEXP xSEXP, SEXP meanSEXP, SEXP dispersionSEXP, SEXP powerSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type dispersion(dispersionSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type power(powerSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(tweedieDensity(x, mean, dispersion, power, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tweedieCDF
+arma::vec tweedieCDF(arma::vec x, arma::vec mean, arma::vec dispersion, arma::vec power);
+RcppExport SEXP _fable_intermittent_tweedieCDF(SEXP xSEXP, SEXP meanSEXP, SEXP dispersionSEXP, SEXP powerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type dispersion(dispersionSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(tweedieCDF(x, mean, dispersion, power));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tweedieInvCDF
+arma::vec tweedieInvCDF(arma::vec q, arma::vec mean, arma::vec dispersion, arma::vec power);
+RcppExport SEXP _fable_intermittent_tweedieInvCDF(SEXP qSEXP, SEXP meanSEXP, SEXP dispersionSEXP, SEXP powerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type q(qSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type dispersion(dispersionSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(tweedieInvCDF(q, mean, dispersion, power));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fable_intermittent_gammaDynamic", (DL_FUNC) &_fable_intermittent_gammaDynamic, 4},
     {"_fable_intermittent_betaDynamic", (DL_FUNC) &_fable_intermittent_betaDynamic, 5},
-    {"_fable_intermittent_tweedieDensity", (DL_FUNC) &_fable_intermittent_tweedieDensity, 5},
     {"_fable_intermittent_dampedSES", (DL_FUNC) &_fable_intermittent_dampedSES, 4},
+    {"_fable_intermittent_tweedieDensity", (DL_FUNC) &_fable_intermittent_tweedieDensity, 5},
+    {"_fable_intermittent_tweedieCDF", (DL_FUNC) &_fable_intermittent_tweedieCDF, 4},
+    {"_fable_intermittent_tweedieInvCDF", (DL_FUNC) &_fable_intermittent_tweedieInvCDF, 4},
     {NULL, NULL, 0}
 };
 

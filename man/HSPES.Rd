@@ -24,6 +24,8 @@ Snyder, Ord & Beaumont (2012). The model decomposes demand into two
 components: a Bernoulli occurrence process (probability of non-zero demand)
 and a shifted Poisson demand-size process. Both components are driven by
 independent (optionally damped) exponential smoothing state equations.
+The first-step forecast follows an hurdle-shifted Poisson distribution,
+multi-step forecasts are obtained by simulating from the model forward in time.
 }
 \references{
 Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the

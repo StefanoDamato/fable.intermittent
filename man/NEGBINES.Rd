@@ -21,9 +21,10 @@ A model specification.
 Exponential smoothing state space model for intermittent demand with a
 negative binomial observation distribution, as proposed by Snyder, Ord &
 Beaumont (2012). The conditional mean of the negative binomial is governed by
-a (optionally damped) exponential smoothing process, allowing the forecast
-distribution to capture both the over-dispersion and the intermittency
-commonly observed in slow-moving inventory data.
+a (optionally damped) exponential smoothing process. The probability
+parameter is estimated to maximise the likelihood. The first-step forecast
+follows a Negative Binomial distribution, and multi-step forecasts
+are obtained by simulating from the model forward in time.
 }
 \references{
 Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the

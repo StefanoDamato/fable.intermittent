@@ -2,7 +2,7 @@
 % Please edit documentation in R/betanbb.R
 \name{BETANBB}
 \alias{BETANBB}
-\title{Beta--Negative Binomial Bayesian Dynamic Model}
+\title{Beta-Negative Binomial Bayesian Dynamic Model}
 \usage{
 BETANBB(formula, ...)
 }
@@ -18,9 +18,9 @@ A model specification.
 Conjugate Bayesian dynamic model for count time series with a negative
 binomial observation distribution and a Beta prior on the success probability
 parameter. This extends the conjugate updating framework of Harvey &
-Fernandes (1989) to the Beta--Negative Binomial family. The Beta prior is
-updated at each time step using a discount factor \code{w}, and the predictive
-distribution is available in closed form.
+Fernandes (1989) to the Beta-Negative Binomial family. The Beta prior is
+updated at each time step using a discount factor \code{w}. Forecasts are available
+as samples simulating from the model forward in time.
 }
 \references{
 Harvey, A. C., & Fernandes, C. (1989). Time series models for count or

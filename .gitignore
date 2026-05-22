@@ -8,6 +8,10 @@ inst/doc
 /doc/
 /Meta/
 
+src/*.o
+src/*.dll
+src/*.def
+
 /probintermittent
 
 /.quarto/
