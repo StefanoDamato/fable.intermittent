@@ -31,8 +31,7 @@ MARWAL <- function(formula, ...) {
   new_model_definition(marwal_model, {{ formula }}, ...)
 }
 
-
-#' @export
+#' @keywords internal
 train_marwal <-function(.data, specials, ...) {
   y <- unclass(.data)[[measured_vars(.data)]]
   
@@ -49,6 +48,9 @@ train_marwal <-function(.data, specials, ...) {
   # Extract the correct frequency and deseasonalize the data
   max_prop_zeros <- 0.95 #TODO: can this be made as an usable parameter?
   period <- get_freq(.data)
+  if (period < 1) {
+    abort("The seasonal period must be greater than or equal to 1.")
+  }
   deseasonalized <- marwal_deseasonalize(y, period = period, 
                                          max_prop_zeros = max_prop_zeros)
   y_deseasonalized <- deseasonalized$y_deseasonalized
