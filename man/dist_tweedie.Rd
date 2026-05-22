@@ -31,8 +31,8 @@ implemented in C++ for performance.
 \examples{
 d <- dist_tweedie(mean = 2, dispersion = 0.8, power = 1.5)
 mean(d)
-variance(d)
-generate(d, 5)
+distributional::variance(d)
+distributional::generate(d, 5)
 }
 \references{
 Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie

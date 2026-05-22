@@ -24,14 +24,14 @@
 #' @export
 #'
 #' @importFrom rlang abort
-#' @importFrom distributional new_dist covariance
+#' @importFrom distributional new_dist covariance 
 #' @importFrom stats rpois rgamma
 #'
 #' @examples
 #' d <- dist_tweedie(mean = 2, dispersion = 0.8, power = 1.5)
 #' mean(d)
-#' variance(d)
-#' generate(d, 5)
+#' distributional::variance(d)
+#' distributional::generate(d, 5)
 dist_tweedie <- function(mean = 1, dispersion = 1, power = 1.5) {
   mean <- as.double(mean)
   dispersion <- as.double(dispersion)
