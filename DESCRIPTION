@@ -2,7 +2,9 @@ Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
 Version: 0.0.1
 Authors@R: 
-    person("Stefano", "D'Amato", , "your.email@example.com", role = c("aut", "cre"))
+    person("Stefano", "Damato", , "your.email@example.com", role = c("aut", "cre"))
+Author: Stefano Damato
+Maintainer: Stefano Damato <your.email@example.com>
 Description: Extends the 'fable' framework to support forecasting methods 
     specifically designed for intermittent time series data, where demand 
     occurs sporadically with many zero values.
@@ -25,6 +27,7 @@ Imports:
     Rcpp (>= 1.0.0)
 Suggests: 
     testthat (>= 3.0.0),
+    tweedie,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

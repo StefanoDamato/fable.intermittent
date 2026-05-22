@@ -8,3 +8,9 @@
 ^pkgdown$
 ^\.git$
 ^\.gitignore$
+^R/gas\.R$
+^test_script.R
+^TODO.md
+^tweedie_tester.R
+^\.Rcheck$
+^exp_tweedie$
