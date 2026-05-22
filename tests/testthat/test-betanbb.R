@@ -6,7 +6,6 @@ for (i in 1:length(test_data)){
     expect_no_error({
       fit <- fabletools::model(test_ts, model = BETANBB(value))
     })
-    fit <- fabletools::model(test_ts, model = BETANBB(value))
     expect_s3_class(fit, "mdl_df")
     expect_identical(fabletools::model_sum(fit$model[[1]]), "BETANBB")
   

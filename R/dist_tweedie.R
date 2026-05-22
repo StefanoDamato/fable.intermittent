@@ -114,6 +114,7 @@ covariance.dist_tweedie <- function(x, ...) {
   x[["phi"]] * x[["mu"]]^x[["p"]]
 }
 
+
 #' Sample from Tweedie Distribution
 #'
 #' Uses the compound Poisson--Gamma representation to draw exact samples

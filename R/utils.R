@@ -11,7 +11,6 @@ crostons_decomp <- function(y) {
   )
 }
 
-
 get_freq <- function(.data, period = NULL, model_name = "Model") {
   period <- fabletools::get_frequencies(period, .data)
   period <- round(as.numeric(period[[1]]))
@@ -24,13 +23,10 @@ get_freq <- function(.data, period = NULL, model_name = "Model") {
   period
 }
 
-
 make_hurdle_shifted_distr <- function(distr, pzero){
   distr <- distributional::dist_transformed(distr, function(x) x + 1, function(x) x - 1)
   distributional::dist_inflated(distr, pzero, 0)
 }
-
-
 
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
@@ -62,5 +58,3 @@ fit_nbinom <- function(y) {
   
   c(size = fit$solution[1], prob = fit$solution[2])
 }
-
-

@@ -165,7 +165,6 @@ wss_transition_matrix <- function(occurrence) {
 }
 
 
-
 no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by WSS.")
 }

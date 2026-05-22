@@ -27,6 +27,7 @@
 #' @importFrom distributional dist_sample dist_poisson dist_transformed dist_inflated
 #' @importFrom nloptr nloptr
 #' @importFrom stats runif rpois dbinom dpois
+#' @importFrom utils tail
 #' @export
 HSPES <- function(formula, damped = TRUE, ...) {
   hspes_model <- new_model_class(

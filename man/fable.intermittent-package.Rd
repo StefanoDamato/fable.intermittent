@@ -6,6 +6,8 @@
 \alias{fable.intermittent-package}
 \title{fable.intermittent: Forecasting Models for Intermittent Time Series}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values.
 }
 \seealso{

@@ -30,6 +30,7 @@
 #' @importFrom rlang abort is_integerish
 #' @importFrom distributional dist_sample
 #' @importFrom nloptr nloptr
+#' @importFrom stats median
 #' @export
 TWEES <- function(formula, damped = TRUE, scaling = TRUE, ...) {
   twees_model <- new_model_class(
