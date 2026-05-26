@@ -15,11 +15,15 @@
 #' is not supplied it is selected automatically via leave-one-out
 #' cross-validation (LOOCV) on the log-score.
 #'
-#' When the detected seasonal period is 1 (non-seasonal data), the method
-#' silently falls back to the plain empirical distribution.
+#' When the detected seasonal period is 1 (non-seasonal data), or when the
+#' (trimmed) series length `n` is shorter than the seasonal period, the method
+#' falls back to the plain empirical distribution (a warning is issued for the
+#' latter case). When `n >= period` but `n < 3 * period`, LOOCV is skipped and
+#' `w` is set to `1 / period`.
 #'
 #' @section LOOCV details:
-#' For each observation \eqn{t}, the leave-one-out log-score is
+#' LOOCV is only run when `n >= 3 * period`. For each observation \eqn{t},
+#' the leave-one-out log-score is
 #' \eqn{\log\bigl[(1-w)\,p^{-t}_{\text{full}}(y_t) + w\,p^{-t}_{\text{seas}}(y_t)\bigr]},
 #' where \eqn{p^{-t}} denotes the empirical probability computed without
 #' observation \eqn{t}. Observations for which both leave-one-out
@@ -80,11 +84,20 @@ train_seasempdistr <- function(.data, specials, hot_start = FALSE, w = NULL, ...
   residuals   <- y - fitted_vals
 
   period <- get_freq(.data)
+  n_emp  <- length(y_emp)
 
-  # ---- Non-seasonal fallback ------------------------------------------------
-  # Also fall back when the (trimmed) series is too short to build meaningful
-  # seasonal sub-series: require strictly more than 2 * period observations.
-  if (period <= 1L || length(y_emp) <= 2L * period) {
+  # ---- Non-seasonal / short-series fallback ---------------------------------
+  # Fall back when non-seasonal OR the trimmed series is shorter than one full
+  # seasonal cycle (n < period): there is not enough data to build any
+  # seasonal sub-series at all.
+  if (period <= 1L || n_emp < period) {
+    if (period > 1L) {
+      warning(sprintf(
+        "Series length after trimming (%d) is shorter than the seasonal period (%d). \
+Falling back to non-seasonal empirical distribution.",
+        n_emp, period
+      ))
+    }
     return(structure(
       list(
         y_emp       = y_emp,
@@ -109,10 +122,21 @@ train_seasempdistr <- function(.data, specials, hot_start = FALSE, w = NULL, ...
   y_seas_list <- split(y_emp, seasons_idx)
 
   # ---- Mixing weight --------------------------------------------------------
-  w_fit <- if (is.null(w)) {
-    seasempdistr_loocv(y_emp, seasons_idx, period)
-  } else {
+  # Three regimes (when w is not user-supplied):
+  #   n < period          -> already handled above (fallback)
+  #   period <= n < 3*period -> skip LOOCV, use w = 1/period
+  #   n >= 3*period          -> LOOCV
+  w_fit <- if (!is.null(w)) {
     w
+  } else if (n_emp < 3L * period) {
+    w_default <- 1 / period
+    message(sprintf(
+      "Too few observations for LOOCV (n = %d < 3 * period = %d). LOOCV is skipped, set w = %.4f.",
+      n_emp, 3L * period, w_default
+    ))
+    w_default
+  } else {
+    seasempdistr_loocv(y_emp, seasons_idx, period)
   }
 
   structure(

@@ -60,18 +60,39 @@ test_that("SEASEMPDISTR stores w in [0, 1]", {
   expect_true(w_fit >= 0 && w_fit <= 1)
 })
 
-# ---- short series falls back (w = 0, period = 1) -------------------------
-# A 10-obs monthly series has period = 12; 10 <= 2*12 triggers the fallback.
-test_that("SEASEMPDISTR falls back for short series", {
+# ---- short series warns and falls back (w = 0, period = 1) ----------------
+# A 10-obs monthly series has period = 12; 10 < 12 triggers the warning fallback.
+test_that("SEASEMPDISTR warns and falls back when n < period", {
   ts_short <- tsibble::tsibble(
     time  = tsibble::yearmonth("2020 Jan") + 0:9,
     value = c(0L, 1L, 0L, 2L, 0L, 0L, 1L, 0L, 3L, 0L),
     index = "time"
   )
-  fit <- fabletools::model(ts_short, model = SEASEMPDISTR(value))
+  expect_warning(
+    fit <- fabletools::model(ts_short, model = SEASEMPDISTR(value)),
+    regexp = "shorter than the seasonal period"
+  )
   obj <- fit$model[[1]]$fit
   expect_equal(obj$w,      0)
   expect_equal(obj$period, 1L)
+})
+
+# ---- mid-range series skips LOOCV and sets w = 1/period ------------------
+# A 24-obs monthly series has period = 12; 24 >= 12 but 24 < 36 = 3*12.
+test_that("SEASEMPDISTR skips LOOCV and sets w = 1/period when period <= n < 3*period", {
+  ts_med <- tsibble::tsibble(
+    time  = tsibble::yearmonth("2020 Jan") + 0:23,
+    value = c(0L, 1L, 0L, 2L, 0L, 0L, 1L, 0L, 3L, 0L, 1L, 2L,
+              0L, 0L, 1L, 0L, 1L, 2L, 0L, 1L, 0L, 0L, 2L, 1L),
+    index = "time"
+  )
+  expect_message(
+    fit <- fabletools::model(ts_med, model = SEASEMPDISTR(value)),
+    regexp = "LOOCV is skipped"
+  )
+  obj <- fit$model[[1]]$fit
+  expect_equal(obj$w,      1 / 12)
+  expect_equal(obj$period, 12L)
 })
 
 # ---- invalid w is rejected at constructor level ---------------------------
