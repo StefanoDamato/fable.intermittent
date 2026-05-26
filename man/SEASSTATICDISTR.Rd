@@ -46,9 +46,10 @@ leave-one-out cross-validation (LOOCV) on the log-score.
 }
 \details{
 When the detected seasonal period is 1 (non-seasonal data), or when the
-number of observations after optional leading-zero removal is not greater
-than \code{2 * period}, the method falls back to a single static distribution
-fitted on the full series (equivalent to \code{\link[=STATICDISTR]{STATICDISTR()}}).
+(trimmed) series length \code{n} is less than \code{2 * period}, the method falls back
+to a single static distribution fitted on the full series (equivalent to
+\code{\link[=STATICDISTR]{STATICDISTR()}}; a warning is issued). When \code{n >= 2 * period} but
+\code{n < 3 * period}, LOOCV is skipped and \code{w} is set to \code{1 / period}.
 }
 \section{Method of moments}{
 
@@ -60,7 +61,8 @@ variance. If \eqn{s^2 \le \bar y} (underdispersed), falls back to Poisson.
 
 \section{LOOCV details}{
 
-Sufficient statistics (\eqn{\sum y}, \eqn{\sum y^2}) are precomputed for
+LOOCV is only run when \code{n >= 3 * period}. Sufficient statistics
+(\eqn{\sum y}, \eqn{\sum y^2}) are precomputed for
 the full series and each seasonal sub-series. Each leave-one-out
 distribution is then refitted in O(1) via closed-form MoM updates, making
 each optimizer evaluation O(T). When a seasonal sub-series has only one

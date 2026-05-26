@@ -77,20 +77,46 @@ test_that("SEASSTATICDISTR stores w in [0, 1]", {
   }
 })
 
-# ---- short series falls back (w = 0, period = 1) -------------------------
-# A 10-obs monthly series has period = 12; 10 <= 2*12 triggers the fallback.
-test_that("SEASSTATICDISTR falls back for short series", {
+# ---- short series warns and falls back (w = 0, period = 1) ---------------
+# A 10-obs monthly series has period = 12; 10 < 2*12=24 triggers the warning fallback.
+test_that("SEASSTATICDISTR warns and falls back when n < 2*period", {
   ts_short <- tsibble::tsibble(
     time  = tsibble::yearmonth("2020 Jan") + 0:9,
     value = c(0L, 1L, 0L, 2L, 0L, 0L, 1L, 0L, 3L, 0L),
     index = "time"
   )
   for (distr in c("pois", "nbinom")) {
-    fit <- fabletools::model(ts_short,
-                             model = SEASSTATICDISTR(value, distr = distr))
+    expect_warning(
+      fit <- fabletools::model(ts_short,
+                               model = SEASSTATICDISTR(value, distr = distr)),
+      regexp = "shorter than 2 \\* period"
+    )
     obj <- fit$model[[1]]$fit
     expect_equal(obj$w,      0)
     expect_equal(obj$period, 1L)
+  }
+})
+
+# ---- mid-range series skips LOOCV and sets w = 1/period ------------------
+# A 28-obs monthly series has period = 12; 28 >= 24=2*12 but 28 < 36=3*12.
+test_that("SEASSTATICDISTR skips LOOCV and sets w = 1/period when 2*period <= n < 3*period", {
+  set.seed(1L)
+  ts_med <- tsibble::tsibble(
+    time  = tsibble::yearmonth("2020 Jan") + 0:27,
+    value = c(0L, 1L, 0L, 2L, 0L, 0L, 1L, 0L, 3L, 0L, 1L, 2L,
+              0L, 0L, 1L, 0L, 1L, 2L, 0L, 1L, 0L, 0L, 2L, 1L,
+              1L, 0L, 2L, 0L),
+    index = "time"
+  )
+  for (distr in c("pois", "nbinom")) {
+    expect_message(
+      fit <- fabletools::model(ts_med,
+                               model = SEASSTATICDISTR(value, distr = distr)),
+      regexp = "LOOCV is skipped"
+    )
+    obj <- fit$model[[1]]$fit
+    expect_equal(obj$w,      1 / 12)
+    expect_equal(obj$period, 12L)
   }
 })
 

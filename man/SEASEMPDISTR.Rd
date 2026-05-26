@@ -38,12 +38,16 @@ is not supplied it is selected automatically via leave-one-out
 cross-validation (LOOCV) on the log-score.
 }
 \details{
-When the detected seasonal period is 1 (non-seasonal data), the method
-silently falls back to the plain empirical distribution.
+When the detected seasonal period is 1 (non-seasonal data), or when the
+(trimmed) series length \code{n} is shorter than the seasonal period, the method
+falls back to the plain empirical distribution (a warning is issued for the
+latter case). When \code{n >= period} but \code{n < 3 * period}, LOOCV is skipped and
+\code{w} is set to \code{1 / period}.
 }
 \section{LOOCV details}{
 
-For each observation \eqn{t}, the leave-one-out log-score is
+LOOCV is only run when \code{n >= 3 * period}. For each observation \eqn{t},
+the leave-one-out log-score is
 \eqn{\log\bigl[(1-w)\,p^{-t}_{\text{full}}(y_t) + w\,p^{-t}_{\text{seas}}(y_t)\bigr]},
 where \eqn{p^{-t}} denotes the empirical probability computed without
 observation \eqn{t}. Observations for which both leave-one-out

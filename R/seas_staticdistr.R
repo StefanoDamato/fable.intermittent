@@ -14,9 +14,10 @@
 #' leave-one-out cross-validation (LOOCV) on the log-score.
 #'
 #' When the detected seasonal period is 1 (non-seasonal data), or when the
-#' number of observations after optional leading-zero removal is not greater
-#' than `2 * period`, the method falls back to a single static distribution
-#' fitted on the full series (equivalent to [STATICDISTR()]).
+#' (trimmed) series length `n` is less than `2 * period`, the method falls back
+#' to a single static distribution fitted on the full series (equivalent to
+#' [STATICDISTR()]; a warning is issued). When `n >= 2 * period` but
+#' `n < 3 * period`, LOOCV is skipped and `w` is set to `1 / period`.
 #'
 #' @section Method of moments:
 #' **Poisson**: \eqn{\hat\lambda = \bar y}.
@@ -25,7 +26,8 @@
 #' variance. If \eqn{s^2 \le \bar y} (underdispersed), falls back to Poisson.
 #'
 #' @section LOOCV details:
-#' Sufficient statistics (\eqn{\sum y}, \eqn{\sum y^2}) are precomputed for
+#' LOOCV is only run when `n >= 3 * period`. Sufficient statistics
+#' (\eqn{\sum y}, \eqn{\sum y^2}) are precomputed for
 #' the full series and each seasonal sub-series. Each leave-one-out
 #' distribution is then refitted in O(1) via closed-form MoM updates, making
 #' each optimizer evaluation O(T). When a seasonal sub-series has only one
@@ -96,9 +98,19 @@ train_seasstaticdistr <- function(.data, specials,
   residuals   <- y - fitted_vals
 
   period <- get_freq(.data)
+  n_emp  <- length(y_emp)
 
-  # ---- Non-seasonal / too-short fallback ------------------------------------
-  if (period <= 1L || length(y_emp) <= 2L * period) {
+  # ---- Non-seasonal / short-series fallback ---------------------------------
+  # Fall back when non-seasonal OR the trimmed series has fewer than 2 * period
+  # observations: not enough to build reliable seasonal sub-series.
+  if (period <= 1L || n_emp < 2L * period) {
+    if (period > 1L) {
+      warning(sprintf(
+        "Series length after trimming (%d) is shorter than 2 * period (%d). \
+Falling back to non-seasonal distribution.",
+        n_emp, 2L * period
+      ))
+    }
     return(structure(
       list(
         full_distr  = full_distr,
@@ -130,10 +142,21 @@ train_seasstaticdistr <- function(.data, specials,
   }
 
   # ---- Mixing weight --------------------------------------------------------
-  w_fit <- if (is.null(w)) {
-    seasstaticdistr_loocv(y_emp, seasons_idx, period, distr)
-  } else {
+  # Three regimes (when w is not user-supplied):
+  #   n < 2*period          -> already handled above (fallback)
+  #   2*period <= n < 3*period -> skip LOOCV, use w = 1/period
+  #   n >= 3*period            -> LOOCV
+  w_fit <- if (!is.null(w)) {
     w
+  } else if (n_emp < 3L * period) {
+    w_default <- 1 / period
+    message(sprintf(
+      "Too few observations for LOOCV (n = %d < 3 * period = %d). LOOCV is skipped, set w = %.4f.",
+      n_emp, 3L * period, w_default
+    ))
+    w_default
+  } else {
+    seasstaticdistr_loocv(y_emp, seasons_idx, period, distr)
   }
 
   structure(
