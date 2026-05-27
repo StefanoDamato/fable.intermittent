@@ -28,6 +28,20 @@ make_hurdle_shifted_distr <- function(distr, pzero){
   distributional::dist_inflated(distr, pzero, 0)
 }
 
+#' @exportS3Method distributional::quantile
+quantile.dist_inflated <- function(x, p, ...) {
+  vapply(seq_along(p), function(i) {
+    pi <- p[[i]]
+    qt <- quantile(x[["dist"]], pmax(0, (pi - x[["p"]])/(1 - x[["p"]])), ...)
+    if (qt >= x[["x"]]) {
+      qt
+    } else {
+      qt <- quantile(x[["dist"]], pi, ...)
+      if (qt < x[["x"]]) qt else x[["x"]]
+    }
+  }, numeric(1))
+}
+
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
     return(c(size = 100, prob = 1 - staticdistr_epsilon))
