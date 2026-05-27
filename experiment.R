@@ -11,8 +11,16 @@ fit <- auto |>
   filter(index <= yearmonth("2011 Jun")) |>
   model(
     empdistr = EMPDISTR(value),
-    staticdistr = STATICDISTR(value)
-    )
+    staticdistr = STATICDISTR(value),
+    betanbb = BETANBB(value),
+    gampois = GAMPOISB(value),
+    wss = WSS(value),
+    vz = VZ(value),
+    hspes = HSPES(value),
+    negbines = NEGBINES(value),
+    twees = TWEES(value),
+    marwal = MARWAL(value)
+  )
 
 fc <- fit |>
   forecast(h = "6 months")
@@ -35,7 +43,15 @@ fit <- raf |>
   filter(index <= yearmonth("2001 Dec")) |>
   model(
     empdistr = EMPDISTR(value),
-    staticdistr = STATICDISTR(value)
+    staticdistr = STATICDISTR(value),
+    betanbb = BETANBB(value),
+    gampois = GAMPOISB(value),
+    wss = WSS(value),
+    vz = VZ(value),
+    hspes = HSPES(value),
+    negbines = NEGBINES(value),
+    twees = TWEES(value),
+    marwal = MARWAL(value)
   )
 
 fc <- fit |>
