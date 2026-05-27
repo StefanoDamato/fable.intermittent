@@ -217,3 +217,13 @@ test_that("qtweedie returns the same results as the tweedie package", {
   }
 })
 
+
+test_that("distributional quantile works for dist_tweedie", {
+  distr <- dist_tweedie(mean = 2, dispersion = 0.8, power = 1.5)
+  expect_no_error({
+    q <- stats::quantile(distr, p = 0.5)
+  })
+  expect_true(is.finite(q))
+  expect_true(q >= 0)
+})
+

@@ -94,8 +94,8 @@ cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
 }
 
 #' @exportS3Method distributional::quantile
-quantile.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
-  qtweedie(at,
+quantile.dist_tweedie <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
+  qtweedie(p,
     mean = x[["mu"]],
     dispersion = x[["phi"]],
     power = x[["p"]],
