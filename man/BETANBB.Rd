@@ -22,6 +22,19 @@ Fernandes (1989) to the Beta-Negative Binomial family. The Beta prior is
 updated at each time step using a discount factor \code{w}. Forecasts are available
 as samples simulating from the model forward in time.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(BETANBB(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Harvey, A. C., & Fernandes, C. (1989). Time series models for count or
 qualitative observations. \emph{Journal of Business & Economic Statistics},

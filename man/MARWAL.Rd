@@ -20,6 +20,19 @@ where the changes are controlled by a Markov Chain on the occurrence process.
 Paramter are estimated in closed-form on deseasonalized data,
 and forecasts are returned as Gaussian distributions for each time step.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(MARWAL(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Sbrana, G. (2025). Markov Walk and Walmart sales prediction.
 \emph{Journal of the Operational Research Society}, 1–12.

@@ -27,6 +27,19 @@ independent (optionally damped) exponential smoothing state equations.
 The first-step forecast follows an hurdle-shifted Poisson distribution,
 multi-step forecasts are obtained by simulating from the model forward in time.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(HSPES(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the
 intermittent demand for slow-moving inventories: A modelling approach.

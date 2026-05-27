@@ -19,6 +19,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(TWEES(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @references
 #'
 #' Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent 
@@ -100,6 +112,23 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
   )
 }
 
+#' Forecast a TWEES model
+#'
+#' Produces forecast distributions from a fitted TWEES model using simulation.
+#'
+#' @inheritParams forecast.EMPDISTR
+#' @param times The number of sample paths to use in estimating the forecast
+#'   distribution.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, TWEES(value))
+#' forecast(fit, h = "7 days")
+#'
 #' @export
 forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...) {
   h <- nrow(new_data)
@@ -128,6 +157,19 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
   c(dist_first, dist_rest)
 }
 
+#' Generate sample paths from a TWEES model
+#'
+#' @param x A fitted `TWEES` model object.
+#' @inheritParams forecast.TWEES
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, TWEES(value))
+#' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
 generate.TWEES <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
@@ -136,11 +178,35 @@ generate.TWEES <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from a TWEES model
+#'
+#' @inheritParams forecast.TWEES
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, TWEES(value))
+#' fitted(fit)
 #' @export
 fitted.TWEES <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from a TWEES model
+#'
+#' @inheritParams forecast.TWEES
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, TWEES(value))
+#' residuals(fit)
 #' @export
 residuals.TWEES <- function(object, ...) {
   object$residuals

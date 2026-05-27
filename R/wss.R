@@ -17,6 +17,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(WSS(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
@@ -86,6 +98,23 @@ train_wss <- function(.data, specials, ...) {
   )
 }
 
+#' Forecast a WSS model
+#'
+#' Produces forecast distributions from a fitted WSS model using simulation.
+#'
+#' @inheritParams forecast.EMPDISTR
+#' @param times The number of sample paths to use in estimating the forecast
+#'   distribution.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, WSS(value))
+#' forecast(fit, h = "7 days")
+#'
 #' @export
 forecast.WSS <- function(object, new_data, specials = NULL, times = 10000, ...) {
   h <- nrow(new_data)
@@ -98,6 +127,19 @@ forecast.WSS <- function(object, new_data, specials = NULL, times = 10000, ...) 
   dist_sample(samples)
 }
 
+#' Generate sample paths from a WSS model
+#'
+#' @param x A fitted `WSS` model object.
+#' @inheritParams forecast.WSS
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, WSS(value))
+#' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
 generate.WSS <- function(x, new_data, specials = NULL, ...) {
   h <- NROW(new_data)
@@ -106,11 +148,35 @@ generate.WSS <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from a WSS model
+#'
+#' @inheritParams forecast.WSS
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, WSS(value))
+#' fitted(fit)
 #' @export
 fitted.WSS <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from a WSS model
+#'
+#' @inheritParams forecast.WSS
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, WSS(value))
+#' residuals(fit)
 #' @export
 residuals.WSS <- function(object, ...) {
   object$residuals

@@ -16,6 +16,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(VZ(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
@@ -72,6 +84,23 @@ train_vz <- function(.data, specials, ...) {
   )
 }
 
+#' Forecast a VZ model
+#'
+#' Produces forecast distributions from a fitted VZ model using simulation.
+#'
+#' @inheritParams forecast.EMPDISTR
+#' @param times The number of sample paths to use in estimating the forecast
+#'   distribution.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, VZ(value))
+#' forecast(fit, h = "7 days")
+#'
 #' @export
 forecast.VZ <- function(object, new_data, specials = NULL, times = 10000, ...) {
   h <- nrow(new_data)
@@ -83,6 +112,19 @@ forecast.VZ <- function(object, new_data, specials = NULL, times = 10000, ...) {
   dist_sample(samples)
 }
 
+#' Generate sample paths from a VZ model
+#'
+#' @param x A fitted `VZ` model object.
+#' @inheritParams forecast.VZ
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, VZ(value))
+#' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
 generate.VZ <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
@@ -91,11 +133,35 @@ generate.VZ <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from a VZ model
+#'
+#' @inheritParams forecast.VZ
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, VZ(value))
+#' fitted(fit)
 #' @export
 fitted.VZ <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from a VZ model
+#'
+#' @inheritParams forecast.VZ
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, VZ(value))
+#' residuals(fit)
 #' @export
 residuals.VZ <- function(object, ...) {
   object$residuals

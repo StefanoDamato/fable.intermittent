@@ -31,6 +31,19 @@ via its compound Poisson-Gamma nature. The first-step forecast follows
 a Tweedie distribution, and multi-step forecasts are obtained by simulating
 from the model forward in time. The model parameters are estimated by
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(TWEES(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent
 time series with Gaussian Processes and Tweedie likelihood.

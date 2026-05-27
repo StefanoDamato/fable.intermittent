@@ -17,6 +17,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(EMPDISTR(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
@@ -65,6 +77,26 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
   )
 }
 
+#' Forecast an EMPDISTR model
+#'
+#' Produces forecast distributions by repeating the empirical distribution
+#' estimated from the training data at each forecast horizon.
+#'
+#' @inheritParams generics::forecast
+#' @param object A fitted `EMPDISTR` model object.
+#' @param new_data A tsibble containing future index values to forecast.
+#' @param specials Passed by [fabletools::forecast.mdl_df()].
+#'
+#' @return A distribution vector of class `dist_sample`.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, EMPDISTR(value))
+#' forecast(fit, h = "7 days")
 #' @export
 forecast.EMPDISTR <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
@@ -72,6 +104,25 @@ forecast.EMPDISTR <- function(object, new_data, specials = NULL, ...) {
   dist_sample(samples)
 }
 
+#' Generate sample paths from an EMPDISTR model
+#'
+#' @param x A fitted `EMPDISTR` model object.
+#' Simulates future observations by resampling with replacement from the
+#' empirical support learned during training.
+#'
+#' @inheritParams forecast.EMPDISTR
+#' @param x A fitted `EMPDISTR` model object.
+#'
+#' @return A `new_data` tibble with a `.sim` column of simulated values.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, EMPDISTR(value))
+#' generate(fit, h = 7)
 #' @export
 generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
@@ -80,11 +131,41 @@ generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from an EMPDISTR model
+#'
+#' @param object A fitted `EMPDISTR` model object.
+#' @param ... Not used.
+#'
+#' @return A numeric vector of fitted values.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, EMPDISTR(value))
+#' fitted(fit)
 #' @export
 fitted.EMPDISTR <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from an EMPDISTR model
+#'
+#' @param object A fitted `EMPDISTR` model object.
+#' @param ... Not used.
+#'
+#' @return A numeric vector of residuals.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, EMPDISTR(value))
+#' residuals(fit)
 #' @export
 residuals.EMPDISTR <- function(object, ...) {
   object$residuals

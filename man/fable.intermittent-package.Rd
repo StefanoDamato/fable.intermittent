@@ -19,7 +19,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Stefano Damato \email{your.email@example.com}
+\strong{Maintainer}: Stefano Damato \email{stefano.damato@supsi.ch}
 
 }
 \keyword{internal}

@@ -23,6 +23,19 @@ predictive distribution at every horizon is simply the empirical distribution
 of the observed values: forecasts are produced by resampling with
 replacement from the historical series. Point forecasts are the sample mean.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(EMPDISTR(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Hasni, M., Aguir, M. S., Babai, M. Z., & Jemai, Z. (2019). Spare parts
 demand forecasting: a review on bootstrapping methods. \emph{International

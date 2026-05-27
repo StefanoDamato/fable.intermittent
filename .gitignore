@@ -7,11 +7,14 @@
 inst/doc
 /doc/
 /Meta/
-
-src/*.o
-src/*.dll
-src/*.def
+/src/*.o
 
 /probintermittent
 
 /.quarto/
+*.Rcheck/
+
+/src/*.o
+/src/*.so
+/src/*.dll
+/src/*.dylib

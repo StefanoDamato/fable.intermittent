@@ -28,6 +28,7 @@ make_hurdle_shifted_distr <- function(distr, pzero){
   distributional::dist_inflated(distr, pzero, 0)
 }
 
+#' @importFrom stats quantile
 #' @exportS3Method distributional::quantile
 quantile.dist_inflated <- function(x, p, ...) {
   vapply(seq_along(p), function(i) {

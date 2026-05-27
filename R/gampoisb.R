@@ -17,6 +17,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(GAMPOISB(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
@@ -82,6 +94,24 @@ train_gampoisb <- function(.data, specials, ...) {
   )
 }
 
+#' Forecast a GAMPOISB model
+#'
+#' Produces forecast distributions from a fitted GAMPOISB model using
+#' simulation.
+#'
+#' @inheritParams forecast.EMPDISTR
+#' @param times The number of sample paths to use in estimating the forecast
+#'   distribution.
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, GAMPOISB(value))
+#' forecast(fit, h = "7 days")
+#'
 #' @export
 forecast.GAMPOISB <- function(object, new_data, specials = NULL, times = 10000, ...) {
   h <- nrow(new_data)
@@ -105,6 +135,19 @@ forecast.GAMPOISB <- function(object, new_data, specials = NULL, times = 10000, 
   c(dist_first, dist_rest)
 }
 
+#' Generate sample paths from a GAMPOISB model
+#'
+#' @param x A fitted `GAMPOISB` model object.
+#' @inheritParams forecast.GAMPOISB
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, GAMPOISB(value))
+#' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
 generate.GAMPOISB <- function(x, new_data, specials = NULL, ...) {
   h <- NROW(new_data)
@@ -113,11 +156,35 @@ generate.GAMPOISB <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from a GAMPOISB model
+#'
+#' @inheritParams forecast.GAMPOISB
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, GAMPOISB(value))
+#' fitted(fit)
 #' @export
 fitted.GAMPOISB <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from a GAMPOISB model
+#'
+#' @inheritParams forecast.GAMPOISB
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, GAMPOISB(value))
+#' residuals(fit)
 #' @export
 residuals.GAMPOISB <- function(object, ...) {
   object$residuals

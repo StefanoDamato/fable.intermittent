@@ -21,6 +21,18 @@
 #'
 #' @return A model specification.
 #'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#'
+#' ts |>
+#'   model(STATICDISTR(value)) |>
+#'   forecast(h = "7 days") |>
+#'   ggtime::autoplot(ts)
+#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort arg_match is_integerish
@@ -122,12 +134,40 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   )
 }
 
+#' Forecast a STATICDISTR model
+#'
+#' Produces forecast distributions from a fitted STATICDISTR model.
+#'
+#' @inheritParams forecast.EMPDISTR
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, STATICDISTR(value))
+#' forecast(fit, h = "7 days")
+#'
 #' @export
 forecast.STATICDISTR <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
   rep(object$pred_distr, h)
 }
 
+#' Generate sample paths from a STATICDISTR model
+#'
+#' @param x A fitted `STATICDISTR` model object.
+#' @inheritParams forecast.STATICDISTR
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, STATICDISTR(value))
+#' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
 generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
@@ -135,11 +175,35 @@ generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
+#' Extract fitted values from a STATICDISTR model
+#'
+#' @inheritParams forecast.STATICDISTR
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, STATICDISTR(value))
+#' fitted(fit)
 #' @export
 fitted.STATICDISTR <- function(object, ...) {
   object$fitted
 }
 
+#' Extract residuals from a STATICDISTR model
+#'
+#' @inheritParams forecast.STATICDISTR
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, STATICDISTR(value))
+#' residuals(fit)
 #' @export
 residuals.STATICDISTR <- function(object, ...) {
   object$residuals

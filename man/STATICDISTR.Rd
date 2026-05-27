@@ -35,6 +35,19 @@ hurdle-shifted Poisson, negative binomial, and hurdle-shifted negative
 binomial --- to the observed series and selects the best by AIC. A mixture
 option that blends all four predictive distributions is also available.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(STATICDISTR(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Kolassa, S. (2016). Evaluating predictive count data distributions in retail
 sales forecasting. \emph{International Journal of Forecasting}, 32(3), 788--803.

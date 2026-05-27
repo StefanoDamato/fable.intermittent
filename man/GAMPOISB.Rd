@@ -22,6 +22,19 @@ using a discount factor \code{w} that controls how quickly past information
 decays. The first-step forecast follows a Negative Binomial distribution,
 and multi-step forecasts are obtained by simulating from the model forward in time.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(GAMPOISB(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Harvey, A. C., & Fernandes, C. (1989). Time series models for count or
 qualitative observations. \emph{Journal of Business & Economic Statistics},

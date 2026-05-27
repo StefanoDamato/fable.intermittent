@@ -22,6 +22,19 @@ from the observed binary occurrence sequence. Demand sizes are resampled from
 past non-zero observations with Gaussian jittering to smooth the empirical
 distribution.
 }
+\examples{
+ts <- tsibble::tsibble(
+  time = as.Date("2026-01-01") + seq_len(40),
+  value = rnbinom(40, size = 1, prob = 0.3),
+  index = time
+)
+
+ts |>
+  model(WSS(value)) |>
+  forecast(h = "7 days") |>
+  ggtime::autoplot(ts)
+
+}
 \references{
 Willemain, T. R., Smart, C. N., & Schwarz, H. F. (2004). A new approach to
 forecasting intermittent demand for service parts inventories.
