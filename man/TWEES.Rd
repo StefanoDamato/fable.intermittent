@@ -45,7 +45,8 @@ ts |>
 
 }
 \references{
-Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent
+Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
 time series with Gaussian Processes and Tweedie likelihood.
-\emph{International Journal of Forecasting}  xx(x), xxx--xxx.
+\emph{International Journal of Forecasting}  (in press).
+\doi{10.1016/j.ijforecast.2025.10.001}.
 }

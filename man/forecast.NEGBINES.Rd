@@ -7,16 +7,20 @@
 \method{forecast}{NEGBINES}(object, new_data, specials = NULL, times = 10000, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which forecasts are required.}
 
 \item{new_data}{A tsibble containing future index values to forecast.}
 
-\item{specials}{Passed by \code{\link[fabletools:forecast]{fabletools::forecast.mdl_df()}}.}
+\item{specials}{Passed by \code{\link[fabletools:forecast.mdl_df]{fabletools::forecast.mdl_df()}}.}
 
 \item{times}{The number of sample paths to use in estimating the forecast
 distribution.}
 
 \item{...}{Other arguments passed to methods}
+}
+\value{
+A distribution vector of forecasts: for h=1 the vector class is
+\code{dist_negative_binomial}; for h>1 the vector class is \code{dist_sample}.
 }
 \description{
 Produces forecast distributions from a fitted NEGBINES model using

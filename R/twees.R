@@ -1,8 +1,8 @@
 #' Tweedie Exponential Smoothing
 #'
 #' Exponential smoothing state space model for intermittent demand with a
-#' Tweedie observation distribution. The conditional mean of the Tweedie 
-#' is governed by a (optionally damped) exponential smoothing process. 
+#' Tweedie observation distribution. The conditional mean of the Tweedie
+#' is governed by a (optionally damped) exponential smoothing process.
 #' The power and dispersion parameter are estimated to maximise the likelihood.
 #' The Tweedie family naturally models both zeros and large spikes
 #' via its compound Poisson-Gamma nature. The first-step forecast follows
@@ -33,9 +33,10 @@
 #'
 #' @references
 #'
-#' Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent 
-#' time series with Gaussian Processes and Tweedie likelihood. 
-#' *International Journal of Forecasting*  xx(x), xxx--xxx.
+#' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
+#' time series with Gaussian Processes and Tweedie likelihood.
+#' *International Journal of Forecasting*  (in press).
+#' \doi{10.1016/j.ijforecast.2025.10.001}.
 #'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
@@ -88,7 +89,7 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 
   # Compute fitted values on the scaled series
   mu <- dampedSES(y_scaled, mu0, alpha, theta)
-  mu <- pmax(mu, twees_epsilon)
+  mu <- pmax(mu, .TWEES_EPSILON)
 
   # Back-transform fitted values and residuals
   fitted <- mu * scale_factor
@@ -120,6 +121,9 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_tweedie`; for h>1 the vector class is `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -140,7 +144,7 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
   mu_forecast <- object$alpha * object$last_y_scaled +
     object$theta * object$mean_y_scaled +
     (1 - object$alpha - object$theta) * object$last_mu
-  mu_forecast <- max(mu_forecast, twees_epsilon)
+  mu_forecast <- max(mu_forecast, .TWEES_EPSILON)
   dist_first <- dist_tweedie(
     mean = mu_forecast * object$scale_factor,
     dispersion = object$phi * object$scale_factor^(2 - object$power),
@@ -162,6 +166,8 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
 #' @param x A fitted `TWEES` model object.
 #' @inheritParams forecast.TWEES
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -180,7 +186,7 @@ generate.TWEES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a TWEES model
 #'
-#' @inheritParams forecast.TWEES
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -197,7 +203,7 @@ fitted.TWEES <- function(object, ...) {
 
 #' Extract residuals from a TWEES model
 #'
-#' @inheritParams forecast.TWEES
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -227,7 +233,7 @@ twees_simulate <- function(object, h, times) {
       (1 - object$alpha - object$theta) * object$last_mu,
     times
   )
-  mu_state <- pmax(mu_state, twees_epsilon)
+  mu_state <- pmax(mu_state, .TWEES_EPSILON)
 
   for (i in seq_len(h)) {
     # Sample from Tweedie on the original scale
@@ -243,9 +249,9 @@ twees_simulate <- function(object, h, times) {
     mu_state <- object$alpha * y_new +
       object$theta * object$mean_y_scaled +
       (1 - object$alpha - object$theta) * mu_state
-    mu_state <- pmax(mu_state, twees_epsilon)
+    mu_state <- pmax(mu_state, .TWEES_EPSILON)
   }
-  
+
   forecast_samples <- forecast_samples * object$scale_factor
   forecast_samples
 }
@@ -275,9 +281,9 @@ twees_optimize <- function(y, damped) {
 
   # In the undamped case specify the parameter vector with theta fixed to 0
   if (!damped) {
-    init_params <- c(phi_init, rho_init, max(mean_y, twees_epsilon), 0.3)
-    lb <- c(twees_epsilon, 1 + twees_epsilon, twees_epsilon, twees_epsilon)
-    ub <- c(phi_upper, 2 - twees_epsilon, max_y * 10, 1 - twees_epsilon)
+    init_params <- c(phi_init, rho_init, max(mean_y, .TWEES_EPSILON), 0.3)
+    lb <- c(.TWEES_EPSILON, 1 + .TWEES_EPSILON, .TWEES_EPSILON, .TWEES_EPSILON)
+    ub <- c(phi_upper, 2 - .TWEES_EPSILON, max_y * 10, 1 - .TWEES_EPSILON)
 
     # Run the optimistion with bounds using nloptr
     opt <- nloptr(
@@ -291,9 +297,9 @@ twees_optimize <- function(y, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(phi_init, rho_init, max(mean_y, twees_epsilon), 0.3, 0.1)
-    lb <- c(twees_epsilon, 1 + twees_epsilon, twees_epsilon, twees_epsilon, 0)
-    ub <- c(phi_upper, 2 - twees_epsilon, max_y * 10, 1 - twees_epsilon, 1)
+    init_params <- c(phi_init, rho_init, max(mean_y, .TWEES_EPSILON), 0.3, 0.1)
+    lb <- c(.TWEES_EPSILON, 1 + .TWEES_EPSILON, .TWEES_EPSILON, .TWEES_EPSILON, 0)
+    ub <- c(phi_upper, 2 - .TWEES_EPSILON, max_y * 10, 1 - .TWEES_EPSILON, 1)
 
     # Run the optimization with bounds and a linear constraint using nloptr
     opt <- nloptr(
@@ -301,7 +307,7 @@ twees_optimize <- function(y, damped) {
       eval_f = function(x) twees_nll(x, y),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[4] + x[5] - 1 + twees_epsilon,
+      eval_g_ineq = function(x) x[4] + x[5] - 1 + .TWEES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -313,4 +319,3 @@ twees_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by TWEES.")
 }
 
-twees_epsilon <- 1e-4

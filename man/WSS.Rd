@@ -39,4 +39,5 @@ ts |>
 Willemain, T. R., Smart, C. N., & Schwarz, H. F. (2004). A new approach to
 forecasting intermittent demand for service parts inventories.
 \emph{International Journal of Forecasting}, 20(3), 375--387.
+\doi{10.1016/S0169-2070(03)00013-X}.
 }

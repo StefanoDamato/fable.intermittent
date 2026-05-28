@@ -7,7 +7,7 @@
 \method{residuals}{EMPDISTR}(object, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which residuals are required.}
 
 \item{...}{Not used.}
 }

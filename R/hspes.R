@@ -6,7 +6,7 @@
 #' components: a Bernoulli occurrence process (probability of non-zero demand)
 #' and a shifted Poisson demand-size process. Both components are driven by
 #' independent (optionally damped) exponential smoothing state equations.
-#' The first-step forecast follows an hurdle-shifted Poisson distribution, 
+#' The first-step forecast follows an hurdle-shifted Poisson distribution,
 #' multi-step forecasts are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
@@ -18,6 +18,7 @@
 #' Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the
 #' intermittent demand for slow-moving inventories: A modelling approach.
 #' *International Journal of Forecasting*, 28(2), 485--496.
+#' \doi{10.1016/j.ijforecast.2011.03.009}.
 #'
 #' @return A model specification.
 #'
@@ -57,7 +58,7 @@ train_hspes <- function(.data, specials, damped, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by HSPES.")
   }
-  
+
   y <- unclass(.data)[[measured_vars(.data)]]
 
   if (all(is.na(y))) {
@@ -78,7 +79,7 @@ train_hspes <- function(.data, specials, damped, ...) {
   decomp <- crostons_decomp(y)
   occurrence <- decomp$occurrence
   intervals <- decomp$intervals
-  shifted_demand <- decomp$demand - 1  
+  shifted_demand <- decomp$demand - 1
 
   # Optimize occurrence and demand components separately
   opt_occ <- hspes_optimize_occurrence(occurrence, damped)
@@ -147,6 +148,9 @@ train_hspes <- function(.data, specials, damped, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_inflated` (hurdle-shifted Poisson); for h>1 the vector class is `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -163,11 +167,11 @@ forecast.HSPES <- function(object, new_data, specials = NULL, times = 10000, ...
     abort("`times` must be a positive integer.")
   }
 
-  # Predict the next p and lambda values 
+  # Predict the next p and lambda values
   p_forecast <- object$alpha_occ * object$last_occurrence +
     object$phi_occ * object$mean_occurrence +
     (1 - object$alpha_occ - object$phi_occ) * object$last_p
-  
+
   # Predict the next lambda value
   lambda_forecast <- object$alpha_dem * object$last_shifted_demand +
     object$phi_dem * object$mean_shifted_demand +
@@ -194,6 +198,8 @@ forecast.HSPES <- function(object, new_data, specials = NULL, times = 10000, ...
 #' @param x A fitted `HSPES` model object.
 #' @inheritParams forecast.HSPES
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -212,7 +218,7 @@ generate.HSPES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a HSPES model
 #'
-#' @inheritParams forecast.HSPES
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -229,7 +235,7 @@ fitted.HSPES <- function(object, ...) {
 
 #' Extract residuals from a HSPES model
 #'
-#' @inheritParams forecast.HSPES
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -304,9 +310,9 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
 
   # In the undamped case, set the last parameter to 0
   if (!damped) {
-    init_params <- c(min(mean(occurrence), 1 - hspes_epsilon), 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon)
-    ub <- c(1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds
     opt <- nloptr(
@@ -319,9 +325,9 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(min(mean(occurrence), 1 - hspes_epsilon), 0.2, 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon, hspes_epsilon)
-    ub <- c(1 - hspes_epsilon, 1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2, 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds and a linear constraint
     opt <-nloptr(
@@ -329,7 +335,7 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
       eval_f = function(x) nll_occ(x, occurrence),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + hspes_epsilon,
+      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -352,16 +358,16 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
 
   # When demand is constant optimisation is not needed
   if (length(unique(shifted_demand)) == 1) {
-    lambda0 <- max(unique(shifted_demand), hspes_epsilon)
+    lambda0 <- max(unique(shifted_demand), .HSPES_EPSILON)
     opt <- list(solution = c(lambda0, 0, 0))
     return(opt)
   }
 
   # In the undamped case, set the last parameter to 0
   if (!damped) {
-    init_params <- c(max(mean(shifted_demand), hspes_epsilon), 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon)
-    ub <- c(max(shifted_demand) * 10, 1 - hspes_epsilon)
+    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds
     opt <-nloptr(
@@ -375,9 +381,9 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(max(mean(shifted_demand), hspes_epsilon), 0.2, 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon, hspes_epsilon)
-    ub <- c(max(shifted_demand) * 10, 1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2, 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # run the optimization using nloptr with bounds and a linear constraint
     opt <- nloptr(
@@ -385,7 +391,7 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
       eval_f = function(x) nll_dem(x, shifted_demand),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + hspes_epsilon,
+      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -397,4 +403,3 @@ hspes_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by HSPES.")
 }
 
-hspes_epsilon <- 1e-4

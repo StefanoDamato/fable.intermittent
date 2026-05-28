@@ -4,8 +4,8 @@
 #' negative binomial observation distribution, as proposed by Snyder, Ord &
 #' Beaumont (2012). The conditional mean of the negative binomial is governed by
 #' a (optionally damped) exponential smoothing process. The probability
-#' parameter is estimated to maximise the likelihood. The first-step forecast 
-#' follows a Negative Binomial distribution, and multi-step forecasts 
+#' parameter is estimated to maximise the likelihood. The first-step forecast
+#' follows a Negative Binomial distribution, and multi-step forecasts
 #' are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
@@ -17,6 +17,7 @@
 #' Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the
 #' intermittent demand for slow-moving inventories: A modelling approach.
 #' *International Journal of Forecasting*, 28(2), 485--496.
+#' \doi{10.1016/j.ijforecast.2011.03.009}.
 #'
 #' @return A model specification.
 #'
@@ -68,7 +69,7 @@ train_negbines <- function(.data, specials, damped, ...) {
     abort("`damped` must be a boolean.")
   }
 
-  # Optimize parameters using Negative Binomial likelihood 
+  # Optimize parameters using Negative Binomial likelihood
   opt <- negbines_optimize(y, damped)
   x <- opt$solution
   prob <- x[1]
@@ -106,6 +107,9 @@ train_negbines <- function(.data, specials, damped, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_negative_binomial`; for h>1 the vector class is `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -126,24 +130,24 @@ forecast.NEGBINES <- function(object, new_data, specials = NULL, times = 10000, 
   mu_forecast <- object$alpha * object$last_y +
     object$phi * object$mean_y +
     (1 - object$alpha - object$phi) * object$last_mu
-  
+
   size <- mu_forecast * object$prob / (1 - object$prob)
   dist_first <- dist_negative_binomial(size = size, prob = object$prob)
-  
+
   if (h == 1) {
     return(dist_first)
   }
-  
+
   sim <- negbines_simulate(object, h, times)
   samples_rest <- as.list(as.data.frame(sim[, -1, drop = FALSE]))
   dist_rest <- dist_sample(samples_rest)
-  
+
   c(dist_first, dist_rest)
 }
 
 #' Extract fitted values from a NEGBINES model
 #'
-#' @inheritParams forecast.NEGBINES
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -160,7 +164,7 @@ fitted.NEGBINES <- function(object, ...) {
 
 #' Extract residuals from a NEGBINES model
 #'
-#' @inheritParams forecast.NEGBINES
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -184,6 +188,8 @@ model_sum.NEGBINES <- function(x) {
 #'
 #' @param x A fitted `NEGBINES` model object.
 #' @inheritParams forecast.NEGBINES
+#'
+#' @return A vector of future paths from a dataset using a fitted model.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -248,13 +254,13 @@ negbines_optimize <- function(y, damped) {
       log = TRUE
     ))
   }
-  
+
   # In the undamped case set the last parameter to 0
   if (!damped) {
     init_params <- c(0.5, mean(y), 0.3)
-    lb <- c(negbines_epsilon, negbines_epsilon, negbines_epsilon)
-    ub <- c(1 - negbines_epsilon, max(y) * 10, 1 - negbines_epsilon)
-    
+    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON)
+    ub <- c(1 - .NEGBINES_EPSILON, max(y) * 10, 1 - .NEGBINES_EPSILON)
+
     # Run the bounded optimization using nloptr
     opt <- nloptr(
       x0 = init_params,
@@ -268,20 +274,20 @@ negbines_optimize <- function(y, damped) {
 
     # In the damped case specify the full parameter vector
     init_params <- c(0.5, mean(y), 0.3, 0.1)
-    lb <- c(negbines_epsilon, negbines_epsilon, negbines_epsilon, 0)
-    ub <- c(1 - negbines_epsilon, max(y), 1 - negbines_epsilon, 1)
-    
+    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON, 0)
+    ub <- c(1 - .NEGBINES_EPSILON, max(y), 1 - .NEGBINES_EPSILON, 1)
+
     # run the bounded optimization with a linear constraint using nloptr
     opt <- nloptr(
       x0 = init_params,
       eval_f = function(x) negbines_nll(x, y),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[3] + x[4] - 1 + negbines_epsilon,
+      eval_g_ineq = function(x) x[3] + x[4] - 1 + .NEGBINES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
-  
+
   opt
 }
 
@@ -290,4 +296,3 @@ negbines_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by NEGBINES.")
 }
 
-negbines_epsilon <- 1e-4

@@ -13,7 +13,7 @@
 #' @references
 #' Harvey, A. C., & Fernandes, C. (1989). Time series models for count or
 #' qualitative observations. *Journal of Business & Economic Statistics*,
-#' 7(4), 407--417.
+#' 7(4), 407--417. \doi{10.1080/07350015.1989.10509750}.
 #'
 #' @return A model specification.
 #'
@@ -106,6 +106,8 @@ train_betanbb <- function(.data, specials, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of class `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -132,6 +134,8 @@ forecast.BETANBB <- function(object, new_data, specials = NULL, times = 10000, .
 #' @param x A fitted `BETANBB` model object.
 #' @inheritParams forecast.BETANBB
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -150,7 +154,8 @@ generate.BETANBB <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a BETANBB model
 #'
-#' @inheritParams forecast.BETANBB
+#' @inherit fitted.EMPDISTR
+#'
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -167,7 +172,7 @@ fitted.BETANBB <- function(object, ...) {
 
 #' Extract residuals from a BETANBB model
 #'
-#' @inheritParams forecast.BETANBB
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -204,7 +209,7 @@ betanbb_simulate <- function(object, h, times) {
   for (i in seq_len(h)) {
     # Sample p from Beta prior
     p_state <- rbeta(times, a_state, b_state)
-    
+
     # Sample observations from Negative Binomial likelihood
     y_new <- rnbinom(times, object$v, p_state)
     forecast_samples[, i] <- y_new
@@ -243,8 +248,8 @@ betanbb_optimize <- function(y) {
   nloptr(
     x0 = c(mean(y), 2, 2, 0.8),
     eval_f = function(x) nll_betanb(x, y),
-    lb = c(betanbb_epsilon, 1, betanbb_epsilon, betanbb_epsilon),
-    ub = c(Inf, Inf, Inf, 1 - betanbb_epsilon),
+    lb = c(.BETANBB_EPSILON, 1, .BETANBB_EPSILON, .BETANBB_EPSILON),
+    ub = c(Inf, Inf, Inf, 1 - .BETANBB_EPSILON),
     opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
   )
 }
@@ -253,4 +258,3 @@ betanbb_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by BETANBB.")
 }
 
-betanbb_epsilon <- 1e-4

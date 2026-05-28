@@ -7,11 +7,11 @@
 \method{forecast}{EMPDISTR}(object, new_data, specials = NULL, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which forecasts are required.}
 
 \item{new_data}{A tsibble containing future index values to forecast.}
 
-\item{specials}{Passed by \code{\link[fabletools:forecast]{fabletools::forecast.mdl_df()}}.}
+\item{specials}{Passed by \code{\link[fabletools:forecast.mdl_df]{fabletools::forecast.mdl_df()}}.}
 
 \item{...}{Other arguments passed to methods}
 }

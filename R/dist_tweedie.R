@@ -19,12 +19,12 @@
 #' @references
 #' Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie
 #' exponential dispersion model densities. *Statistics and Computing*,
-#' 15(4), 267--280.
+#' 15(4), 267--280. \doi{10.1007/s11222-005-4070-y}.
 #'
 #' @export
 #'
 #' @importFrom rlang abort
-#' @importFrom distributional new_dist covariance 
+#' @importFrom distributional new_dist covariance
 #' @importFrom stats rpois rgamma
 #'
 #' @examples
@@ -152,46 +152,46 @@ dtweedie <- function(x, mean = 1, dispersion = 1, power = 1.5, log = FALSE) {
 }
 
 #' Compute Tweedie CDF
-#' 
-#' Evaluates the Tweedie cumulative distribution function via the Compound Poisson-Gamma 
+#'
+#' Evaluates the Tweedie cumulative distribution function via the Compound Poisson-Gamma
 #' representation, dispatching to the C++ implementation `tweedieCDF`.
-#' 
+#'
 #' @param q The values the CDF is evaluated at.
 #' @param mean Mean parameter of the distribution.
 #' @param dispersion Dispersion parameter of the distribution.
 #' @param power Power parameter of the distribution.
 #' @param lower.tail Whether to return the lower tail probability.
 #' @param log.p Whether to return the logarithm of the probability.
-#' 
+#'
 #' @keywords internal
 ptweedie <- function(q, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
   cdf <- as.vector(tweedieCDF(q, mean, dispersion, power))
   if (!lower.tail) {
     cdf <- 1 - cdf
-  } 
+  }
   if (log.p) {
     cdf <- log(cdf)
-  } 
+  }
   cdf
 }
 
 #' Compute the Tweedie quantile function
-#' 
-#' Evaluates the Tweedie quantile function via the Newton-Raphson method based on the CDF 
+#'
+#' Evaluates the Tweedie quantile function via the Newton-Raphson method based on the CDF
 #' and density function implementations, dispatching to the C++ implementation `tweedieInvCDF`.
-#' 
+#'
 #' @param p The probabilities the quantile function is evaluated at.
 #' @param mean Mean parameter of the distribution.
 #' @param dispersion Dispersion parameter of the distribution.
 #' @param power Power parameter of the distribution.
-#' @param lower.tail Whether `p` represents lower tail probabilities. 
-#' @param log.p Whether `p` is given as log-probabilities.  
-#'  
+#' @param lower.tail Whether `p` represents lower tail probabilities.
+#' @param log.p Whether `p` is given as log-probabilities.
+#'
 #' @keywords internal
 qtweedie <- function(p, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
   if (lower.tail == FALSE) {
     p = 1 - p
-  } 
+  }
   invcdf <- as.vector(tweedieInvCDF(p, mean, dispersion, power))
   if (log.p) {
     invcdf <- log(invcdf)

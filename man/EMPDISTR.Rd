@@ -40,4 +40,5 @@ ts |>
 Hasni, M., Aguir, M. S., Babai, M. Z., & Jemai, Z. (2019). Spare parts
 demand forecasting: a review on bootstrapping methods. \emph{International
 Journal of Production Research}, 57(15--16), 4791--4804.
+\doi{10.1080/00207543.2018.1424375}.
 }

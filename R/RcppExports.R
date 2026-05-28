@@ -9,18 +9,6 @@ betaDynamic <- function(y, v, a0, b0, w) {
     .Call('_fable_intermittent_betaDynamic', PACKAGE = 'fable.intermittent', y, v, a0, b0, w)
 }
 
-gasFilterPois <- function(y, psi0, phi, rho, xi0, k, period) {
-    .Call('_fable_intermittent_gasFilterPois', PACKAGE = 'fable.intermittent', y, psi0, phi, rho, xi0, k, period)
-}
-
-gasFilterNbinom <- function(y, psi0, phi, rho, xi0, k, period, alpha) {
-    .Call('_fable_intermittent_gasFilterNbinom', PACKAGE = 'fable.intermittent', y, psi0, phi, rho, xi0, k, period, alpha)
-}
-
-gasFilterBern <- function(y, psi0, phi, rho, xi0, k, period) {
-    .Call('_fable_intermittent_gasFilterBern', PACKAGE = 'fable.intermittent', y, psi0, phi, rho, xi0, k, period)
-}
-
 dampedSES <- function(y, mu0, alpha, phi) {
     .Call('_fable_intermittent_dampedSES', PACKAGE = 'fable.intermittent', y, mu0, alpha, phi)
 }
