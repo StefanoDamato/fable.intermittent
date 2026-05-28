@@ -248,8 +248,8 @@ betanbb_optimize <- function(y) {
   nloptr(
     x0 = c(mean(y), 2, 2, 0.8),
     eval_f = function(x) nll_betanb(x, y),
-    lb = c(betanbb_epsilon, 1, betanbb_epsilon, betanbb_epsilon),
-    ub = c(Inf, Inf, Inf, 1 - betanbb_epsilon),
+    lb = c(.BETANBB_EPSILON, 1, .BETANBB_EPSILON, .BETANBB_EPSILON),
+    ub = c(Inf, Inf, Inf, 1 - .BETANBB_EPSILON),
     opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
   )
 }
@@ -258,4 +258,3 @@ betanbb_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by BETANBB.")
 }
 
-betanbb_epsilon <- 1e-4

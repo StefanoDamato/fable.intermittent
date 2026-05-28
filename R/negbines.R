@@ -258,8 +258,8 @@ negbines_optimize <- function(y, damped) {
   # In the undamped case set the last parameter to 0
   if (!damped) {
     init_params <- c(0.5, mean(y), 0.3)
-    lb <- c(negbines_epsilon, negbines_epsilon, negbines_epsilon)
-    ub <- c(1 - negbines_epsilon, max(y) * 10, 1 - negbines_epsilon)
+    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON)
+    ub <- c(1 - .NEGBINES_EPSILON, max(y) * 10, 1 - .NEGBINES_EPSILON)
 
     # Run the bounded optimization using nloptr
     opt <- nloptr(
@@ -274,8 +274,8 @@ negbines_optimize <- function(y, damped) {
 
     # In the damped case specify the full parameter vector
     init_params <- c(0.5, mean(y), 0.3, 0.1)
-    lb <- c(negbines_epsilon, negbines_epsilon, negbines_epsilon, 0)
-    ub <- c(1 - negbines_epsilon, max(y), 1 - negbines_epsilon, 1)
+    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON, 0)
+    ub <- c(1 - .NEGBINES_EPSILON, max(y), 1 - .NEGBINES_EPSILON, 1)
 
     # run the bounded optimization with a linear constraint using nloptr
     opt <- nloptr(
@@ -283,7 +283,7 @@ negbines_optimize <- function(y, damped) {
       eval_f = function(x) negbines_nll(x, y),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[3] + x[4] - 1 + negbines_epsilon,
+      eval_g_ineq = function(x) x[3] + x[4] - 1 + .NEGBINES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -296,4 +296,3 @@ negbines_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by NEGBINES.")
 }
 
-negbines_epsilon <- 1e-4

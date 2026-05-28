@@ -241,7 +241,7 @@ staticdistr_fit_hsnb <- function(occurrence, shifted_demand) {
   if (length(shifted_demand) > 0) {
     params <- fit_nbinom(shifted_demand)
   } else {
-    params <- c(size = 100, prob = 1 - staticdistr_epsilon)
+    params <- c(size = 100, prob = 1 - .STATICDISTR_EPSILON)
   }
   pzero = mean(1 - occurrence)
   make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
@@ -267,4 +267,3 @@ staticdistr_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by STATICDISTR.")
 }
 
-staticdistr_epsilon <- 1e-4

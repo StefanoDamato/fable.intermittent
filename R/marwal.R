@@ -130,7 +130,7 @@ marwal_transition_matrix <- function(occurrence, mean_y) {
   ), 2, 2)
 
   # Extract transition probabilities
-  lambda <- max(num[2, 2] / sum(num[2, ]), marwal_epsilon)
+  lambda <- max(num[2, 2] / sum(num[2, ]), .MARWAL_EPSILON)
   xi <- num[1, 2] / sum(num[1, ])
   p00 <- 1 - xi
   if (sum(num[1, ]) == 0) lambda <- 1
@@ -288,7 +288,6 @@ generate.MARWAL <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
-marwal_epsilon <- 1e-04
 
 
 # # ===========================================================================

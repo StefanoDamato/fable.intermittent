@@ -310,9 +310,9 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
 
   # In the undamped case, set the last parameter to 0
   if (!damped) {
-    init_params <- c(min(mean(occurrence), 1 - hspes_epsilon), 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon)
-    ub <- c(1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds
     opt <- nloptr(
@@ -325,9 +325,9 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(min(mean(occurrence), 1 - hspes_epsilon), 0.2, 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon, hspes_epsilon)
-    ub <- c(1 - hspes_epsilon, 1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2, 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds and a linear constraint
     opt <-nloptr(
@@ -335,7 +335,7 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
       eval_f = function(x) nll_occ(x, occurrence),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + hspes_epsilon,
+      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -358,16 +358,16 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
 
   # When demand is constant optimisation is not needed
   if (length(unique(shifted_demand)) == 1) {
-    lambda0 <- max(unique(shifted_demand), hspes_epsilon)
+    lambda0 <- max(unique(shifted_demand), .HSPES_EPSILON)
     opt <- list(solution = c(lambda0, 0, 0))
     return(opt)
   }
 
   # In the undamped case, set the last parameter to 0
   if (!damped) {
-    init_params <- c(max(mean(shifted_demand), hspes_epsilon), 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon)
-    ub <- c(max(shifted_demand) * 10, 1 - hspes_epsilon)
+    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON)
 
     # Run the optimization using nloptr with bounds
     opt <-nloptr(
@@ -381,9 +381,9 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(max(mean(shifted_demand), hspes_epsilon), 0.2, 0.2)
-    lb <- c(hspes_epsilon, hspes_epsilon, hspes_epsilon)
-    ub <- c(max(shifted_demand) * 10, 1 - hspes_epsilon, 1 - hspes_epsilon)
+    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2, 0.2)
+    lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
+    ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
 
     # run the optimization using nloptr with bounds and a linear constraint
     opt <- nloptr(
@@ -391,7 +391,7 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
       eval_f = function(x) nll_dem(x, shifted_demand),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + hspes_epsilon,
+      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
@@ -403,4 +403,3 @@ hspes_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by HSPES.")
 }
 
-hspes_epsilon <- 1e-4

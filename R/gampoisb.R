@@ -253,8 +253,8 @@ gampoisb_optimize <- function(y) {
   nloptr(
     x0 = c(1, 1, 0.8),
     eval_f = function(x) nll_gampois(x, y),
-    lb = c(gampoisb_epsilon, gampoisb_epsilon, gampoisb_epsilon),
-    ub = c(Inf, Inf, 1 - gampoisb_epsilon),
+    lb = c(.GAMPOISB_EPSILON, .GAMPOISB_EPSILON, .GAMPOISB_EPSILON),
+    ub = c(Inf, Inf, 1 - .GAMPOISB_EPSILON),
     opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
   )
 }
@@ -263,4 +263,3 @@ gampoisb_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by GAMPOISB.")
 }
 
-gampoisb_epsilon <- 1e-4
