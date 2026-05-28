@@ -2,7 +2,21 @@ Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
 Version: 0.1.0
 Authors@R: 
-    person("Stefano", "Damato", , "stefano.damato@supsi.ch", role = c("aut", "cre"))
+    c(person(given  ="Stefano", 
+             family ="Damato",
+             role   = c("aut", "cre", "cph")
+             email  = "stefano.damato@supsi.ch",
+             comment = c(ORCID = "0009-0001-0225-3736")),
+      person(given = "Lorenzo",
+             family = "Zambon",
+             role = c("aut"),
+             email = "lorenzo.zambon@idsia.ch",
+             comment = c(ORCID = "0000-0002-8939-993X")),
+      person(given = "Dario",
+             family = "Azzimonti",
+             role = c("aut"),
+             email = "dario.azzimonti@gmail.com",
+             comment = c(ORCID = "0000-0001-5080-3061")))
 Author: Stefano Damato
 Maintainer: Stefano Damato <stefano.damato@supsi.ch>
 Description: Extends the 'fable' framework to support forecasting methods 
