@@ -17,8 +17,6 @@ Authors@R:
              role = c("aut"),
              email = "dario.azzimonti@gmail.com",
              comment = c(ORCID = "0000-0001-5080-3061")))
-Author: Stefano Damato
-Maintainer: Stefano Damato <stefano.damato@supsi.ch>
 Description: Extends the 'fable' framework to support forecasting methods 
     specifically designed for intermittent time series data, where demand 
     occurs sporadically with many zero values.
