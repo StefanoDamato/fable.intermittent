@@ -21,5 +21,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Stefano Damato \email{stefano.damato@supsi.ch}
 
+Authors:
+\itemize{
+  \item Stefano Damato \email{stefano.damato@supsi.ch}
+}
+
 }
 \keyword{internal}

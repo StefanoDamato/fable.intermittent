@@ -6,7 +6,7 @@
 #' components: a Bernoulli occurrence process (probability of non-zero demand)
 #' and a shifted Poisson demand-size process. Both components are driven by
 #' independent (optionally damped) exponential smoothing state equations.
-#' The first-step forecast follows an hurdle-shifted Poisson distribution, 
+#' The first-step forecast follows an hurdle-shifted Poisson distribution,
 #' multi-step forecasts are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
@@ -57,7 +57,7 @@ train_hspes <- function(.data, specials, damped, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by HSPES.")
   }
-  
+
   y <- unclass(.data)[[measured_vars(.data)]]
 
   if (all(is.na(y))) {
@@ -78,7 +78,7 @@ train_hspes <- function(.data, specials, damped, ...) {
   decomp <- crostons_decomp(y)
   occurrence <- decomp$occurrence
   intervals <- decomp$intervals
-  shifted_demand <- decomp$demand - 1  
+  shifted_demand <- decomp$demand - 1
 
   # Optimize occurrence and demand components separately
   opt_occ <- hspes_optimize_occurrence(occurrence, damped)
@@ -147,6 +147,8 @@ train_hspes <- function(.data, specials, damped, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of class `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -163,11 +165,11 @@ forecast.HSPES <- function(object, new_data, specials = NULL, times = 10000, ...
     abort("`times` must be a positive integer.")
   }
 
-  # Predict the next p and lambda values 
+  # Predict the next p and lambda values
   p_forecast <- object$alpha_occ * object$last_occurrence +
     object$phi_occ * object$mean_occurrence +
     (1 - object$alpha_occ - object$phi_occ) * object$last_p
-  
+
   # Predict the next lambda value
   lambda_forecast <- object$alpha_dem * object$last_shifted_demand +
     object$phi_dem * object$mean_shifted_demand +
@@ -194,6 +196,8 @@ forecast.HSPES <- function(object, new_data, specials = NULL, times = 10000, ...
 #' @param x A fitted `HSPES` model object.
 #' @inheritParams forecast.HSPES
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -212,7 +216,7 @@ generate.HSPES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a HSPES model
 #'
-#' @inheritParams forecast.HSPES
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -229,7 +233,7 @@ fitted.HSPES <- function(object, ...) {
 
 #' Extract residuals from a HSPES model
 #'
-#' @inheritParams forecast.HSPES
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

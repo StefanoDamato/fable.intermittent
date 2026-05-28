@@ -62,7 +62,7 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
   # Remove leading zeros for hot_start
   start <- ifelse(hot_start, min(which(y != 0)), 1)
   y_emp <- y[start:length(y)]
-  
+
   # Fit the model by simply repeating the mean
   fitted <- rep(mean(y_emp), length(y))
   residuals <- y - fitted
@@ -83,7 +83,6 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
 #' estimated from the training data at each forecast horizon.
 #'
 #' @inheritParams generics::forecast
-#' @param object A fitted `EMPDISTR` model object.
 #' @param new_data A tsibble containing future index values to forecast.
 #' @param specials Passed by [fabletools::forecast.mdl_df()].
 #'
@@ -133,7 +132,7 @@ generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from an EMPDISTR model
 #'
-#' @param object A fitted `EMPDISTR` model object.
+#' @param object A model for which fitted values are required.
 #' @param ... Not used.
 #'
 #' @return A numeric vector of fitted values.
@@ -153,7 +152,7 @@ fitted.EMPDISTR <- function(object, ...) {
 
 #' Extract residuals from an EMPDISTR model
 #'
-#' @param object A fitted `EMPDISTR` model object.
+#' @param object A model for which residuals are required.
 #' @param ... Not used.
 #'
 #' @return A numeric vector of residuals.

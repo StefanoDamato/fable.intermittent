@@ -7,7 +7,7 @@
 \method{residuals}{WSS}(object, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which forecasts are required.}
 
 \item{...}{Other arguments passed to methods}
 }

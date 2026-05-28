@@ -12,7 +12,6 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 LinkingTo: Rcpp, RcppArmadillo
 Depends: 
     R (>= 4.1.0),
@@ -32,3 +31,4 @@ Suggests:
 VignetteBuilder: knitr
 URL: https://github.com/yourusername/fable.intermittent
 BugReports: https://github.com/yourusername/fable.intermittent/issues
+Config/roxygen2/version: 8.0.0

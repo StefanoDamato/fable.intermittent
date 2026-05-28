@@ -7,9 +7,12 @@
 \method{residuals}{MARWAL}(object, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which residuals are required.}
 
-\item{...}{Other arguments passed to methods}
+\item{...}{Not used.}
+}
+\value{
+A numeric vector of residuals.
 }
 \description{
 Extract residuals from a MARWAL model

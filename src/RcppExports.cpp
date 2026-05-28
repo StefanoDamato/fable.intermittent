@@ -40,58 +40,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// gasFilterPois
-List gasFilterPois(NumericVector y, double psi0, double phi, double rho, double xi0, double k, int period);
-RcppExport SEXP _fable_intermittent_gasFilterPois(SEXP ySEXP, SEXP psi0SEXP, SEXP phiSEXP, SEXP rhoSEXP, SEXP xi0SEXP, SEXP kSEXP, SEXP periodSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
-    Rcpp::traits::input_parameter< double >::type psi0(psi0SEXP);
-    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    Rcpp::traits::input_parameter< double >::type xi0(xi0SEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type period(periodSEXP);
-    rcpp_result_gen = Rcpp::wrap(gasFilterPois(y, psi0, phi, rho, xi0, k, period));
-    return rcpp_result_gen;
-END_RCPP
-}
-// gasFilterNbinom
-List gasFilterNbinom(NumericVector y, double psi0, double phi, double rho, double xi0, double k, int period, double alpha);
-RcppExport SEXP _fable_intermittent_gasFilterNbinom(SEXP ySEXP, SEXP psi0SEXP, SEXP phiSEXP, SEXP rhoSEXP, SEXP xi0SEXP, SEXP kSEXP, SEXP periodSEXP, SEXP alphaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
-    Rcpp::traits::input_parameter< double >::type psi0(psi0SEXP);
-    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    Rcpp::traits::input_parameter< double >::type xi0(xi0SEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type period(periodSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    rcpp_result_gen = Rcpp::wrap(gasFilterNbinom(y, psi0, phi, rho, xi0, k, period, alpha));
-    return rcpp_result_gen;
-END_RCPP
-}
-// gasFilterBern
-List gasFilterBern(NumericVector y, double psi0, double phi, double rho, double xi0, double k, int period);
-RcppExport SEXP _fable_intermittent_gasFilterBern(SEXP ySEXP, SEXP psi0SEXP, SEXP phiSEXP, SEXP rhoSEXP, SEXP xi0SEXP, SEXP kSEXP, SEXP periodSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
-    Rcpp::traits::input_parameter< double >::type psi0(psi0SEXP);
-    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    Rcpp::traits::input_parameter< double >::type xi0(xi0SEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type period(periodSEXP);
-    rcpp_result_gen = Rcpp::wrap(gasFilterBern(y, psi0, phi, rho, xi0, k, period));
-    return rcpp_result_gen;
-END_RCPP
-}
 // dampedSES
 NumericVector dampedSES(NumericVector y, double mu0, double alpha, double phi);
 RcppExport SEXP _fable_intermittent_dampedSES(SEXP ySEXP, SEXP mu0SEXP, SEXP alphaSEXP, SEXP phiSEXP) {
@@ -153,9 +101,6 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_fable_intermittent_gammaDynamic", (DL_FUNC) &_fable_intermittent_gammaDynamic, 4},
     {"_fable_intermittent_betaDynamic", (DL_FUNC) &_fable_intermittent_betaDynamic, 5},
-    {"_fable_intermittent_gasFilterPois", (DL_FUNC) &_fable_intermittent_gasFilterPois, 7},
-    {"_fable_intermittent_gasFilterNbinom", (DL_FUNC) &_fable_intermittent_gasFilterNbinom, 8},
-    {"_fable_intermittent_gasFilterBern", (DL_FUNC) &_fable_intermittent_gasFilterBern, 7},
     {"_fable_intermittent_dampedSES", (DL_FUNC) &_fable_intermittent_dampedSES, 4},
     {"_fable_intermittent_tweedieDensity", (DL_FUNC) &_fable_intermittent_tweedieDensity, 5},
     {"_fable_intermittent_tweedieCDF", (DL_FUNC) &_fable_intermittent_tweedieCDF, 4},

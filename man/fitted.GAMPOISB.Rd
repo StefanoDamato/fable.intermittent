@@ -7,9 +7,12 @@
 \method{fitted}{GAMPOISB}(object, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which fitted values are required.}
 
-\item{...}{Other arguments passed to methods}
+\item{...}{Not used.}
+}
+\value{
+A numeric vector of fitted values.
 }
 \description{
 Extract fitted values from a GAMPOISB model

@@ -7,7 +7,7 @@
 \method{fitted}{EMPDISTR}(object, ...)
 }
 \arguments{
-\item{object}{A fitted \code{EMPDISTR} model object.}
+\item{object}{A model for which fitted values are required.}
 
 \item{...}{Not used.}
 }

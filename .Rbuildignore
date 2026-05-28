@@ -15,3 +15,5 @@
 ^\.Rcheck$
 ^exp_tweedie$
 ^data-raw$
+^\.positai$
+^\.claude$
