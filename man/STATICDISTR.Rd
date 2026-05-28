@@ -51,4 +51,5 @@ ts |>
 \references{
 Kolassa, S. (2016). Evaluating predictive count data distributions in retail
 sales forecasting. \emph{International Journal of Forecasting}, 32(3), 788--803.
+\doi{10.1016/j.ijforecast.2015.12.004}.
 }

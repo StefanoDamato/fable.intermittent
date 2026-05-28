@@ -14,6 +14,7 @@
 #' Willemain, T. R., Smart, C. N., & Schwarz, H. F. (2004). A new approach to
 #' forecasting intermittent demand for service parts inventories.
 #' *International Journal of Forecasting*, 20(3), 375--387.
+#' \doi{10.1016/S0169-2070(03)00013-X}.
 #'
 #' @return A model specification.
 #'
@@ -47,13 +48,13 @@ WSS <- function(formula, ...) {
 }
 
 train_wss <- function(.data, specials, ...) {
-  
+
   # Extrapolate values from the tsibble
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by WSS.")
   }
   y <- unclass(.data)[[measured_vars(.data)]]
-  
+
   # Check for missing values and all-zero series
   if (all(is.na(y))) {
     abort("All observations are missing, a model cannot be estimated without data.")
@@ -106,6 +107,8 @@ train_wss <- function(.data, specials, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of forecasts of class `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -132,6 +135,8 @@ forecast.WSS <- function(object, new_data, specials = NULL, times = 10000, ...) 
 #' @param x A fitted `WSS` model object.
 #' @inheritParams forecast.WSS
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -150,7 +155,7 @@ generate.WSS <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a WSS model
 #'
-#' @inheritParams forecast.WSS
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -167,7 +172,7 @@ fitted.WSS <- function(object, ...) {
 
 #' Extract residuals from a WSS model
 #'
-#' @inheritParams forecast.WSS
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -189,7 +194,7 @@ model_sum.WSS <- function(x) {
 
 wss_simulate <- function(object, h, times) {
   forecast_samples <- matrix(0, nrow = times, ncol = h)
-  
+
   # Set the occurrence state and sample a value
   occ_state <- rep(object$last_occurrence, times)
   for (i in seq_len(h)) {

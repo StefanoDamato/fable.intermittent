@@ -18,6 +18,7 @@
 #' @references
 #' Kolassa, S. (2016). Evaluating predictive count data distributions in retail
 #' sales forecasting. *International Journal of Forecasting*, 32(3), 788--803.
+#' \doi{10.1016/j.ijforecast.2015.12.004}.
 #'
 #' @return A model specification.
 #'
@@ -40,7 +41,7 @@
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
 #' @export
-STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"), 
+STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
                         hot_start = FALSE, criterion = c("aic", "bic"), ...) {
   distr <- arg_match(distr)
   criterion <- arg_match(criterion)
@@ -52,7 +53,7 @@ STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsn
       xreg = staticdistr_no_xreg
     )
   )
-  new_model_definition(staticdistr_model, {{ formula }}, distr = distr, 
+  new_model_definition(staticdistr_model, {{ formula }}, distr = distr,
                        hot_start = hot_start, criterion = criterion, ...)
 }
 
@@ -60,7 +61,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by STATICDISTR.")
   }
-  
+
   y <- unclass(.data)[[measured_vars(.data)]]
 
   if (all(is.na(y))) {
@@ -69,7 +70,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   if (anyNA(y)) {
     abort("Missing values are not supported by STATICDISTR.")
   }
-  
+
   if (hot_start) {
     start <- which(y > 0)[1]
     y <- y[start:length(y)]
@@ -83,14 +84,14 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   } else {
     to_eval <- distr
   }
-  
-  
+
+
   # Apply Croston's decomposition
   decomp <- crostons_decomp(y)
   occurrence <- decomp$occurrence
   shifted_demand <- decomp$demand - 1
 
-  #Fit the distributions 
+  #Fit the distributions
   fit_distr <- list()
   if ("pois" %in% to_eval) {
     fit_distr[["pois"]] <- staticdistr_fit_pois(y)
@@ -117,7 +118,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     pred_distr <- fit_distr[[distr]]
     ic <- NULL
   }
-  
+
   # Compute fitted values and residuals
   init_na <- rep(NA, start - 1)
   fitted <- c(init_na, rep(mean(pred_distr), length(y)))
@@ -140,6 +141,9 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
 #'
 #' @inheritParams forecast.EMPDISTR
 #'
+#' @return A distribution vector. The class depends on the static distribution
+#'    fitted by the `STATICDISTR` method.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -160,6 +164,8 @@ forecast.STATICDISTR <- function(object, new_data, specials = NULL, ...) {
 #' @param x A fitted `STATICDISTR` model object.
 #' @inheritParams forecast.STATICDISTR
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -177,7 +183,7 @@ generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a STATICDISTR model
 #'
-#' @inheritParams forecast.STATICDISTR
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -194,7 +200,7 @@ fitted.STATICDISTR <- function(object, ...) {
 
 #' Extract residuals from a STATICDISTR model
 #'
-#' @inheritParams forecast.STATICDISTR
+#' @inheritParams residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -246,7 +252,7 @@ staticdistr_information <- function(distr, y, criterion){
   loglik <- sum(distributional::log_likelihood(distr, y))
   n_obs <- length(y)
   n_params <- length(distributional::parameters(distr))
-  
+
   if (criterion == "aic") {
     -2 * loglik + 2 * n_params
   } else if (criterion == "bic") {

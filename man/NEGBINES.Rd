@@ -43,4 +43,5 @@ ts |>
 Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the
 intermittent demand for slow-moving inventories: A modelling approach.
 \emph{International Journal of Forecasting}, 28(2), 485--496.
+\doi{10.1016/j.ijforecast.2011.03.009}.
 }

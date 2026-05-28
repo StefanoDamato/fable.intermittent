@@ -13,7 +13,7 @@
 #' @references
 #' Harvey, A. C., & Fernandes, C. (1989). Time series models for count or
 #' qualitative observations. *Journal of Business & Economic Statistics*,
-#' 7(4), 407--417.
+#' 7(4), 407--417. \doi{10.1080/07350015.1989.10509750}.
 #'
 #' @return A model specification.
 #'
@@ -103,7 +103,8 @@ train_gampoisb <- function(.data, specials, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
-#' @return A distribution vector of class `dist_sample`.
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_negative_binomial`; for h>1 the vector class is `dist_sample`.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

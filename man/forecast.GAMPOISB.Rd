@@ -19,7 +19,8 @@ distribution.}
 \item{...}{Other arguments passed to methods}
 }
 \value{
-A distribution vector of class \code{dist_sample}.
+A distribution vector of forecasts: for h=1 the vector class is
+\code{dist_negative_binomial}; for h>1 the vector class is \code{dist_sample}.
 }
 \description{
 Produces forecast distributions from a fitted GAMPOISB model using

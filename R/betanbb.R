@@ -13,7 +13,7 @@
 #' @references
 #' Harvey, A. C., & Fernandes, C. (1989). Time series models for count or
 #' qualitative observations. *Journal of Business & Economic Statistics*,
-#' 7(4), 407--417.
+#' 7(4), 407--417. \doi{10.1080/07350015.1989.10509750}.
 #'
 #' @return A model specification.
 #'

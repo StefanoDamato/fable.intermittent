@@ -1,8 +1,8 @@
 #' Tweedie Exponential Smoothing
 #'
 #' Exponential smoothing state space model for intermittent demand with a
-#' Tweedie observation distribution. The conditional mean of the Tweedie 
-#' is governed by a (optionally damped) exponential smoothing process. 
+#' Tweedie observation distribution. The conditional mean of the Tweedie
+#' is governed by a (optionally damped) exponential smoothing process.
 #' The power and dispersion parameter are estimated to maximise the likelihood.
 #' The Tweedie family naturally models both zeros and large spikes
 #' via its compound Poisson-Gamma nature. The first-step forecast follows
@@ -33,9 +33,10 @@
 #'
 #' @references
 #'
-#' Damato, S., Azzimonti D., & Corani, G. (2025). Forecasting intermittent 
-#' time series with Gaussian Processes and Tweedie likelihood. 
-#' *International Journal of Forecasting*  xx(x), xxx--xxx.
+#' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
+#' time series with Gaussian Processes and Tweedie likelihood.
+#' *International Journal of Forecasting*  (in press).
+#' \doi{10.1016/j.ijforecast.2025.10.001}.
 #'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
@@ -120,6 +121,9 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_tweedie`; for h>1 the vector class is `dist_sample`.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -162,6 +166,8 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
 #' @param x A fitted `TWEES` model object.
 #' @inheritParams forecast.TWEES
 #'
+#' @return A vector of future paths from a dataset using a fitted model.
+#'
 #' @examples
 #' ts <- tsibble::tsibble(
 #'   time = as.Date("2026-01-01") + seq_len(40),
@@ -180,7 +186,7 @@ generate.TWEES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a TWEES model
 #'
-#' @inheritParams forecast.TWEES
+#' @inherit fitted.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -197,7 +203,7 @@ fitted.TWEES <- function(object, ...) {
 
 #' Extract residuals from a TWEES model
 #'
-#' @inheritParams forecast.TWEES
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -245,7 +251,7 @@ twees_simulate <- function(object, h, times) {
       (1 - object$alpha - object$theta) * mu_state
     mu_state <- pmax(mu_state, twees_epsilon)
   }
-  
+
   forecast_samples <- forecast_samples * object$scale_factor
   forecast_samples
 }

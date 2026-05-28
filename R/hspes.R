@@ -18,6 +18,7 @@
 #' Snyder, R. D., Ord, J. K., & Beaumont, A. (2012). Forecasting the
 #' intermittent demand for slow-moving inventories: A modelling approach.
 #' *International Journal of Forecasting*, 28(2), 485--496.
+#' \doi{10.1016/j.ijforecast.2011.03.009}.
 #'
 #' @return A model specification.
 #'
@@ -147,7 +148,8 @@ train_hspes <- function(.data, specials, damped, ...) {
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
-#' @return A distribution vector of class `dist_sample`.
+#' @return A distribution vector of forecasts: for h=1 the vector class is
+#' `dist_inflated` (hurdle-shifted Poisson); for h>1 the vector class is `dist_sample`.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

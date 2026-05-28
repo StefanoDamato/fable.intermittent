@@ -15,6 +15,10 @@
 
 \item{...}{Other arguments passed to methods}
 }
+\value{
+A distribution vector. The class depends on the static distribution
+fitted by the \code{STATICDISTR} method.
+}
 \description{
 Produces forecast distributions from a fitted STATICDISTR model.
 }

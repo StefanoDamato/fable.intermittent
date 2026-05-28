@@ -15,6 +15,9 @@
 
 \item{...}{Other arguments passed to methods}
 }
+\value{
+A vector of future paths from a dataset using a fitted model.
+}
 \description{
 Generate sample paths from a TWEES model
 }

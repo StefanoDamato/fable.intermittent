@@ -18,6 +18,10 @@ distribution.}
 
 \item{...}{Other arguments passed to methods}
 }
+\value{
+A distribution vector of forecasts: for h=1 the vector class is
+\code{dist_tweedie}; for h>1 the vector class is \code{dist_sample}.
+}
 \description{
 Produces forecast distributions from a fitted TWEES model using simulation.
 }

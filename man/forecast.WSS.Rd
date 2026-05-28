@@ -18,6 +18,9 @@ distribution.}
 
 \item{...}{Other arguments passed to methods}
 }
+\value{
+A distribution vector of forecasts of class \code{dist_sample}.
+}
 \description{
 Produces forecast distributions from a fitted WSS model using simulation.
 }

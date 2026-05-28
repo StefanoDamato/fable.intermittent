@@ -11,7 +11,7 @@
 #' @references
 #'
 #' Sbrana, G. (2025). Markov Walk and Walmart sales prediction.
-#' *Journal of the Operational Research Society*, 1–12.
+#' *Journal of the Operational Research Society*, 1--12. \doi{10.1080/01605682.2025.2569661}.
 #'
 #' @return A model specification.
 #'

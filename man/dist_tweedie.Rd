@@ -37,5 +37,5 @@ distributional::generate(d, 5)
 \references{
 Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie
 exponential dispersion model densities. \emph{Statistics and Computing},
-15(4), 267--280.
+15(4), 267--280. \doi{10.1007/s11222-005-4070-y}.
 }

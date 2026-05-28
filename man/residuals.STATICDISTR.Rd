@@ -7,9 +7,9 @@
 \method{residuals}{STATICDISTR}(object, ...)
 }
 \arguments{
-\item{object}{A model for which forecasts are required.}
+\item{object}{A model for which residuals are required.}
 
-\item{...}{Other arguments passed to methods}
+\item{...}{Not used.}
 }
 \description{
 Extract residuals from a STATICDISTR model
