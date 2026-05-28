@@ -1,6 +1,6 @@
 Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
     person("Stefano", "Damato", , "stefano.damato@supsi.ch", role = c("aut", "cre"))
 Author: Stefano Damato
@@ -8,7 +8,7 @@ Maintainer: Stefano Damato <stefano.damato@supsi.ch>
 Description: Extends the 'fable' framework to support forecasting methods 
     specifically designed for intermittent time series data, where demand 
     occurs sporadically with many zero values.
-License: GPL-3
+License: LGPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
