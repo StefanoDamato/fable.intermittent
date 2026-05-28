@@ -1,20 +1,30 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 # fable.intermittent
 
 <!-- badges: start -->
-
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Forecasting models for intermittent time series, extending the
-[fable](https://fable.tidyverts.org/) framework.
+Forecasting models for intermittent time series, extending the [fable](https://fable.tidyverts.org/) framework.
+
 
 ## Installation
 
-You can install the development version of fable.intermittent from
-[GitHub](https://github.com/StefanoDamato/fable.intermittent) with:
+You can install the development version of fable.intermittent from [GitHub](https://github.com/StefanoDamato/fable.intermittent) with:
 
 ``` r
 # install.packages("devtools")
@@ -25,8 +35,9 @@ devtools::install_github("StefanoDamato/fable.intermittent", build_vignettes = T
 
 This is a basic example which shows you how to solve a common problem:
 
-``` r
+```{r example}
 library(fable.intermittent)
-#> Loading required package: fabletools
 ## basic example code
 ```
+
+
