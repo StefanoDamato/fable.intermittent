@@ -5,7 +5,7 @@ Authors@R:
     c(person(given  ="Stefano", 
              family ="Damato",
              role   = c("aut", "cre", "cph"),
-             email  = "stefano.damato@supsi.ch",
+             email  = "stefanodamato128@gmail.com",
              comment = c(ORCID = "0009-0001-0225-3736")),
       person(given = "Lorenzo",
              family = "Zambon",
