@@ -1,0 +1,143 @@
+---
+title: "Forecasting intermittent time series with fable.intermittent"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Forecasting intermittent time series with fable.intermittent}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoded{UTF-8}
+---
+
+```{r seed, echo=FALSE}
+set.seed(42)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+options(tibble.width = Inf, knitr.kable.NA = "")
+```
+
+# Introduction
+
+`fable.intermittent` is an R package for modeling and forecasting intermittent time series in the `tidyverts` framework, providing a suite of probabilistic methods and data sets. 
+This vignette introduces the main features and demonstrates basic usage.
+
+# Installation
+
+You can install the development version from GitHub:
+
+```r
+# install.packages("devtools")
+devtools::install_github("StefanoDamato/fable.intermittent")
+```
+
+# Usage
+
+We show different features of the package, including the data sets, a pipeline to fit models, generate forecast and evaluate them, and our implementation of the Tweedie distribution. First, load the package.
+
+```{r libraries, message=FALSE}
+library(fable.intermittent)
+```
+
+TODO: plotting a t.s. as an example?
+
+## Data
+
+The package includes two data sets,`auto` and `raf`. Each data set is saved as a `tsibble` object, which is a tidy data structure for time series data.
+The identifiers of the time series are stored in the `series_id` column. Time indices are stored in the `index` column. The observed values are stored in the `value` column.
+
+In this vignette, we use a subset sampling 200 time series from the `auto` data set, which contains 3000 time series of monthly sales of spare parts for cars. We use the `filter()` function to select the desired time series. Each time series is composed by 24 observations spanning from January 2010 to December 2011.
+
+```{r data}
+data(auto)
+idx <- paste0("TS", sample(3000, 200))
+data <- auto |>
+  dplyr::filter(series_id %in% idx)
+```
+
+```{r data_tab, echo=FALSE, results='asis'}
+knitr::kable(head(data), caption = "First observations of the data subset")
+```
+
+## Fitting and forecasting
+
+The package provides several models from the literature, including:
+
+- `BETANBB()`
+- `EMPDISTR()`
+- `GAMPOISB()`
+- `HSPES()`
+- `MARWAL()`
+- `NEGBINES()`
+- `VZ()`
+- `WSS()`
+
+Moreover, two novel methods are implemented:
+
+- `TWEES()`
+- `STATICDISTR()`
+
+See the documentation for details on each function.
+
+Before fitting the methods, we use the `filter()` function to drop the last 6 observation from each time series, which will be used for evaluating the forecasts. The methods are fitted using the `model()` function. In this vignette, we only use a pool of 4 models, two of which are the novel ones.
+
+```{r fit, echo=FALSE}
+fit <- data |>
+  dplyr::filter(index <= tsibble::yearmonth("2011 June")) |>
+  fabletools::model(
+    betanbb = BETANBB(value),
+    staticdistr = STATICDISTR(value),
+    twees = TWEES(value),
+    wss = WSS(value)
+  )
+```
+
+```{r fit_tab, echo=FALSE, results='asis'}
+knitr::kable(as.data.frame(head(fit), stringsAsFactors = FALSE), 
+             escape = TRUE,
+             caption = "Fitted models")
+```
+
+TODO: I have not been able to display correctly the method name (when printed they appear as `<NAME>`). Maybe Claude will?
+
+Forecasts are generated using the `forecast()` function, which produces a `fable` object containing the forecasts and their associated uncertainty. Other than the time series identifiers and the time indices, it contains a `.model` column that indicates the method used to generate the forecasts, a `value` column storing the predictive distributions (implemented as `distributional` objects), and a `.mean` column for the point forecast (the mean).
+We generate forecasts for the next 6 months.
+
+```{r fc, echo=FALSE}
+fc <- fit |>
+  fabletools::forecast(h = "6 months")
+```
+
+```{r fc_tab, echo=FALSE, results='asis'}
+knitr::kable(head(fc), caption = "Forecasts for the next 6 months")
+```
+
+## Evaluation
+
+We evaluate the forecasts using the `accuracy()` function: among the different scoring rules, we use RMSSE for mean forecasts, and the pinball loss for quantile forecasts. To compare the performance of forecasting methods, we group the scores by model (via `group_by()`) and we aggregate them using the mean (via `summarise()`).
+
+
+```{r accuracy, echo=FALSE}
+results <- fc |>
+  fabletools::accuracy(data, measures = list(
+    RMSSE = fabletools::RMSSE, 
+    pinball_loss = fabletools::pinball_loss
+    )) |>
+  dplyr::group_by(.model) |>
+  dplyr::summarise(
+    RMSSE = mean(RMSSE), 
+    pinball_loss  = mean(pinball_loss)
+    )
+```
+
+```{r accuracy_tab, echo=FALSE, results='asis'}
+knitr::kable(results, digits = 3, caption = "Forecast accuracy metrics")
+```
+
+TODO: plot an example of a forecast?
+
+# References
+
+- [Package documentation](../)
+- [GitHub repository](https://github.com/yourusername/fable.intermittent)
+

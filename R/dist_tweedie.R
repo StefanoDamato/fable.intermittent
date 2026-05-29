@@ -115,17 +115,54 @@ covariance.dist_tweedie <- function(x, ...) {
 }
 
 
-#' Sample from Tweedie Distribution
+#' Tweedie Distribution Functions
 #'
-#' Uses the compound Poisson--Gamma representation to draw exact samples
-#' for power in \eqn{(1, 2)} (Dunn & Smyth, 2005).
+#' @description
+#' Density, distribution function, quantile function and random generation for
+#' the Tweedie distribution with mean equal to `mean`, dispersion equal to
+#' `dispersion`, and power equal to `power`.
 #'
-#' @param n The number of samples.
-#' @param mean Mean parameter of the distribution.
-#' @param dispersion Dispersion parameter of the distribution.
-#' @param power Power parameter of the distribution.
+#' @details
+#' If `mean`, `dispersion`, or `power` are not specified they assume the
+#' default values of `1`, `1`, and `1.5`, respectively.
 #'
-#' @keywords internal
+#' The Tweedie distribution used here follows the compound Poisson-Gamma
+#' parameterisation with power parameter in \eqn{(1, 2)}. It has
+#' \eqn{\mathbb{E}[X] = \mu} and
+#' \eqn{\mathrm{Var}(X) = \phi\mu^p}, where \eqn{\mu} is `mean`,
+#' \eqn{\phi} is `dispersion`, and \eqn{p} is `power`.
+#'
+#' @param x,q vector of quantiles.
+#' @param p vector of probabilities.
+#' @param n number of observations. If `length(n) > 1`, the length is taken
+#'   to be the number required.
+#' @param mean vector of means.
+#' @param dispersion vector of dispersion parameters.
+#' @param power vector of power parameters.
+#' @param log,log.p logical; if `TRUE`, probabilities `p` are given as `log(p)`.
+#' @param lower.tail logical; if `TRUE` (default), probabilities are
+#'   \eqn{P[X \le x]}; otherwise, \eqn{P[X > x]}.
+#'
+#' @return 
+#' `dtweedie` gives the density, `ptweedie` gives the distribution
+#'  function, `qtweedie` gives the quantile function, and `rtweedie`
+#'  generates random samples.
+#' 
+#' The length of the result is determined by `n` for `rtweedie`, and is the
+#' maximum of the lengths of the numerical arguments for the other functions.
+#'
+#' The numerical arguments other than `n` are recycled to the length of the
+#' result. Only the first elements of the logical arguments are used.
+#'
+#' @references
+#' Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie
+#' exponential dispersion model densities. *Statistics and Computing*,
+#' 15(4), 267--280. \doi{10.1007/s11222-005-4070-y}.
+#'
+#' @name tweedie
+#' @rdname tweedie
+#' @aliases dtweedie ptweedie qtweedie rtweedie
+#' @export
 rtweedie <- function(n, mean = 1, dispersion = 1, power = 1.5) {
   lambda <- (mean^(2 - power)) / (dispersion * (2 - power))
   alpha <- (2 - power) / (power - 1)
@@ -135,35 +172,14 @@ rtweedie <- function(n, mean = 1, dispersion = 1, power = 1.5) {
   rgamma(n, m * alpha, beta)
 }
 
-#' Compute Tweedie Density
-#'
-#' Evaluates the Tweedie density via the series expansion of Dunn & Smyth
-#' (2005), dispatching to the C++ implementation `tweedieDensity`.
-#'
-#' @param x The values the density is evaluated at.
-#' @param mean Mean parameter of the distribution.
-#' @param dispersion Dispersion parameter of the distribution.
-#' @param power Power parameter of the distribution.
-#' @param log Whether to return the logarithm.
-#'
-#' @keywords internal
+#' @rdname tweedie
+#' @export
 dtweedie <- function(x, mean = 1, dispersion = 1, power = 1.5, log = FALSE) {
   as.vector(tweedieDensity(x, mean, dispersion, power, log))
 }
 
-#' Compute Tweedie CDF
-#'
-#' Evaluates the Tweedie cumulative distribution function via the Compound Poisson-Gamma
-#' representation, dispatching to the C++ implementation `tweedieCDF`.
-#'
-#' @param q The values the CDF is evaluated at.
-#' @param mean Mean parameter of the distribution.
-#' @param dispersion Dispersion parameter of the distribution.
-#' @param power Power parameter of the distribution.
-#' @param lower.tail Whether to return the lower tail probability.
-#' @param log.p Whether to return the logarithm of the probability.
-#'
-#' @keywords internal
+#' @rdname tweedie
+#' @export
 ptweedie <- function(q, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
   cdf <- as.vector(tweedieCDF(q, mean, dispersion, power))
   if (!lower.tail) {
@@ -175,26 +191,15 @@ ptweedie <- function(q, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE
   cdf
 }
 
-#' Compute the Tweedie quantile function
-#'
-#' Evaluates the Tweedie quantile function via the Newton-Raphson method based on the CDF
-#' and density function implementations, dispatching to the C++ implementation `tweedieInvCDF`.
-#'
-#' @param p The probabilities the quantile function is evaluated at.
-#' @param mean Mean parameter of the distribution.
-#' @param dispersion Dispersion parameter of the distribution.
-#' @param power Power parameter of the distribution.
-#' @param lower.tail Whether `p` represents lower tail probabilities.
-#' @param log.p Whether `p` is given as log-probabilities.
-#'
-#' @keywords internal
+#' @rdname tweedie
+#' @export
 qtweedie <- function(p, mean = 1, dispersion = 1, power = 1.5, lower.tail = TRUE, log.p = FALSE) {
-  if (lower.tail == FALSE) {
-    p = 1 - p
+  if (log.p) {
+    p <- exp(p)
+  }
+  if (!lower.tail) {
+    p <- 1 - p
   }
   invcdf <- as.vector(tweedieInvCDF(p, mean, dispersion, power))
-  if (log.p) {
-    invcdf <- log(invcdf)
-  }
   invcdf
 }
