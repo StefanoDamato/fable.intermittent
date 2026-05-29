@@ -2,12 +2,11 @@ Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
 Version: 0.0.1
 Authors@R: 
-    person("Stefano", "Damato", , "stefano.damato@supsi.ch", role = c("aut", "cre"))
+    person("Stefano", "Damato", , "stefanodamato128@gmail.com", role = c("aut", "cre"))
 Author: Stefano Damato
-Maintainer: Stefano Damato <stefano.damato@supsi.ch>
+Maintainer: Stefano Damato <stefanodamato128@gmail.com>
 Description: Extends the 'fable' framework to support forecasting methods 
-    specifically designed for intermittent time series data, where demand 
-    occurs sporadically with many zero values.
+    specifically designed for intermittent time series data.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -32,3 +31,4 @@ VignetteBuilder: knitr
 URL: https://github.com/yourusername/fable.intermittent
 BugReports: https://github.com/yourusername/fable.intermittent/issues
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
