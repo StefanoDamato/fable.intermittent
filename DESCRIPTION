@@ -38,6 +38,7 @@ Suggests:
     testthat (>= 3.3.0),
     tweedie,
     ggtime,
+    dplyr,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

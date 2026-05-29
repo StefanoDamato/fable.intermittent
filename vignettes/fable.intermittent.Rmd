@@ -39,8 +39,6 @@ We show different features of the package, including the data sets, a pipeline t
 library(fable.intermittent)
 ```
 
-TODO: plotting a t.s. as an example?
-
 ## Data
 
 The package includes two data sets,`auto` and `raf`. Each data set is saved as a `tsibble` object, which is a tidy data structure for time series data.
@@ -57,6 +55,12 @@ data <- auto |>
 
 ```{r data_tab, echo=FALSE, results='asis'}
 knitr::kable(head(data), caption = "First observations of the data subset")
+```
+
+```{r ts_plot, echo=FALSE, fig.cap="Example time series from the auto data set", fig.width=7, fig.height=4}
+one_series <- fable.intermittent::auto |> dplyr::filter(series_id == idx[1])
+fabletools::autoplot(one_series, value) +
+  ggplot2::labs(title = paste("Time series", idx[1]), x = "Month", y = "Demand")
 ```
 
 ## Fitting and forecasting
@@ -81,7 +85,7 @@ See the documentation for details on each function.
 
 Before fitting the methods, we use the `filter()` function to drop the last 6 observation from each time series, which will be used for evaluating the forecasts. The methods are fitted using the `model()` function. In this vignette, we only use a pool of 4 models, two of which are the novel ones.
 
-```{r fit, echo=FALSE}
+```{r fit, echo=TRUE}
 fit <- data |>
   dplyr::filter(index <= tsibble::yearmonth("2011 June")) |>
   fabletools::model(
@@ -93,17 +97,18 @@ fit <- data |>
 ```
 
 ```{r fit_tab, echo=FALSE, results='asis'}
-knitr::kable(as.data.frame(head(fit), stringsAsFactors = FALSE), 
-             escape = TRUE,
-             caption = "Fitted models")
+knitr::kable(
+  head(fit) |>
+    tibble::as_tibble() |>
+    dplyr::mutate(dplyr::across(where(is.list), ~vapply(.x, function(m) class(m)[[1]], character(1)))),
+  caption = "Fitted models"
+)
 ```
-
-TODO: I have not been able to display correctly the method name (when printed they appear as `<NAME>`). Maybe Claude will?
 
 Forecasts are generated using the `forecast()` function, which produces a `fable` object containing the forecasts and their associated uncertainty. Other than the time series identifiers and the time indices, it contains a `.model` column that indicates the method used to generate the forecasts, a `value` column storing the predictive distributions (implemented as `distributional` objects), and a `.mean` column for the point forecast (the mean).
 We generate forecasts for the next 6 months.
 
-```{r fc, echo=FALSE}
+```{r fc, echo=TRUE}
 fc <- fit |>
   fabletools::forecast(h = "6 months")
 ```
@@ -117,7 +122,7 @@ knitr::kable(head(fc), caption = "Forecasts for the next 6 months")
 We evaluate the forecasts using the `accuracy()` function: among the different scoring rules, we use RMSSE for mean forecasts, and the pinball loss for quantile forecasts. To compare the performance of forecasting methods, we group the scores by model (via `group_by()`) and we aggregate them using the mean (via `summarise()`).
 
 
-```{r accuracy, echo=FALSE}
+```{r accuracy, echo=TRUE}
 results <- fc |>
   fabletools::accuracy(data, measures = list(
     RMSSE = fabletools::RMSSE, 
@@ -134,10 +139,13 @@ results <- fc |>
 knitr::kable(results, digits = 3, caption = "Forecast accuracy metrics")
 ```
 
-TODO: plot an example of a forecast?
+```{r fc_plot, echo=FALSE, fig.cap="Example forecast for one time series", fig.width=7, fig.height=4}
+one_fc <- fc |> dplyr::filter(series_id == idx[1])
+fabletools::autoplot(one_fc, one_series) +
+  ggplot2::labs(title = paste("Forecast for", idx[1]), x = "Month", y = "Demand")
+```
 
 # References
 
-- [Package documentation](../)
-- [GitHub repository](https://github.com/yourusername/fable.intermittent)
+- [GitHub repository](https://github.com/StefanoDamato/fable.intermittent)
 

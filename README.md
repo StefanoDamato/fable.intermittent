@@ -15,7 +15,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 The package `fable.intermittent` implements probabilistic methods for
 intermittent time series in the [`tidyverts`](https://tidyverts.org/)
 framework. The methods can be used using
-[`fable`](https://tidyverts.fable.org/)/[`fabletools`](https://tidyverts.fabletools.org/)
+[`fable`](https://tidyverts.fable.org/)/[`fabletools`](https://fabletools.tidyverts.org/)
 syntax. To fit the methods, use them as arguments of the `model()`
 function. To generate forecasts, pass the fitted models to the
 `forecast()` function, following the
