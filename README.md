@@ -73,8 +73,9 @@ The package follows the standard `fable` workflow:
 2.  Fit forecasting methods with `model()`.
 3.  Produce probabilistic forecasts with `forecast()`.
 
-We provide in [this vignette](TODO) a simple usage example; refer to the
-package documentation for more details on the methods.
+We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple
+usage example; refer to the package documentation for more details on
+the methods.
 
 ## References
 
