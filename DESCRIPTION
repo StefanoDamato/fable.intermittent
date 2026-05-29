@@ -39,6 +39,8 @@ Suggests:
     tweedie,
     ggtime,
     dplyr,
+    ggplot2,
+    tibble,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
