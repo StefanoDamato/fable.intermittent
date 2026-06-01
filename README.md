@@ -89,7 +89,7 @@ the methods.
 
 <tr>
 
-<td align="center" valign="top" width="14.28%">
+<td align="center" valign="top" width="20%">
 
 <a href="#">
 <img src="https://github.com/StefanoDamato.png" width="100px;" alt="Stefano Damato" style="border-radius:50%;border:1px solid #646464;"/><br />
@@ -97,7 +97,7 @@ the methods.
 <a href="mailto:stefano.damato@idsia.ch?subject=[fable.intermittent package]">Email</a>
 </td>
 
-<td align="center" valign="top" width="14.28%">
+<td align="center" valign="top" width="20%">
 
 <a href="#">
 <img src="https://github.com/LorenzoZambon.png" width="100px;" alt="Lorenzo Zambon" style="border-radius:50%;border:1px solid #646464;"/><br />
@@ -105,7 +105,7 @@ the methods.
 <a href="mailto:lorenzo.zambon@idsia.ch?subject=[fable.intermittent package]">Email</a>
 </td>
 
-<td align="center" valign="top" width="14.28%">
+<td align="center" valign="top" width="20%">
 
 <a href="https://dazzimonti.github.io/dazzimonti/">
 <img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
