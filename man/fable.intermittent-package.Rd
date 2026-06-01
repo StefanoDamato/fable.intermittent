@@ -8,18 +8,18 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values.
+Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/yourusername/fable.intermittent}
-  \item Report bugs at \url{https://github.com/yourusername/fable.intermittent/issues}
+  \item \url{https://github.com/StefanoDamato/fable.intermittent}
+  \item Report bugs at \url{https://github.com/StefanoDamato/fable.intermittent/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Stefano Damato \email{stefano.damato@supsi.ch}
+\strong{Maintainer}: Stefano Damato \email{stefanodamato128@gmail.com}
 
 }
 \keyword{internal}

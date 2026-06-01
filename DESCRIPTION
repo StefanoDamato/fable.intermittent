@@ -3,7 +3,6 @@ Title: Forecasting Models for Intermittent Time Series
 Version: 0.0.1
 Authors@R: 
     person("Stefano", "Damato", , "stefanodamato128@gmail.com", role = c("aut", "cre"))
-Author: Stefano Damato
 Maintainer: Stefano Damato <stefanodamato128@gmail.com>
 Description: Extends the 'fable' framework to support forecasting methods 
     specifically designed for intermittent time series data.
@@ -22,6 +21,7 @@ Imports:
     rlang (>= 1.0.0),
     Rcpp (>= 1.0.0)
 Suggests: 
+    dplyr,
     testthat (>= 3.3.0),
     tweedie,
     ggtime,

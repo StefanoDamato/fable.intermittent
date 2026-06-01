@@ -134,10 +134,11 @@ results <- fc |>
 knitr::kable(results, digits = 3, caption = "Forecast accuracy metrics")
 ```
 
-TODO: plot an example of a forecast?
+TODO: plot some forecasts as an example?
+
 
 # References
 
 - [Package documentation](../)
-- [GitHub repository](https://github.com/yourusername/fable.intermittent)
+- [GitHub repository](https://github.com/StefanoDamato/fable.intermittent)
 
