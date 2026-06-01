@@ -100,7 +100,7 @@ fit <- data |>
 knitr::kable(
   head(fit) |>
     tibble::as_tibble() |>
-    dplyr::mutate(dplyr::across(where(is.list), ~vapply(.x, function(m) class(m)[[1]], character(1)))),
+    dplyr::mutate(dplyr::across(where(is.list), ~vapply(.x, function(m) model_sum(m)[[1]], character(1)))),
   caption = "Fitted models"
 )
 ```
