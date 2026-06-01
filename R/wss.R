@@ -187,6 +187,17 @@ residuals.WSS <- function(object, ...) {
   object$residuals
 }
 
+#' Return model name
+#' @inherit model_sum.EMPDISTR
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, WSS(value))
+#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.WSS <- function(x) {
   "WSS"

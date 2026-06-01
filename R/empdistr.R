@@ -171,6 +171,18 @@ residuals.EMPDISTR <- function(object, ...) {
   object$residuals
 }
 
+#' Return model name
+#' @param x A fitted `fable` model object.
+#' @return The model name as a string
+#'
+#' @examples
+#' ts <- tsibble::tsibble(
+#'   time = as.Date("2026-01-01") + seq_len(40),
+#'   value = rnbinom(40, size = 1, prob = 0.3),
+#'   index = time
+#' )
+#' fit <- model(ts, EMPDISTR(value))
+#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.EMPDISTR <- function(x) {
   "EMPDISTR"
