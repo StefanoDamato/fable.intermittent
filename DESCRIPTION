@@ -19,7 +19,9 @@ Authors@R:
              comment = c(ORCID = "0000-0001-5080-3061")))
 Description: Extends the 'fable' framework to support forecasting methods 
     specifically designed for intermittent time series data, where demand 
-    occurs sporadically with many zero values.
+    occurs sporadically with many zero values. All methods produce probabilistic
+    forecasts returned as 'distributional' objects. The returned forecasts can be
+    used to evaluate accuracy, plot and print the results seamlessly with 'fable'. 
 License: LGPL (>= 3)
 Encoding: UTF-8
 LazyData: true
