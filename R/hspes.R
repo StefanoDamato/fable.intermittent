@@ -29,11 +29,17 @@
 #'   index = time
 #' )
 #'
-#' ts |>
+#' fc_ts <- ts |>
 #'   model(HSPES(value)) |>
-#'   forecast(h = "7 days") |>
-#'   ggtime::autoplot(ts)
+#'   forecast(h = "7 days")
 #'
+#' fc_ts |> print()
+#'
+#'
+#' if (requireNamespace("ggtime", quietly = TRUE)) {
+#'   library(ggtime)
+#'   fc_ts |> autoplot(ts)
+#' }
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish

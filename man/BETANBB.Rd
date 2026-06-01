@@ -29,10 +29,17 @@ ts <- tsibble::tsibble(
   index = time
 )
 
-ts |>
+fc_ts <- ts |>
   model(BETANBB(value)) |>
-  forecast(h = "7 days") |>
-  ggtime::autoplot(ts)
+  forecast(h = "7 days")
+
+fc_ts |> print()
+
+
+if (requireNamespace("ggtime", quietly = TRUE)) {
+  library(ggtime)
+  fc_ts |> autoplot(ts)
+}
 
 }
 \references{

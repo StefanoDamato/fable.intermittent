@@ -29,11 +29,17 @@ ts <- tsibble::tsibble(
   index = time
 )
 
-ts |>
+fc_ts <- ts |>
   model(GAMPOISB(value)) |>
-  forecast(h = "7 days") |>
-  ggtime::autoplot(ts)
+  forecast(h = "7 days")
 
+fc_ts |> print()
+
+
+if (requireNamespace("ggtime", quietly = TRUE)) {
+  library(ggtime)
+  fc_ts |> autoplot(ts)
+}
 }
 \references{
 Harvey, A. C., & Fernandes, C. (1989). Time series models for count or

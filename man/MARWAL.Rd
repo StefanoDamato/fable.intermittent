@@ -27,11 +27,17 @@ ts <- tsibble::tsibble(
   index = time
 )
 
-ts |>
+fc_ts <- ts |>
   model(MARWAL(value)) |>
-  forecast(h = "7 days") |>
-  ggtime::autoplot(ts)
+  forecast(h = "7 days")
 
+fc_ts |> print()
+
+
+if (requireNamespace("ggtime", quietly = TRUE)) {
+  library(ggtime)
+  fc_ts |> autoplot(ts)
+}
 }
 \references{
 Sbrana, G. (2025). Markov Walk and Walmart sales prediction.

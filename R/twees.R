@@ -26,11 +26,17 @@
 #'   index = time
 #' )
 #'
-#' ts |>
+#' fc_ts <- ts |>
 #'   model(TWEES(value)) |>
-#'   forecast(h = "7 days") |>
-#'   ggtime::autoplot(ts)
+#'   forecast(h = "7 days")
 #'
+#' fc_ts |> print()
+#'
+#'
+#' if (requireNamespace("ggtime", quietly = TRUE)) {
+#'   library(ggtime)
+#'   fc_ts |> autoplot(ts)
+#' }
 #' @references
 #'
 #' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
