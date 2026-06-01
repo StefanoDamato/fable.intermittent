@@ -14,8 +14,8 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 The package `fable.intermittent` implements probabilistic methods for
 intermittent time series in the [`tidyverts`](https://tidyverts.org/)
-framework. The methods can be used using
-[`fable`](https://tidyverts.fable.org/)/[`fabletools`](https://fabletools.tidyverts.org/)
+framework. The methods follow the
+[`fable`](https://fable.tidyverts.org/)/[`fabletools`](https://fabletools.tidyverts.org/)
 syntax. To fit the methods, use them as arguments of the `model()`
 function. To generate forecasts, pass the fitted models to the
 `forecast()` function, following the
@@ -53,7 +53,7 @@ Finally, the package releases two data sets in the
 
 ## News
 
-:boom: \[2026-TO-DO\] fable.intermittent v0.0.1: first release.
+:boom: \[2026-TO-DO\] fable.intermittent v0.1.0: first release.
 
 ## Installation
 
@@ -77,13 +77,51 @@ We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple
 usage example; refer to the package documentation for more details on
 the methods.
 
-## References
-
-TODO (preprint arXiv appena disponibile)
-
 ## Contributors
 
-TODO (ordine da stabilire)
+<!-- prettier-ignore-start -->
+
+<!-- markdownlint-disable -->
+
+<table>
+
+<tbody>
+
+<tr>
+
+<td align="center" valign="top" width="14.28%">
+
+<a href="#">
+<img src="https://github.com/StefanoDamato.png" width="100px;" alt="Stefano Damato" style="border-radius:50%;border:1px solid #646464;"/><br />
+<sub><b>Stefano Damato</b></sub></a><br /> <sub>(Maintainer)</sub><br />
+<a href="mailto:stefano.damato@idsia.ch?subject=[fable.intermittent package]">Email</a>
+</td>
+
+<td align="center" valign="top" width="14.28%">
+
+<a href="#">
+<img src="https://github.com/LorenzoZambon.png" width="100px;" alt="Lorenzo Zambon" style="border-radius:50%;border:1px solid #646464;"/><br />
+<sub><b>Lorenzo Zambon</b></sub></a><br /> <sub> </sub><br />
+<a href="mailto:lorenzo.zambon@idsia.ch?subject=[fable.intermittent package]">Email</a>
+</td>
+
+<td align="center" valign="top" width="14.28%">
+
+<a href="https://dazzimonti.github.io/dazzimonti/">
+<img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
+<sub><b>Dario Azzimonti</b></sub></a><br /> <sub> </sub><br />
+<a href="mailto:dario.azzimonti@gmail.com?subject=[fable.intermittent package]">Email</a>
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<!-- markdownlint-restore -->
+
+<!-- prettier-ignore-end -->
 
 ## Getting help
 
