@@ -141,7 +141,37 @@ knitr::kable(results, digits = 3, caption = "Forecast accuracy metrics")
 
 ```{r fc_plot, echo=FALSE, fig.cap="Example forecast for one time series", fig.width=7, fig.height=4}
 one_fc <- fc |> dplyr::filter(series_id == idx[1])
-fabletools::autoplot(one_fc, one_series) +
+one_series_plot <- dplyr::as_tibble(one_series) |>
+  dplyr::mutate(index_date = as.Date(index))
+one_fc_q <- one_fc |>
+  dplyr::group_by(.model) |>
+  dplyr::mutate(q90 = stats::quantile(value, p = 0.9)) |>
+  dplyr::ungroup() |>
+  dplyr::mutate(index_date = as.Date(index))
+
+ggplot2::ggplot() +
+  ggplot2::geom_line(
+    data = one_series_plot,
+    ggplot2::aes(x = index_date, y = value),
+    colour = "black"
+  ) +
+  ggplot2::geom_line(
+    data = one_fc_q,
+    ggplot2::aes(x = index_date, y = .mean, colour = .model, linetype = "mean", group = .model)
+  ) +
+  ggplot2::geom_line(
+    data = one_fc_q,
+    ggplot2::aes(x = index_date, y = q90, colour = .model, linetype = "q90", group = .model)
+  ) +
+  ggplot2::scale_linetype_manual(
+    name = "Forecast",
+    values = c(mean = "solid", q90 = "dashed"),
+    labels = c("mean", "q90")
+  ) +
+  ggplot2::guides(
+    colour = ggplot2::guide_legend(title = "Model"),
+    linetype = ggplot2::guide_legend(override.aes = list(colour = "black"))
+  ) +
   ggplot2::labs(title = paste("Forecast for", idx[1]), x = "Month", y = "Demand")
 ```
 

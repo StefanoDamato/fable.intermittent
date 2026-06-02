@@ -29,12 +29,12 @@ The forecasting methods are the following:
 | `EMPDISTR()` | Empirical resampling baseline that forecasts from the observed distribution. |
 | `GAMPOISB()` | Bayesian dynamic Poisson model with a gamma prior on the rate parameter. |
 | `HSPES()` | Exponential smoothing model with a hurdle-shifted Poisson forecast distribution. |
-| `MARWAL()` | ARMA model with Markov walk dynamic on the occurrence and Gaussian forecast distribution. |
+| `MARWAL()` | ARMA model with a Markov walk on the occurrence and Gaussian forecast distribution. |
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
 | `STATICDISTR()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
-| `VZ()` | Bootstrap method based on Croston decomposition and resampling of demand sizes and intervals. |
-| `WSS()` | Bootstrap method with resampled demand sizes and Markov-chain transitions for the occurrence. |
+| `VZ()` | Bootstrap method based on Croston decomposition sampling of demand sizes and intervals. |
+| `WSS()` | Bootstrap method with sampled demand sizes and a Markov-chain for the occurrence. |
 
 The probabilistic forecasts produced by the implemented methods are
 [`distributional`](https://github.com/mitchelloharawild/distributional)

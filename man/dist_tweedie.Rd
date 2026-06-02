@@ -30,9 +30,11 @@ implemented in C++ for performance.
 }
 \examples{
 d <- dist_tweedie(mean = 2, dispersion = 0.8, power = 1.5)
-mean(d)
-distributional::variance(d)
-distributional::generate(d, 5)
+d |> mean()
+d |> quantile(c(0.5, 0.9))
+d |> density(c(0, 1.5, 3))
+d |> distributional::variance()
+d |> distributional::generate(10)
 }
 \references{
 Dunn, P. K., & Smyth, G. K. (2005). Series evaluation of Tweedie

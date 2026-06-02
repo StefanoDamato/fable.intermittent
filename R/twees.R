@@ -16,6 +16,13 @@
 #'   its maximum value before fitting and predictions are back-transformed.
 #'   This improves numerical stability.
 #' @param ... Not used.
+#' 
+#' @references
+#'
+#' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
+#' time series with Gaussian Processes and Tweedie likelihood.
+#' *International Journal of Forecasting*  (in press).
+#' \doi{10.1016/j.ijforecast.2025.10.001}.
 #'
 #' @return A model specification.
 #'
@@ -37,13 +44,6 @@
 #'   library(ggtime)
 #'   fc_ts |> autoplot(ts)
 #' }
-#' @references
-#'
-#' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
-#' time series with Gaussian Processes and Tweedie likelihood.
-#' *International Journal of Forecasting*  (in press).
-#' \doi{10.1016/j.ijforecast.2025.10.001}.
-#'
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish

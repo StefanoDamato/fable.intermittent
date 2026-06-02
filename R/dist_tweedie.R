@@ -29,9 +29,11 @@
 #'
 #' @examples
 #' d <- dist_tweedie(mean = 2, dispersion = 0.8, power = 1.5)
-#' mean(d)
-#' distributional::variance(d)
-#' distributional::generate(d, 5)
+#' d |> mean()
+#' d |> quantile(c(0.5, 0.9))
+#' d |> density(c(0, 1.5, 3))
+#' d |> distributional::variance()
+#' d |> distributional::generate(10)
 dist_tweedie <- function(mean = 1, dispersion = 1, power = 1.5) {
   mean <- as.double(mean)
   dispersion <- as.double(dispersion)
@@ -50,6 +52,7 @@ dist_tweedie <- function(mean = 1, dispersion = 1, power = 1.5) {
   new_dist(mu = mean, phi = dispersion, p = power, class = "dist_tweedie")
 }
 
+#' @noRd
 #' @export
 format.dist_tweedie <- function(x, digits = 2, ...) {
   sprintf(
@@ -63,6 +66,7 @@ format.dist_tweedie <- function(x, digits = 2, ...) {
 #' @importFrom stats density
 #' @exportS3Method distributional::density
 #' @export
+#' @noRd
 density.dist_tweedie <- function(x, at, ...) {
   dtweedie(at,
     mean = x[["mu"]],
@@ -74,6 +78,7 @@ density.dist_tweedie <- function(x, at, ...) {
 
 #' @importFrom distributional generate
 #' @exportS3Method distributional::generate
+#' @noRd
 generate.dist_tweedie <- function(x, times, ...) {
   rtweedie(times,
     mean = x[["mu"]],
@@ -83,6 +88,7 @@ generate.dist_tweedie <- function(x, times, ...) {
 }
 
 #' @exportS3Method distributional::cdf
+#' @noRd
 cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
   ptweedie(at,
     mean = x[["mu"]],
@@ -94,6 +100,7 @@ cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
 }
 
 #' @exportS3Method distributional::quantile
+#' @noRd
 quantile.dist_tweedie <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
   qtweedie(p,
     mean = x[["mu"]],
@@ -105,11 +112,13 @@ quantile.dist_tweedie <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
 }
 
 #' @export
+#' @noRd 
 mean.dist_tweedie <- function(x, ...) {
   x[["mu"]]
 }
 
 #' @export
+#' @noRd
 covariance.dist_tweedie <- function(x, ...) {
   x[["phi"]] * x[["mu"]]^x[["p"]]
 }
