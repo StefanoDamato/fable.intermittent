@@ -39,6 +39,16 @@ make_hurdle_shifted_distr <- function(distr, pzero){
   distributional::dist_inflated(distr, pzero, 0)
 }
 
+#' Quantile method for inflated distributions
+#'
+#' @param x An inflated distribution.
+#' @param p A numeric vector of probabilities.
+#' @param ... Additional arguments passed to [stats::quantile()].
+#' @return A numeric vector of quantiles.
+#' @examples
+#' x <- distributional::dist_inflated(distributional::dist_normal(), 0.2, 0)
+#' stats::quantile(x, p = c(0.25, 0.5, 0.75))
+#' @keywords internal
 #' @importFrom stats quantile
 #' @exportS3Method distributional::quantile
 quantile.dist_inflated <- function(x, p, ...) {
