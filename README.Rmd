@@ -54,6 +54,11 @@ Finally, the package releases two data sets in the [`tsibble`](https://tsibble.t
 
 ## Installation
 
+You can install the **stable** version from CRAN:
+```r
+install.packages("fable.intermittent")
+```
+
 You can install the **development** version from
 [GitHub](https://github.com/StefanoDamato/fable.intermittent):
 
