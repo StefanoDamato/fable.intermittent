@@ -193,7 +193,7 @@ residuals.WSS <- function(object, ...) {
   object$residuals
 }
 
-#' Return model name
+
 #' @inherit model_sum.EMPDISTR
 #'
 #' @examples

@@ -189,6 +189,8 @@ residuals.EMPDISTR <- function(object, ...) {
 #' )
 #' fit <- model(ts, EMPDISTR(value))
 #' model_sum(fit[[1]][[1]])
+#' 
+#' @importFrom fabletools model_sum
 #' @export
 model_sum.EMPDISTR <- function(x) {
   "EMPDISTR"
