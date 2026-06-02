@@ -36,7 +36,7 @@ The forecasting methods are the following:
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
 | `STATICDISTR()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
-| `VZ()` | Bootstrap method based on Croston decomposition sampling of demand sizes and intervals. |
+| `VZ()` | Bootstrap method based on Croston decomposition sampling demand sizes and intervals. |
 | `WSS()` | Bootstrap method with sampled demand sizes and a Markov-chain for the occurrence. |
 
 The probabilistic forecasts produced by the implemented methods are [`distributional`](https://github.com/mitchelloharawild/distributional) objects. Among the predictive distribution used by the methods, there is the Tweedie distribution, for which `fable.intermittent` provides a novel implementation. It can be used in the following ways:
