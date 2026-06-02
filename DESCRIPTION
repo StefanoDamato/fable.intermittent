@@ -41,7 +41,6 @@ Suggests:
     testthat (>= 3.3.0),
     tweedie,
     ggtime,
-    dplyr,
     ggplot2,
     tibble,
     knitr,
