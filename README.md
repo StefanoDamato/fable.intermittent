@@ -33,7 +33,7 @@ The forecasting methods are the following:
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
 | `STATICDISTR()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
-| `VZ()` | Bootstrap method based on Croston decomposition sampling of demand sizes and intervals. |
+| `VZ()` | Bootstrap method based on Croston decomposition sampling demand sizes and intervals. |
 | `WSS()` | Bootstrap method with sampled demand sizes and a Markov-chain for the occurrence. |
 
 The probabilistic forecasts produced by the implemented methods are
