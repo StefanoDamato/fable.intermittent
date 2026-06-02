@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# fable.intermittent: forecasting intermittent time series in the fable framework <a href="https://github.com/StefanoDamato/fable.intermittent/"><img src="man/figures/logo.png" align="right" height="150" /></a>
+# fable.intermittent <a href="https://github.com/StefanoDamato/fable.intermittent/"><img src="man/figures/logo.png" align="right" height="150" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)

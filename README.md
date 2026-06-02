@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# fable.intermittent: forecasting intermittent time series in the fable framework <a href="https://github.com/StefanoDamato/fable.intermittent/"><img src="man/figures/logo.png" align="right" height="150" /></a>
+# fable.intermittent <a href="https://github.com/StefanoDamato/fable.intermittent/"><img src="man/figures/logo.png" align="right" height="150" /></a>
 
 <!-- badges: start -->
 
@@ -56,6 +56,12 @@ Finally, the package releases two data sets in the
 :boom: \[2026-TO-DO\] fable.intermittent v0.1.0: first release.
 
 ## Installation
+
+You can install the **stable** version from CRAN:
+
+``` r
+install.packages("fable.intermittent")
+```
 
 You can install the **development** version from
 [GitHub](https://github.com/StefanoDamato/fable.intermittent):
