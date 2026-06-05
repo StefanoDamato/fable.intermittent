@@ -1,12 +1,17 @@
 #' Generate Intermittent Time Series Data
 #'
 #' Creates synthetic intermittent time series data in tsibble format.
-#' Intermittent series are characterized by many zero values with sporadic non-zero observations.
+#' The occurrence is generated using a Bernoulli distribution, whose probability
+#' can be influenced by a seasonal pattern. The demand size is generated using 
+#' a gamma distribution, which can also be influenced by seasonality.
 #'
 #' @param num_ts Number of time series to generate
 #' @param len_ts Length of each time series
 #' @param freq Frequency of the time series: "W" (weekly), "D" (daily), or "M" (monthly)
-#' @param seasonality_w Weight of seasonality component (0 to 1, where 0 = no seasonality)
+#' @param prob_occurrence Probability of a non-zero observation (between 0 and 1)
+#' @param occurrence_seasonal_w Weight of seasonality in occurrence (0 to 1, where 0 = no seasonality)
+#' @param demand_size Mean and variance of the gamma distribution (higher = lower variability)
+#' @param demand_seasonality_w Weight of seasonality component (0 to 1, where 0 = no seasonality)
 #' @param prob_nonzero Probability of a non-zero observation (between 0 and 1)
 #' @param demand_size Shape parameter for gamma distribution (higher = lower variability)
 #'
@@ -17,18 +22,23 @@
 #' ts_data <- generate_intermittent_ts(num_ts = 3, len_ts = 100, freq = "M", seasonality_w = 0.3)
 #'
 #' @export
-generate_intermittent_ts <- function(num_ts, len_ts, freq = "M", seasonality_w = 0.2, prob_nonzero = 0.3, demand_size = 3) {
+generate_intermittent_ts <- function(num_ts, len_ts, freq = "M", 
+                                     prob_occurrence = 0.3, occurrence_seasonal_w = 0.2,
+                                     demand_size = 3, demand_seasonal_w = 0.2) {
+  
   # Validate inputs
   stopifnot(
     is.numeric(num_ts) && num_ts > 0,
     is.numeric(len_ts) && len_ts > 0,
     freq %in% c("W", "D", "M"),
-    is.numeric(seasonality_w) && seasonality_w >= 0 && seasonality_w <= 1
+    is.numeric(prob_occurrence) && prob_occurrence >= 0 && prob_occurrence <= 1,
+    is.numeric(occurrence_seasonal_w) && occurrence_seasonal_w >= 0 && occurrence_seasonal_w <= 1,
+    is.numeric(demand_size) && demand_size > 0,
+    is.numeric(demand_seasonal_w) && demand_seasonal_w >= 0 && demand_seasonal_w <= 1
   )
   
   # Generate dates based on frequency
   start_date <- as.Date("2026-01-01")
-  
   index_values <- switch(
     freq,
     "W" = start_date + (0:(len_ts - 1)) * 7,
@@ -44,22 +54,24 @@ generate_intermittent_ts <- function(num_ts, len_ts, freq = "M", seasonality_w =
       seasonal_period <- 12
     } else if (freq == "W") {
       seasonal_period <- 52
-    } else {  # daily
-      seasonal_period <- 365
+    } else if (freq == "D") {  # daily
+      seasonal_period <- 7
     }
     
-    seasonal <- seasonality_w * sin(2 * pi * (1:len_ts) / seasonal_period)
+    # Generate the seasonal weight
+    seasonal_occurrence <- occurrence_seasonal_w * sin(2 * pi * (1:len_ts) / seasonal_period)
+    seasonal_demand <- demand_seasonal_w * sin(2 * pi * (1:len_ts) / seasonal_period)
     
-    # Generate intermittent values from gamma distribution
-    # Sparse observations with zero-inflation
-    sparse_indicator <- rbinom(len_ts, size = 1, prob = prob_nonzero)
+    # Generate the occurrence with a Bernoulli distribution 
+    prob <- prob_occurrence + seasonal_occurrence*(0.5 + abs(0.5 - prob_occurrence))
+    occurrence <- rbinom(len_ts, size = 1, prob = prob)
     
-    # Sample from gamma distribution with specified demand_size (shape parameter)
-    # Scale is set to 1 so mean ≈ demand_size
-    gamma_samples <- rgamma(len_ts, shape = demand_size, scale = 1)
+    # Generate the seasonal demand size using a gamma distribution
+    mean_size <- demand_size * (1 + seasonal_demand)
+    demand_size <- rgamma(len_ts, mean_size, 1)
     
     # Combine with seasonality and convert to integers
-    values <- sparse_indicator * as.integer(gamma_samples * (1 + seasonal))
+    values <- occurrence * ceiling(demand_size)
     
     data.frame(
       series_id = paste0("TS", ts_id),
@@ -97,3 +109,9 @@ generate_intermittent_ts <- function(num_ts, len_ts, freq = "M", seasonality_w =
   
   return(ts_obj)
 }
+
+
+dataset <- generate_intermittent_ts(num_ts = 1, len_ts = 100, freq = "M")
+
+
+
