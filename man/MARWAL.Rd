@@ -15,9 +15,9 @@ MARWAL(formula, ...)
 A model specification.
 }
 \description{
-A Random Walk model on the demand composed by a swithcing constant and an ARMA model,
+A Random Walk model on the demand composed by a switching constant and an ARMA model,
 where the changes are controlled by a Markov Chain on the occurrence process.
-Paramter are estimated in closed-form on deseasonalized data,
+Parameters are estimated in closed-form on deseasonalized data,
 and forecasts are returned as Gaussian distributions for each time step.
 }
 \examples{

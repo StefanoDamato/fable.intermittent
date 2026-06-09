@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values. All methods produce probabilistic forecasts returned as 'distributional' objects. The returned forecasts can be used to evaluate accuracy, plot and print the results seamlessly with 'fable'.
+Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values. All methods produce probabilistic forecasts returned as 'distributional' objects. The returned forecasts can be used to evaluate accuracy, plot and print the results seamlessly with 'fable'. The methods include: Harvey, Fernandes (1989) \doi{10.1080/07350015.1989.10509750}, Willemain, Smart, Schwarz (2004) \doi{10.1016/S0169-2070(03)00013-X}, Zhou, Viswanathan (2011) \doi{10.1016/j.ijpe.2010.09.021}, Snyder, Ord, Beaumont (2012) \doi{10.1016/j.ijforecast.2011.03.009}, Kolassa (2016) \doi{10.1016/j.ijforecast.2015.12.004}, Hasni, Aguir, Babai, Jemai (2019) \doi{10.1080/00207543.2018.1424375}, Damato, Azzimonti, Corani (2025) \doi{10.1016/j.ijforecast.2025.10.001}, Sbrana (2025) \doi{10.1080/01605682.2025.2569661}.
 }
 \seealso{
 Useful links:

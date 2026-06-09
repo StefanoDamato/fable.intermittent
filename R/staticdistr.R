@@ -206,7 +206,7 @@ fitted.STATICDISTR <- function(object, ...) {
 
 #' Extract residuals from a STATICDISTR model
 #'
-#' @inheritParams residuals.EMPDISTR
+#' @inherit residuals.EMPDISTR
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

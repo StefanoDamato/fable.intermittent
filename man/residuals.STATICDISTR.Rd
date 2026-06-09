@@ -11,6 +11,9 @@
 
 \item{...}{Not used.}
 }
+\value{
+A numeric vector of residuals.
+}
 \description{
 Extract residuals from a STATICDISTR model
 }
