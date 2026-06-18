@@ -6,6 +6,13 @@ library(dplyr)
 ### EXPERIMENT WITH AUTO DATASET ###
 
 data("auto")
+h <- 6
+
+test_start <- auto$index |> 
+  unique() |> 
+  sort() |> 
+  tail(h) |>
+  head(1)
 
 fit <- auto |>
   filter(index <= yearmonth("2011 Jun")) |>
@@ -38,9 +45,16 @@ print(res)
 ### EXPERIMENT WITH RAF DATASET ###
 
 data("raf")
+h <- 12
+
+test_start <- raf$index |> 
+  unique() |> 
+  sort() |> 
+  tail(h) |>
+  head(1)
 
 fit <- raf |>
-  filter(index <= yearmonth("2001 Dec")) |>
+  filter(index < test_start) |>
   model(
     empdistr = EMPDISTR(value),
     staticdistr = STATICDISTR(value),
@@ -55,7 +69,7 @@ fit <- raf |>
   )
 
 fc <- fit |>
-  forecast(h = "1 year")
+  forecast(h = h)
 
 res <- fc |>
   accuracy(raf, measures = list(
