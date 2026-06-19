@@ -41,7 +41,7 @@ Depends:
     fabletools (>= 0.6.0)
 Imports:
     tsibble (>= 1.0.0),
-    distributional (>= 0.3.0),
+    distributional (>= 0.7.1),
     nloptr (>= 2.0.0),
     rlang (>= 1.0.0),
     Rcpp (>= 1.0.0)
