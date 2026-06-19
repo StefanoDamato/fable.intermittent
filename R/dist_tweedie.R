@@ -89,8 +89,8 @@ generate.dist_tweedie <- function(x, times, ...) {
 
 #' @exportS3Method distributional::cdf
 #' @noRd
-cdf.dist_tweedie <- function(x, at, lower.tail = TRUE, log.p = FALSE, ...) {
-  ptweedie(at,
+cdf.dist_tweedie <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) {
+  ptweedie(q,
     mean = x[["mu"]],
     dispersion = x[["phi"]],
     power = x[["p"]],
@@ -112,7 +112,7 @@ quantile.dist_tweedie <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
 }
 
 #' @export
-#' @noRd 
+#' @noRd
 mean.dist_tweedie <- function(x, ...) {
   x[["mu"]]
 }
@@ -152,11 +152,11 @@ covariance.dist_tweedie <- function(x, ...) {
 #' @param lower.tail logical; if `TRUE` (default), probabilities are
 #'   \eqn{P[X \le x]}; otherwise, \eqn{P[X > x]}.
 #'
-#' @return 
+#' @return
 #' `dtweedie` gives the density, `ptweedie` gives the distribution
 #'  function, `qtweedie` gives the quantile function, and `rtweedie`
 #'  generates random samples.
-#' 
+#'
 #' The length of the result is determined by `n` for `rtweedie`, and is the
 #' maximum of the lengths of the numerical arguments for the other functions.
 #'
