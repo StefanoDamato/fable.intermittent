@@ -36,14 +36,14 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_normal
+#' @importFrom distributional dist_normal dist_truncated
 #' @export
 MARWAL <- function(formula, ...) {
   marwal_model <- new_model_class(
     "MARWAL",
     train = train_marwal,
     specials = new_specials(
-      xreg = no_xreg
+      xreg = marwal_no_xreg
     )
   )
   new_model_definition(marwal_model, {{ formula }}, ...)
@@ -200,13 +200,6 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
   # Compute the mean forecast
   mc_state <- object$last_occurrence
 
-  # S: OLDER VERSION, SLOWER
-  #mean_fc <- numeric(h)
-  #for (i in seq_len(h)) {
-    #mc_state <- object$xi + object$delta * mc_state
-    #mean_fc[i] <- object$mean_demand * mc_state + object$lambda^(i - 1) * object$last_z
-  #}
-
   # Compute the mean forecasts
   mc_fc <- (object$delta^(1:h) * object$last_occurrence +
               object$xi * cumsum(object$delta^(0:(h - 1))))
@@ -228,7 +221,7 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
     object$var_v * (1 + object$k^2 * lambda_sum)
 
   # Return the Gaussian forecast distribution
-  dist_normal(mean_fc, sqrt(var_fc))
+  dist_truncated(dist_normal(mean_fc, sqrt(var_fc)), lower = 0)
 }
 
 #' Extract fitted values from a MARWAL model
@@ -305,166 +298,6 @@ generate.MARWAL <- function(x, new_data, specials = NULL, ...) {
   new_data
 }
 
-
-
-# # ===========================================================================
-# Bernoulli <- function(y, steps) {
-#   alpha <- -1
-#   co <- mean(y[y > 0])
-
-#   bern <- y
-#   bern[bern > 0] <- 1
-
-#   su <- bern[-1] + bern[-length(y)]
-#   di <- bern[-1] - bern[-length(y)]
-
-#   n00 <- length(su[su == 0])
-#   n11 <- length(su[su == 2])
-#   n01 <- length(di[di == -1])
-#   n10 <- length(di[di == 1])
-
-#   p00 <- n00 / (n00 + n10)
-#   xi  <- n10 / (n10 + n00)
-#   p   <- mean(bern)
-#   lambda <- n11 / (n11 + n01)
-
-#   if (n00 == 0 & n10 == 0) lambda <- 1
-#   if (n11 == 0 & n01 == 0) lambda <- 0
-#   if (lambda <= 0) lambda <- .0001
-
-#   delta <- p00 + lambda - 1
-#   if (lambda == 1) {
-#     p <- 1
-#     xi <- 0
-#     delta <- 1
-#   }
-
-#   # =================================
-#   # STE: to be added in the forecast method
-#   MC <- c()
-#   MC[1] <- xi + delta * tail(bern, 1)
-#   for (s in 2:steps) {
-#     MC[s] <- xi + delta * MC[s - 1]
-#   }
-#   # =================================
-
-#   m <- v <- c()
-#   m[1] <- 0
-#   k <- (lambda^2 - 1 + sqrt(1 - lambda^2)) / lambda
-
-#   for (t in 1:length(y)) {
-#     v[t] <- y[t] - bern[t] * co - m[t]
-#     m[t + 1] <- lambda * m[t] + k * v[t]
-#   }
-
-#   # =================================
-#   # STE: to be added in the forecast method
-#   fo <- c()
-#   for (s in 1:steps) {
-#     fo[s] <- co * MC[s] + lambda^(s - 1) * m[length(m)]
-#   }
-#   # =================================
-
-#   list(bern, p, lambda, MC, delta, xi, fo, v, k)
-# }
-
-# MW <- function(y, steps) {
-#   prob1 <- .5
-#   prob2 <- .67
-#   prob3 <- .95
-#   prob4 <- .99
-
-#   mysum <- function(x, steps) {
-#     d <- 0
-#     for (f in 0:(steps - 2)) d <- d + x^(f * 2)
-#     d
-#   }
-
-#   # Classical multiplicative seasonal adjustment
-#   if ((length(y[y == 0]) / length(y)) < .95) {
-#     s <- 7
-#     h <- steps
-#     cma <- matrix(NA, length(y), 1)
-
-#     for (g in 1:(length(y) - s + 1)) {
-#       cma[g + ((s + 1) / 2) - 1] <- mean(y[g:(g + s - 1)])
-#     }
-
-#     residuals <- y / cma
-
-#     sfactors <- c()
-#     for (seas in 1:s) {
-#       sfactors[seas] <- mean(na.omit(residuals[seq(seas, length(y) - s + seas, by = s)]))
-#     }
-
-#     sfactout <- rep(sfactors, length(y) + h)[(length(y) + 1):(length(y) + h)]
-#     y <- y / rep(sfactors, ceiling(length(y) / s))[1:length(y)]
-#     y[is.na(y)] <- 0
-#     y[y == Inf] <- 0
-
-#   } else {
-#     sfactout <- rep(1, steps)
-#   }
-
-#   h <- c()
-#   le <- 14
-
-#   for (i in 0:1000) {
-#     Y <- tail(y, (length(y) - i * le))
-#     if (length(Y) < 100) break
-#     ins <- head(Y, length(Y) - steps)
-
-#     if ((length(ins[ins == 0]) / length(ins)) < .99 & length(ins) > 100) {
-#       h[i + 1] <- mean((tail(Y, steps) - Bernoulli(ins, steps)[[7]])^2)
-#     }
-#   }
-
-#   if (length(h) != 0) {
-#     y <- tail(y, (length(y) - which.min(h[!is.na(h)]) * le) + steps)
-#   }
-
-#   co <- mean(y[y > 0])
-#   ma <- Bernoulli(y, steps)
-
-#   bern   <- ma[[1]]
-#   p      <- ma[[2]]
-#   lambda <- ma[[3]]
-#   MC     <- ma[[4]]
-#   delta  <- ma[[5]]
-#   fo     <- ma[[7]]
-#   v      <- ma[[8]]
-#   k      <- ma[[9]]
-
-#   fo <- fo * sfactout
-
-#   if (p < 1) {
-#     vari <- ((-1 + lambda) * (1 + lambda - 2 * p) * p) / (-1 + p)
-#   } else {
-#     vari <- 0
-#   }
-
-#   Interv <- c()
-#   Interv[1] <- vari * co^2 + var(v)
-#   for (j in 2:steps) {
-#     Interv[j] <- vari * mysum(delta, j) * co^2 +
-#                  (var(v) * (1 + k^2 * (mysum(lambda, j))))
-#   }
-
-#   lower0 <- fo
-#   lower50 <- fo - qnorm((1 + prob1) / 2) * sqrt(Interv)
-#   lower67 <- fo - qnorm((1 + prob2) / 2) * sqrt(Interv)
-#   lower95 <- fo - qnorm((1 + prob3) / 2) * sqrt(Interv)
-#   lower99 <- fo - qnorm((1 + prob4) / 2) * sqrt(Interv)
-
-#   upper0 <- fo
-#   upper50 <- fo + qnorm((1 + prob1) / 2) * sqrt(Interv)
-#   upper67 <- fo + qnorm((1 + prob2) / 2) * sqrt(Interv)
-#   upper95 <- fo + qnorm((1 + prob3) / 2) * sqrt(Interv)
-#   upper99 <- fo + qnorm((1 + prob4) / 2) * sqrt(Interv)
-
-#   list(
-#     mean = fo,
-#     lower = cbind(lower0, lower50, lower67, lower95, lower99),
-#     upper = cbind(upper0, upper50, upper67, upper95, upper99)
-#   )
-# }
+marwal_no_xreg <- function(...) {
+  abort("Exogenous regressors are not supported by MARWAL.")
+}

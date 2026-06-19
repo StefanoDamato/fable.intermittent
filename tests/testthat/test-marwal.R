@@ -30,7 +30,7 @@ for (i in 1:length(test_data)){
     expect_equal(length(fc_distr), h)
     expect_all_true(is.finite(fc_mean))
     expect_true(inherits(fc_distr, "distribution"))
-    expect_all_equal(fc_family,  "normal")
+    expect_all_equal(fc_family,  "truncated")
     
     # Check that simulation runs without error
     sims <- fabletools::generate(fit, h = h)
