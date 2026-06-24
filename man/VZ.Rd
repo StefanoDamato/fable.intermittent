@@ -2,14 +2,19 @@
 % Please edit documentation in R/vz.R
 \name{VZ}
 \alias{VZ}
+\alias{report.VZ}
 \title{Viswanathan--Zhou Bootstrap Method}
 \usage{
 VZ(formula, ...)
+
+\method{report}{VZ}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

@@ -6,6 +6,7 @@
 #' and forecasts are returned as Gaussian distributions for each time step.
 #'
 #' @param formula Model specification.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -260,19 +261,31 @@ residuals.MARWAL <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, MARWAL(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.MARWAL <- function(x) {
   "MARWAL"
+}
+
+#' @export
+tidy.MARWAL <- function(x, ...) {
+  tibble(
+    term     = c("lambda", "xi", "delta", "mean_demand", "var_v"),
+    estimate = c(x$lambda, x$xi, x$delta, x$mean_demand, x$var_v)
+  )
+}
+
+#' @rdname MARWAL
+#' @export
+report.MARWAL <- function(object, ...) {
+  cat("  Markov chain parameters:\n")
+  cat(sprintf("    lambda = %g\n", object$lambda))
+  cat(sprintf("    xi     = %g\n", object$xi))
+  cat(sprintf("    delta  = %g\n", object$delta))
+  cat(sprintf("\n  Mean demand size: %g\n", object$mean_demand))
+  cat(sprintf("  Error variance:   %g\n", object$var_v))
+  if (!is.null(object$seasons))
+    cat(sprintf("  Seasonal period:  %d\n", object$frequency))
+  invisible(object)
 }
 
 #' Generate sample paths from a MARWAL model

@@ -12,6 +12,7 @@
 #' @param formula Model specification.
 #' @param damped Logical. If `TRUE` (default), both the occurrence and demand
 #'   smoothing components use a damping parameter.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -59,7 +60,7 @@ HSPES <- function(formula, damped = TRUE, ...) {
   new_model_definition(hspes_model, {{ formula }}, damped = damped, ...)
 }
 
-#' @importFrom utils tail
+
 train_hspes <- function(.data, specials, damped, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by HSPES.")
@@ -257,19 +258,35 @@ residuals.HSPES <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, HSPES(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.HSPES <- function(x) {
-  "HSPES"
+  if (x$phi_occ != 0) "HSPES(d)" else "HSPES(u)"
+}
+
+#' @export
+tidy.HSPES <- function(x, ...) {
+  terms <- c("alpha_occ", if (x$phi_occ != 0) "phi_occ",
+             "alpha_dem", if (x$phi_dem != 0) "phi_dem",
+             "p[0]", "lambda[0]")
+  ests  <- c(x$alpha_occ, if (x$phi_occ != 0) x$phi_occ,
+             x$alpha_dem, if (x$phi_dem != 0) x$phi_dem,
+             x$p0, x$lambda0)
+  tibble(term = terms, estimate = ests)
+}
+
+#' @rdname HSPES
+#' @export
+report.HSPES <- function(object, ...) {
+  cat("  Occurrence component:\n")
+  cat(sprintf("    alpha = %g\n", object$alpha_occ))
+  if (object$phi_occ != 0) cat(sprintf("    phi   = %g\n", object$phi_occ))
+  cat("\n  Demand size component:\n")
+  cat(sprintf("    alpha = %g\n", object$alpha_dem))
+  if (object$phi_dem != 0) cat(sprintf("    phi   = %g\n", object$phi_dem))
+  cat("\n  Initial states:\n")
+  cat(sprintf("    p[0]      = %g\n", object$p0))
+  cat(sprintf("    lambda[0] = %g\n", object$lambda0))
+  invisible(object)
 }
 
 hspes_simulate <- function(object, h, times) {

@@ -8,6 +8,7 @@
 #' distribution.
 #'
 #' @param formula Model specification.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -194,19 +195,29 @@ residuals.WSS <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, WSS(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.WSS <- function(x) {
   "WSS"
+}
+
+#' @export
+tidy.WSS <- function(x, ...) {
+  tibble(
+    term     = c("p[0,0]", "p[0,1]", "p[1,0]", "p[1,1]", "mean_demand"),
+    estimate = c(x$p[1, 1], x$p[1, 2], x$p[2, 1], x$p[2, 2], x$mean_demand)
+  )
+}
+
+#' @rdname WSS
+#' @export
+report.WSS <- function(object, ...) {
+  cat("  Markov chain transition matrix:\n")
+  cat("                  zero  non-zero\n")
+  cat(sprintf("  zero          %6.4f    %6.4f\n", object$p[1, 1], object$p[1, 2]))
+  cat(sprintf("  non-zero      %6.4f    %6.4f\n", object$p[2, 1], object$p[2, 2]))
+  cat(sprintf("\n  Mean demand size:   %g\n", object$mean_demand))
+  cat(sprintf("  Demand occurrences: %d\n", length(object$demand)))
+  invisible(object)
 }
 
 wss_simulate <- function(object, h, times) {

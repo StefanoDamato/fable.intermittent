@@ -11,6 +11,7 @@
 #' @param formula Model specification.
 #' @param damped Logical. If `TRUE` (default), the exponential smoothing
 #'   component uses a damping parameter.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -187,19 +188,28 @@ residuals.NEGBINES <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, NEGBINES(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.NEGBINES <- function(x) {
-  "NEGBINES"
+  if (x$phi != 0) "NEGBINES(d)" else "NEGBINES(u)"
+}
+
+#' @export
+tidy.NEGBINES <- function(x, ...) {
+  terms <- c("prob", "alpha", if (x$phi != 0) "phi", "mu[0]")
+  ests  <- c(x$prob, x$alpha, if (x$phi != 0) x$phi, x$mu0)
+  tibble(term = terms, estimate = ests)
+}
+
+#' @rdname NEGBINES
+#' @export
+report.NEGBINES <- function(object, ...) {
+  cat("  Smoothing parameters:\n")
+  cat(sprintf("    alpha = %g\n", object$alpha))
+  if (object$phi != 0) cat(sprintf("    phi   = %g\n", object$phi))
+  cat(sprintf("\n  NB probability: %g\n", object$prob))
+  cat("\n  Initial state:\n")
+  cat(sprintf("    mu[0] = %g\n", object$mu0))
+  invisible(object)
 }
 
 #' Generate sample paths from a NEGBINES model

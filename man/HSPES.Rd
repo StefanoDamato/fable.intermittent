@@ -2,9 +2,12 @@
 % Please edit documentation in R/hspes.R
 \name{HSPES}
 \alias{HSPES}
+\alias{report.HSPES}
 \title{Hurdle-Shifted Poisson Exponential Smoothing}
 \usage{
 HSPES(formula, damped = TRUE, ...)
+
+\method{report}{HSPES}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
@@ -13,6 +16,8 @@ HSPES(formula, damped = TRUE, ...)
 smoothing components use a damping parameter.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

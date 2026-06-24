@@ -2,14 +2,19 @@
 % Please edit documentation in R/marwal.R
 \name{MARWAL}
 \alias{MARWAL}
+\alias{report.MARWAL}
 \title{Markov Chain Model with Random Walk dynamic}
 \usage{
 MARWAL(formula, ...)
+
+\method{report}{MARWAL}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

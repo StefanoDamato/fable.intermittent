@@ -9,8 +9,9 @@ for (i in 1:length(test_data)){
       fit <- fabletools::model(test_ts, model = TWEES(value, damped = damped))
       })
       expect_s3_class(fit, "mdl_df")
-      expect_identical(fabletools::model_sum(fit$model[[1]]), "TWEES")
-      
+      expect_match(fabletools::model_sum(fit$model[[1]]), "^TWEES\\((d|u)\\)$")
+      if (!damped) expect_identical(fabletools::model_sum(fit$model[[1]]), "TWEES(u)")
+
       # Check that fitted values and residuals are returned correctly
       fitted_vals <- stats::fitted(fit)
       resid_vals <- stats::residuals(fit)
@@ -39,6 +40,12 @@ for (i in 1:length(test_data)){
       sims <- fabletools::generate(fit, h = h, times = 1)
       expect_equal(nrow(sims), h)
       expect_all_true(is.finite(sims$.sim))
+
+      # Check tidy
+      t <- generics::tidy(fit)
+      expect_s3_class(t, "tbl_df")
+      expect_true(all(c("term", "estimate") %in% names(t)))
+      expect_gt(nrow(t), 0L)
       })
   }
 }

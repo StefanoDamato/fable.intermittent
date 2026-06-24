@@ -2,9 +2,12 @@
 % Please edit documentation in R/negbines.R
 \name{NEGBINES}
 \alias{NEGBINES}
+\alias{report.NEGBINES}
 \title{Negative Binomial Exponential Smoothing}
 \usage{
 NEGBINES(formula, damped = TRUE, ...)
+
+\method{report}{NEGBINES}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
@@ -13,6 +16,8 @@ NEGBINES(formula, damped = TRUE, ...)
 component uses a damping parameter.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

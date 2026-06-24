@@ -2,9 +2,12 @@
 % Please edit documentation in R/empdistr.R
 \name{EMPDISTR}
 \alias{EMPDISTR}
+\alias{report.EMPDISTR}
 \title{Empirical Distribution Resampling}
 \usage{
 EMPDISTR(formula, hot_start = FALSE, ...)
+
+\method{report}{EMPDISTR}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
@@ -13,6 +16,8 @@ EMPDISTR(formula, hot_start = FALSE, ...)
 time series before fitting.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

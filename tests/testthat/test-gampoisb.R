@@ -37,5 +37,11 @@ for (i in 1:length(test_data)){
     sims <- fabletools::generate(fit, h = h, times = 1)
     expect_equal(nrow(sims), h)
     expect_all_true(is.finite(sims$.sim))
+
+    # Check tidy
+    t <- generics::tidy(fit)
+    expect_s3_class(t, "tbl_df")
+    expect_true(all(c("term", "estimate") %in% names(t)))
+    expect_gt(nrow(t), 0L)
   })
 }

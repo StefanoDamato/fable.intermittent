@@ -2,14 +2,19 @@
 % Please edit documentation in R/gampoisb.R
 \name{GAMPOISB}
 \alias{GAMPOISB}
+\alias{report.GAMPOISB}
 \title{Gamma-Poisson Bayesian Dynamic Model}
 \usage{
 GAMPOISB(formula, ...)
+
+\method{report}{GAMPOISB}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

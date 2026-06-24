@@ -2,9 +2,12 @@
 % Please edit documentation in R/twees.R
 \name{TWEES}
 \alias{TWEES}
+\alias{report.TWEES}
 \title{Tweedie Exponential Smoothing}
 \usage{
 TWEES(formula, damped = TRUE, scaling = TRUE, ...)
+
+\method{report}{TWEES}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
@@ -17,6 +20,8 @@ its maximum value before fitting and predictions are back-transformed.
 This improves numerical stability.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.
