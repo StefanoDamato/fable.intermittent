@@ -2,14 +2,19 @@
 % Please edit documentation in R/wss.R
 \name{WSS}
 \alias{WSS}
+\alias{report.WSS}
 \title{Willemain--Smart--Schwarz Bootstrap Method}
 \usage{
 WSS(formula, ...)
+
+\method{report}{WSS}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

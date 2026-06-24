@@ -53,7 +53,7 @@ Finally, the package releases two data sets in the
 
 ## News
 
-:boom: \[2026-TO-DO\] fable.intermittent v0.1.0: first release.
+:boom: \[2026-06-19\] fable.intermittent v0.1.0: first release.
 
 ## Installation
 

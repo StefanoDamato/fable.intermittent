@@ -8,6 +8,7 @@
 #' as samples simulating from the model forward in time.
 #'
 #' @param formula Model specification.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -195,19 +196,26 @@ residuals.BETANBB <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, BETANBB(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.BETANBB <- function(x) {
   "BETANBB"
+}
+
+#' @export
+tidy.BETANBB <- function(x, ...) {
+  tibble(term = c("v", "w", "a[0]", "b[0]"), estimate = c(x$v, x$w, x$a0, x$b0))
+}
+
+#' @rdname BETANBB
+#' @export
+report.BETANBB <- function(object, ...) {
+  cat("  Estimated parameters:\n")
+  cat(sprintf("    size (v)            = %g\n", object$v))
+  cat(sprintf("    discount factor (w) = %g\n", object$w))
+  cat("\n  Initial Beta parameters:\n")
+  cat(sprintf("    a[0] = %g\n", object$a0))
+  cat(sprintf("    b[0] = %g\n", object$b0))
+  invisible(object)
 }
 
 betanbb_simulate <- function(object, h, times) {

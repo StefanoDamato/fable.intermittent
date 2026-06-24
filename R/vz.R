@@ -7,6 +7,7 @@
 #' both components, preserving the marginal structure of the original series.
 #'
 #' @param formula Model specification.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -181,19 +182,26 @@ residuals.VZ <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, VZ(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.VZ <- function(x) {
   "VZ"
+}
+
+#' @export
+tidy.VZ <- function(x, ...) {
+  tibble(
+    term     = c("mean_demand", "mean_interval"),
+    estimate = c(mean(x$demand), mean(x$intervals))
+  )
+}
+
+#' @rdname VZ
+#' @export
+report.VZ <- function(object, ...) {
+  cat(sprintf("  Demand occurrences:         %d\n", length(object$demand)))
+  cat(sprintf("  Mean demand size:           %g\n", mean(object$demand)))
+  cat(sprintf("  Mean inter-demand interval: %g\n", mean(object$intervals)))
+  invisible(object)
 }
 
 vz_simulate <- function(object, h, times) {

@@ -1,7 +1,6 @@
 # Test Data Helper for fable.intermittent
 # Single tsibble with 5 different time series stacked, keyed by "series" variable
 # Same test time series from probintermittent
-library(tsibble)
 
 set.seed(42)
 startdate <- as.Date("1997-08-12")

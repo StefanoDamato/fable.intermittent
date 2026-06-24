@@ -8,6 +8,7 @@
 #' @param formula Model specification.
 #' @param hot_start Logical. If `TRUE`, leading zeros are removed from the
 #'   time series before fitting.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -177,23 +178,25 @@ residuals.EMPDISTR <- function(object, ...) {
   object$residuals
 }
 
-#' Return model name
-#' @param x A fitted `fable` model object.
-#' @return The model name as a string
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, EMPDISTR(value))
-#' model_sum(fit[[1]][[1]])
-#' 
 #' @importFrom fabletools model_sum
 #' @export
 model_sum.EMPDISTR <- function(x) {
   "EMPDISTR"
+}
+
+#' @export
+tidy.EMPDISTR <- function(x, ...) {
+  tibble(
+    term     = c("mean", "variance"),
+    estimate = c(mean(x$y_emp), var(x$y_emp))
+  )
+}
+
+#' @rdname EMPDISTR
+#' @export
+report.EMPDISTR <- function(object, ...) {
+  cat(sprintf("  Empirical distribution based on %d observations.\n", length(object$y_emp)))
+  invisible(object)
 }
 
 empdistr_no_xreg <- function(...) {

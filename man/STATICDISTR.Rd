@@ -2,6 +2,7 @@
 % Please edit documentation in R/staticdistr.R
 \name{STATICDISTR}
 \alias{STATICDISTR}
+\alias{report.STATICDISTR}
 \title{Static Count Distribution Model}
 \usage{
 STATICDISTR(
@@ -11,6 +12,8 @@ STATICDISTR(
   criterion = c("aic", "bic"),
   ...
 )
+
+\method{report}{STATICDISTR}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
@@ -24,6 +27,8 @@ time series before fitting.}
 \item{criterion}{Information criterion to use for model selection when \code{distr = "auto"}. One of \code{"aic"} or \code{"bic"}.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

@@ -1,6 +1,6 @@
 Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     c(person(given  ="Stefano", 
              family ="Damato",
@@ -41,17 +41,18 @@ Depends:
     fabletools (>= 0.6.0)
 Imports:
     tsibble (>= 1.0.0),
-    distributional (>= 0.3.0),
+    distributional (>= 0.7.1),
     nloptr (>= 2.0.0),
     rlang (>= 1.0.0),
-    Rcpp (>= 1.0.0)
-Suggests: 
+    Rcpp (>= 1.0.0),
+    generics (>= 0.1.0),
+    tibble (>= 3.0.0)
+Suggests:
     dplyr,
     testthat (>= 3.3.0),
     tweedie,
     ggtime,
     ggplot2,
-    tibble,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

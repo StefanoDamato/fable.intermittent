@@ -2,14 +2,19 @@
 % Please edit documentation in R/betanbb.R
 \name{BETANBB}
 \alias{BETANBB}
+\alias{report.BETANBB}
 \title{Beta-Negative Binomial Bayesian Dynamic Model}
 \usage{
 BETANBB(formula, ...)
+
+\method{report}{BETANBB}(object, ...)
 }
 \arguments{
 \item{formula}{Model specification.}
 
 \item{...}{Not used.}
+
+\item{object}{A fitted model object.}
 }
 \value{
 A model specification.

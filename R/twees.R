@@ -15,6 +15,7 @@
 #' @param scaling Logical. If `TRUE` (default), the time series is divided by
 #'   its maximum value before fitting and predictions are back-transformed.
 #'   This improves numerical stability.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #' 
 #' @references
@@ -225,19 +226,32 @@ residuals.TWEES <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, TWEES(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.TWEES <- function(x) {
-  "TWEES"
+  if (x$theta != 0) "TWEES(d)" else "TWEES(u)"
+}
+
+#' @export
+tidy.TWEES <- function(x, ...) {
+  terms <- c("alpha", if (x$theta != 0) "theta", "dispersion", "power", "mu[0]")
+  ests  <- c(x$alpha, if (x$theta != 0) x$theta, x$phi, x$power, x$mu0)
+  tibble(term = terms, estimate = ests)
+}
+
+#' @rdname TWEES
+#' @export
+report.TWEES <- function(object, ...) {
+  cat("  Smoothing parameters:\n")
+  cat(sprintf("    alpha = %g\n", object$alpha))
+  if (object$theta != 0) cat(sprintf("    theta = %g\n", object$theta))
+  cat("\n  Tweedie parameters:\n")
+  cat(sprintf("    dispersion (phi) = %g\n", object$phi))
+  cat(sprintf("    power            = %g\n", object$power))
+  cat("\n  Initial state:\n")
+  cat(sprintf("    mu[0] = %g\n", object$mu0))
+  if (object$scale_factor != 1)
+    cat(sprintf("\n  Scale factor: %g\n", object$scale_factor))
+  invisible(object)
 }
 
 twees_simulate <- function(object, h, times) {

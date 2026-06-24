@@ -8,6 +8,7 @@
 #' and multi-step forecasts are obtained by simulating from the model forward in time.
 #'
 #' @param formula Model specification.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -202,19 +203,25 @@ residuals.GAMPOISB <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, GAMPOISB(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.GAMPOISB <- function(x) {
   "GAMPOISB"
+}
+
+#' @export
+tidy.GAMPOISB <- function(x, ...) {
+  tibble(term = c("w", "a[0]", "b[0]"), estimate = c(x$w, x$a0, x$b0))
+}
+
+#' @rdname GAMPOISB
+#' @export
+report.GAMPOISB <- function(object, ...) {
+  cat("  Estimated parameters:\n")
+  cat(sprintf("    discount factor (w) = %g\n", object$w))
+  cat("\n  Initial Gamma parameters:\n")
+  cat(sprintf("    a[0] = %g\n", object$a0))
+  cat(sprintf("    b[0] = %g\n", object$b0))
+  invisible(object)
 }
 
 gampoisb_simulate <- function(object, h, times) {

@@ -39,31 +39,6 @@ make_hurdle_shifted_distr <- function(distr, pzero){
   distributional::dist_inflated(distr, pzero, 0)
 }
 
-#' Quantile method for inflated distributions
-#'
-#' @param x An inflated distribution.
-#' @param p A numeric vector of probabilities.
-#' @param ... Additional arguments passed to [stats::quantile()].
-#' @return A numeric vector of quantiles.
-#' @examples
-#' x <- distributional::dist_inflated(distributional::dist_normal(), 0.2, 0)
-#' stats::quantile(x, p = c(0.25, 0.5, 0.75))
-#' @keywords internal
-#' @importFrom stats quantile
-#' @exportS3Method distributional::quantile
-quantile.dist_inflated <- function(x, p, ...) {
-  vapply(seq_along(p), function(i) {
-    pi <- p[[i]]
-    qt <- quantile(x[["dist"]], pmax(0, (pi - x[["p"]])/(1 - x[["p"]])), ...)
-    if (qt >= x[["x"]]) {
-      qt
-    } else {
-      qt <- quantile(x[["dist"]], pi, ...)
-      if (qt < x[["x"]]) qt else x[["x"]]
-    }
-  }, numeric(1))
-}
-
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
     return(c(size = 100, prob = 1 - .STATICDISTR_EPSILON))

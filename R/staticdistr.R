@@ -13,6 +13,7 @@
 #'   time series before fitting.
 #' @param criterion Information criterion to use for model selection when `distr =
 #'   "auto"`. One of `"aic"` or `"bic"`.
+#' @param object A fitted model object.
 #' @param ... Not used.
 #'
 #' @references
@@ -124,6 +125,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     pred_distr <- fit_distr[[distr]]
     ic <- NULL
   }
+  selected_distr <- if (distr == "auto") names(which.min(ic)) else distr
 
   # Compute fitted values and residuals
   init_na <- rep(NA, start - 1)
@@ -132,6 +134,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
 
   structure(
     list(
+      selected_distr = selected_distr,
       ic = ic,
       pred_distr = pred_distr,
       fitted = fitted,
@@ -222,19 +225,45 @@ residuals.STATICDISTR <- function(object, ...) {
 }
 
 
-#' @inherit model_sum.EMPDISTR
-#'
-#' @examples
-#' ts <- tsibble::tsibble(
-#'   time = as.Date("2026-01-01") + seq_len(40),
-#'   value = rnbinom(40, size = 1, prob = 0.3),
-#'   index = time
-#' )
-#' fit <- model(ts, STATICDISTR(value))
-#' model_sum(fit[[1]][[1]])
 #' @export
 model_sum.STATICDISTR <- function(x) {
-  "STATICDISTR"
+  paste0("STATICDISTR(", x$selected_distr, ")")
+}
+
+#' @export
+tidy.STATICDISTR <- function(x, ...) {
+  tryCatch({
+    params <- as.list(distributional::parameters(x$pred_distr))
+    tibble(
+      term     = names(params),
+      estimate = vapply(params, function(v) {
+        v <- unlist(v)
+        if (is.numeric(v) && length(v) == 1L) v else NA_real_
+      }, numeric(1))
+    )
+  }, error = function(e) tibble(term = character(), estimate = numeric()))
+}
+
+#' @rdname STATICDISTR
+#' @export
+report.STATICDISTR <- function(object, ...) {
+  tryCatch({
+    params <- as.list(distributional::parameters(object$pred_distr))
+    if (length(params) > 0) {
+      cat("  Parameters:\n")
+      for (nm in names(params)) {
+        val <- unlist(params[[nm]])
+        if (is.numeric(val) && length(val) == 1)
+          cat(sprintf("    %-8s = %g\n", nm, val))
+      }
+    }
+  }, error = function(e) NULL)
+  if (!is.null(object$ic)) {
+    cat("\n  Information criteria:\n")
+    for (nm in names(object$ic))
+      cat(sprintf("    %-8s = %.2f\n", nm, object$ic[[nm]]))
+  }
+  invisible(object)
 }
 
 
