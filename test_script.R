@@ -16,16 +16,15 @@ devtools::load_all()
 
  
 # debugger =========================================================
-ts <- test_data[[5]]
+ts <- test_data[[6]]
 #ts1 <- raf |>
   #dplyr::filter(series_id == "TS1")
-fit <- ts |> model(GAMPOISB(value))
+fit <- ts |> model(NNARMA(value))
 fc <- fit |> forecast(h = 10)
 fc$.mean
-gen <- fit |> generate(h = 10)
+fc$value
+fit |> generate(h = 10)
 # =======================================================================
-
-
 
 # example ======================================================================
 undebug(train_betanbb)
@@ -161,3 +160,24 @@ cpp_filter$f
 
 gasFilterPois(y, psi0, phi, rho, xi0, k, period = 4)
 
+
+
+library(distributional)
+dist <- dist_normal(c(0, 1, -1), sqrt(c(1,2,3))) 
+l <- list()
+for (d in dist){
+  p0 <- d |> cdf(0)
+  d <- list(d) |> dist_truncated(lower = 0) |> dist_inflated(prob = p0)
+  l[[length(l) + 1]] <- d
+}
+c(l[[1]], l[[2]], l[[3]])
+
+
+do.call(c, lapply(as.list(dist), \(d) {
+  p0 <- cdf(d, 0)
+  dist_truncated(list(d), lower = 0) |> dist_inflated(prob = p0)
+}))
+
+s <- c(l[[1]], l[[2]], l[[3]]) |> generate(10000)
+lapply(s, function(x) mean(x <= 0))
+c(l[[1]], l[[2]], l[[3]]) |> cdf(0)

@@ -11,6 +11,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// armaDynamic
+List armaDynamic(NumericVector y, double phi, double theta, double co);
+RcppExport SEXP _fable_intermittent_armaDynamic(SEXP ySEXP, SEXP phiSEXP, SEXP thetaSEXP, SEXP coSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type co(coSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaDynamic(y, phi, theta, co));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gammaDynamic
 List gammaDynamic(NumericVector y, double a0, double b0, double w);
 RcppExport SEXP _fable_intermittent_gammaDynamic(SEXP ySEXP, SEXP a0SEXP, SEXP b0SEXP, SEXP wSEXP) {
@@ -99,6 +113,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_fable_intermittent_armaDynamic", (DL_FUNC) &_fable_intermittent_armaDynamic, 4},
     {"_fable_intermittent_gammaDynamic", (DL_FUNC) &_fable_intermittent_gammaDynamic, 4},
     {"_fable_intermittent_betaDynamic", (DL_FUNC) &_fable_intermittent_betaDynamic, 5},
     {"_fable_intermittent_dampedSES", (DL_FUNC) &_fable_intermittent_dampedSES, 4},
