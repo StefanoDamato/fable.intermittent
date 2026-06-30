@@ -39,6 +39,37 @@ csv_to_tsibble <- function(csv_path, start, interval = "month", key_prefix = "TS
   tsibble::as_tsibble(out, key = series_id, index = index)
 }
 
+# Pasta dataset: column-wise layout (rows = weeks, paired qty/prom cols per SKU).
+# Column naming convention: B{n}_{sku} for quantity, B{n}_{sku}_prom for promotion.
+pasta_to_tsibble <- function(csv_path) {
+  raw <- utils::read.csv(csv_path, check.names = TRUE)
+
+  qty_cols  <- grep("^QTY_",   names(raw), value = TRUE)
+  prom_cols <- grep("^PROMO_", names(raw), value = TRUE)
+
+  qty <- raw[, c("DATE", qty_cols), drop = FALSE]
+  qty_long <- tidyr::pivot_longer(qty, cols = -DATE,
+                                  names_to = "key", values_to = "value") |>
+    dplyr::mutate(key = sub("^QTY_", "", key))
+
+  prom <- raw[, c("DATE", prom_cols), drop = FALSE]
+  prom_long <- tidyr::pivot_longer(prom, cols = -DATE,
+                                   names_to = "key", values_to = "promotion") |>
+    dplyr::mutate(key = sub("^PROMO_", "", key))
+
+  out <- dplyr::left_join(qty_long, prom_long, by = c("DATE", "key")) |>
+    dplyr::mutate(
+      week      = as.Date(DATE),
+      brand     = sub("_(\\d+)$", "", key),
+      product   = sub("^.*_(\\d+)$", "\\1", key),
+      value     = as.numeric(value),
+      promotion = as.integer(promotion)
+    ) |>
+    dplyr::select(week, brand, product, value, promotion)
+
+  tsibble::as_tsibble(out, index = week, key = c(brand, product))
+}
+
 dataset_specs <- list(
   list(
     name = "auto",
@@ -65,6 +96,12 @@ datasets <- lapply(dataset_specs, function(spec) {
   )
 })
 names(datasets) <- vapply(dataset_specs, function(spec) spec$name, character(1))
+
+# Pasta is built separately (different layout + promotion feature).
+pasta_csv <- file.path("data-raw", "pasta.csv")
+if (file.exists(pasta_csv) && file.size(pasta_csv) > 0) {
+  datasets[["pasta"]] <- pasta_to_tsibble(pasta_csv)
+}
 
 if (!dir.exists("data")) {
   dir.create("data", recursive = TRUE)

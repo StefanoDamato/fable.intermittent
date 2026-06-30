@@ -1,10 +1,15 @@
 ################################################################################
 # GLOBAL PARAMETERS (EPSILON) TO AVOID NUMERICAL ISSUES IN COMPUTATIONS
+#' @importFrom distributional cdf dist_inflated dist_transformed dist_truncated
+#' @importFrom fabletools get_frequencies
+#' @importFrom rlang abort
+NULL
 
 .BETANBB_EPSILON     <- 1e-4
 .GAMPOISB_EPSILON    <- 1e-4
 .HSPES_EPSILON       <- 1e-4
 .MARWAL_EPSILON      <- 1e-4
+.NNARMA_EPSILON      <- 1e-4
 .NEGBINES_EPSILON    <- 1e-4
 .STATICDISTR_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
@@ -23,20 +28,27 @@ crostons_decomp <- function(y) {
 }
 
 get_freq <- function(.data, period = NULL, model_name = "Model") {
-  period <- fabletools::get_frequencies(period, .data)
+  period <- get_frequencies(period, .data)
   period <- round(as.numeric(period[[1]]))
 
   period <- as.integer(period)
   if (period < 1) {
-    rlang::abort("The seasonal period must be greater than or equal to 1.")
+    abort("The seasonal period must be greater than or equal to 1.")
   }
 
   period
 }
 
 make_hurdle_shifted_distr <- function(distr, pzero){
-  distr <- distributional::dist_transformed(distr, function(x) x + 1, function(x) x - 1)
-  distributional::dist_inflated(distr, pzero, 0)
+  distr <- dist_transformed(distr, function(x) x + 1, function(x) x - 1)
+  dist_inflated(distr, pzero, 0)
+}
+
+negative_mass_to_zero <- function(distr) {
+  do.call(c, lapply(as.list(distr), \(d) {
+    p0 <- cdf(d, 0)[[1]]
+    dist_truncated(d, lower = 0) |> dist_inflated(prob = p0)
+  }))
 }
 
 fit_nbinom <- function(y) {

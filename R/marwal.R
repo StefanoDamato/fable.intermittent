@@ -37,7 +37,7 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_normal dist_truncated
+#' @importFrom distributional dist_normal dist_truncated dist_inflated cdf
 #' @export
 MARWAL <- function(formula, ...) {
   marwal_model <- new_model_class(
@@ -222,7 +222,7 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
     object$var_v * (1 + object$k^2 * lambda_sum)
 
   # Return the Gaussian forecast distribution
-  dist_truncated(dist_normal(mean_fc, sqrt(var_fc)), lower = 0)
+  negative_mass_to_zero(dist_normal(mean_fc, sqrt(var_fc)))
 }
 
 #' Extract fitted values from a MARWAL model
