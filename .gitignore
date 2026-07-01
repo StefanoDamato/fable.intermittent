@@ -23,4 +23,4 @@ exp_tweedie/
 experiment_cosmetic.R
 R/nnarma.R
 data/cosmetic.rda
-data-raw/Cosmetic.csv
+data-raw/
