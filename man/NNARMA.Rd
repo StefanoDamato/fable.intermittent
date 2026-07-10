@@ -20,7 +20,12 @@ NNARMA(formula, ...)
 A model specification.
 }
 \description{
-#TODO
+A non-negative autoregressive moving average (NNARMA) model for
+intermittent demand, where the demand is driven by an ARMA(1, 1) process
+with a constant, constrained so that the process remains non-negative.
+Parameters are estimated by constrained least squares on deseasonalized data,
+and forecasts are returned as Gaussian distributions for each time step,
+with the negative probability mass collapsed to zero.
 }
 \examples{
 ts <- tsibble::tsibble(
@@ -42,5 +47,7 @@ if (requireNamespace("ggtime", quietly = TRUE)) {
 }
 }
 \references{
-TODO
+Sbrana, G., & Babai, M. Z. (2026). Non-negative autoregressive moving average
+models for intermittent demand: Forecast accuracy and inventory implications.
+\emph{European Journal of Operational Research}. \doi{10.1016/j.ejor.2026.06.009}.
 }
