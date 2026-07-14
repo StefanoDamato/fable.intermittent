@@ -5,9 +5,9 @@
 \alias{pasta}
 \title{Pasta Sales Dataset}
 \format{
-A tsibble with 212,164 rows and 5 variables:
+A tsibble with 215,350 rows and 5 variables:
 \describe{
-\item{week}{Date. Daily time index.}
+\item{index}{Date. Daily time index.}
 \item{brand}{Character. Brand identifier (B1, B2, B3, B4), with 42, 45,
 21, and 10 SKUs respectively.}
 \item{product}{Character. SKU number within the brand.}
@@ -36,7 +36,8 @@ store, spanning five years from January 2014 to December 2018. The dataset
 covers 118 Stock Keeping Units (SKUs) organised across four brands (B1--B4),
 making it a standard benchmark for hierarchical and intermittent demand
 forecasting. Each SKU-day combination records the quantity sold and a binary
-promotional indicator.
+promotional indicator. Dates on which the store was closed (public
+holidays) are included with a quantity sold of zero.
 }
 \examples{
 library(tsibble)
