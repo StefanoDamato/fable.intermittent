@@ -1,8 +1,9 @@
 ################################################################################
 # GLOBAL PARAMETERS (EPSILON) TO AVOID NUMERICAL ISSUES IN COMPUTATIONS
-#' @importFrom distributional cdf dist_inflated dist_transformed dist_truncated
+#' @importFrom distributional dist_inflated dist_transformed new_dist covariance
 #' @importFrom fabletools get_frequencies
 #' @importFrom rlang abort
+#' @importFrom stats dnorm pnorm qnorm rnorm
 NULL
 
 .BETANBB_EPSILON     <- 1e-4
@@ -44,11 +45,103 @@ make_hurdle_shifted_distr <- function(distr, pzero){
   dist_inflated(distr, pzero, 0)
 }
 
-negative_mass_to_zero <- function(distr) {
-  do.call(c, lapply(as.list(distr), \(d) {
-    p0 <- cdf(d, 0)[[1]]
-    dist_truncated(d, lower = 0) |> dist_inflated(prob = p0)
-  }))
+# Former generic construction of the censored distribution, replaced by
+# dist_normal_nonneg below. Unlike the class, its mean() was the coherent
+# expectation E[max(X, 0)] rather than the clamped max(mu, 0).
+# negative_mass_to_zero <- function(distr) {
+#   do.call(c, lapply(as.list(distr), \(d) {
+#     p0 <- cdf(d, 0)[[1]]
+#     dist_truncated(d, lower = 0) |> dist_inflated(prob = p0)
+#   }))
+# }
+
+# Gaussian forecast distribution with its negative part collapsed to zero,
+# used by NNARMA and MARWAL. Quantiles, cdf, and samples are those of the
+# rectified Gaussian max(X, 0); as a deliberate reporting choice, mean() is
+# the clamped max(mu, 0) (the distribution's median) rather than the coherent
+# expectation E[max(X, 0)], so point forecasts match the clamped Gaussian mean
+# of the reference literature. variance() is the Gaussian sigma^2. Hence
+# mean() does not match the average of generate() samples when P(X < 0) > 0.
+dist_normal_nonneg <- function(mu = 0, sigma = 1) {
+  mu <- as.double(mu)
+  sigma <- as.double(sigma)
+
+  if (any(sigma <= 0, na.rm = TRUE)) {
+    abort("The sigma parameter of a non-negative Gaussian distribution must be strictly positive.")
+  }
+
+  new_dist(mu = mu, sigma = sigma, class = "dist_normal_nonneg")
+}
+
+#' @noRd
+#' @export
+format.dist_normal_nonneg <- function(x, digits = 2, ...) {
+  sprintf(
+    "N+(%s, %s)",
+    format(x[["mu"]], digits = digits, ...),
+    format(x[["sigma"]]^2, digits = digits, ...)
+  )
+}
+
+#' @importFrom stats density
+#' @exportS3Method distributional::density
+#' @export
+#' @noRd
+density.dist_normal_nonneg <- function(x, at, ...) {
+  # At zero the distribution has an atom; report its probability mass there
+  ifelse(
+    at < 0,
+    0,
+    ifelse(
+      at == 0,
+      pnorm(0, x[["mu"]], x[["sigma"]]),
+      dnorm(at, x[["mu"]], x[["sigma"]])
+    )
+  )
+}
+
+#' @importFrom distributional generate
+#' @exportS3Method distributional::generate
+#' @noRd
+generate.dist_normal_nonneg <- function(x, times, ...) {
+  pmax(rnorm(times, x[["mu"]], x[["sigma"]]), 0)
+}
+
+#' @exportS3Method distributional::cdf
+#' @noRd
+cdf.dist_normal_nonneg <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) {
+  cdf <- ifelse(q < 0, 0, pnorm(q, x[["mu"]], x[["sigma"]]))
+  if (!lower.tail) {
+    cdf <- 1 - cdf
+  }
+  if (log.p) {
+    cdf <- log(cdf)
+  }
+  cdf
+}
+
+#' @exportS3Method distributional::quantile
+#' @noRd
+quantile.dist_normal_nonneg <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
+  if (log.p) {
+    p <- exp(p)
+  }
+  if (!lower.tail) {
+    p <- 1 - p
+  }
+  pmax(qnorm(p, x[["mu"]], x[["sigma"]]), 0)
+}
+
+#' @export
+#' @noRd
+mean.dist_normal_nonneg <- function(x, ...) {
+  max(x[["mu"]], 0)
+}
+
+#' @export
+#' @noRd
+covariance.dist_normal_nonneg <- function(x, ...) {
+  x[["sigma"]]^2
 }
 
 fit_nbinom <- function(y) {

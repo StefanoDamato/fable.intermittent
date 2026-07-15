@@ -38,7 +38,6 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_normal dist_truncated dist_inflated cdf
 #' @export
 NNARMA <- function(formula, ...) {
   nnarma_model <- new_model_class(
@@ -86,7 +85,7 @@ train_nnarma <-function(.data, specials, ...) {
   m <- process$m
 
   # Deseasonalize fitted values and residuals
-  fitted <- (m + co) * ifelse(is.null(seasons), 1, rep(seasons, length.out = length(y)))
+  fitted <- (m + co) * if (is.null(seasons)) 1 else rep(seasons, length.out = length(y))
   residuals <- y - fitted
   
   structure(
@@ -95,7 +94,7 @@ train_nnarma <-function(.data, specials, ...) {
       theta = theta,
       co = co,
       frequency = period,
-      seasons = if (period > 1) seasons else NULL,
+      seasons = seasons,
       v_state = v,
       last_v = v[length(v)],
       last_m = m[length(m)],
@@ -119,16 +118,25 @@ nnarma_deseasonalize <- function(y, period, max_prop_zeros) {
   for (i in 1:(length(y) - period + 1)) {
     moving_avg[i + ((period + 1) / 2) - 1] <- mean(y[i:(i + period - 1)])
   }
-  resid <- ifelse(moving_avg > 0, y / moving_avg, 0)
+  # All-zero windows carry no seasonal information: drop them (NA) rather
+  # than counting them as ratio 0, as in the reference implementation
+  resid <- ifelse(moving_avg > 0, y / moving_avg, NA)
   
   # Compute the seasonal factors and deseasonalise the data
   seasons <- numeric(period)
   for (s in 1:period) {
     seasons[s] <- mean(resid[seq(s, length(y) - period + s, by = period)], na.rm = TRUE)
   }
+  seasons <- seasons * period / sum(seasons)
+
+  # Only deseasonalize when all factors are strictly positive and finite,
+  # so training and forecasting always operate on the same scale
+  if (!all(is.finite(seasons)) || min(seasons) <= 0) {
+    return(list(y_deseasonalized = y, seasons = NULL))
+  }
+
   y_deseasonalized <- y / rep(seasons, length.out = length(y))
-  y_deseasonalized[!is.finite(y_deseasonalized)] <- 0
-  
+
   list(y_deseasonalized = y_deseasonalized, seasons = seasons)
 }
 
@@ -138,7 +146,7 @@ nnarma_deseasonalize <- function(y, period, max_prop_zeros) {
 #'
 #' @inheritParams forecast.EMPDISTR
 #'
-#' @return A distribution vector of class `dist_normal`.
+#' @return A distribution vector of class `dist_normal_nonneg`.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -160,7 +168,7 @@ forecast.NNARMA <- function(object, new_data, specials = NULL, ...) {
     var_v <- .NNARMA_EPSILON
   }
   mean_fc <- numeric(h)
-  mean_fc[1] <- object$last_m + K * object$last_v
+  mean_fc[1] <- object$phi * object$last_m + K * object$last_v
   var_fc <- numeric(h)
   var_fc[1] <- var_v
   if (h > 1){
@@ -171,11 +179,11 @@ forecast.NNARMA <- function(object, new_data, specials = NULL, ...) {
   }
   mean_fc <- mean_fc + object$co
   
-  mean_fc_alt <- (object$last_m + K * object$last_v)*object$phi^(0:(h-1)) + object$co
+  mean_fc_alt <- (object$phi * object$last_m + K * object$last_v)*object$phi^(0:(h-1)) + object$co
   var_fc_alt <- c(0, K^2 * var_v * cumsum(object$phi^(2 * (0:(h-2))))) + var_v
   
   # Adjust for seasonality if necessary
-  if (!is.null(object$seasons) && min(object$seasons) > 0) {
+  if (!is.null(object$seasons)) {
     s <- 1 + length(object$v_state) %% object$frequency
     seasons <- rep(object$seasons,
                    1 + ceiling((h - object$frequency + s - 1) / object$frequency))
@@ -183,7 +191,8 @@ forecast.NNARMA <- function(object, new_data, specials = NULL, ...) {
   }
   
   # Return the Gaussian forecast distribution (floor sd to avoid degenerate N(0,0))
-  negative_mass_to_zero(dist_normal(mean_fc, pmax(sqrt(pmax(var_fc, .NNARMA_EPSILON)), .NNARMA_EPSILON)))
+  sd_fc <- pmax(sqrt(pmax(var_fc, .NNARMA_EPSILON)), .NNARMA_EPSILON)
+  dist_normal_nonneg(mean_fc, sd_fc)
 }
 
 #' Extract fitted values from a NNARMA model

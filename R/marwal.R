@@ -37,7 +37,6 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_normal dist_truncated dist_inflated cdf
 #' @export
 MARWAL <- function(formula, ...) {
   marwal_model <- new_model_class(
@@ -183,7 +182,7 @@ marwal_deseasonalize <- function(y, period, max_prop_zeros) {
 #'
 #' @inheritParams forecast.EMPDISTR
 #'
-#' @return A distribution vector of class `dist_normal`.
+#' @return A distribution vector of class `dist_normal_nonneg`.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -222,7 +221,7 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
     object$var_v * (1 + object$k^2 * lambda_sum)
 
   # Return the Gaussian forecast distribution
-  negative_mass_to_zero(dist_normal(mean_fc, sqrt(var_fc)))
+  dist_normal_nonneg(mean_fc, sqrt(var_fc))
 }
 
 #' Extract fitted values from a MARWAL model

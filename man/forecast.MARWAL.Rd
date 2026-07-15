@@ -16,7 +16,7 @@
 \item{...}{Other arguments passed to methods}
 }
 \value{
-A distribution vector of class \code{dist_normal}.
+A distribution vector of class \code{dist_normal_nonneg}.
 }
 \description{
 Produces forecast distributions from a fitted MARWAL model.

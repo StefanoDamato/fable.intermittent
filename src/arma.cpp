@@ -12,7 +12,7 @@ List armaDynamic(NumericVector y, double phi, double theta, double co) {
   double K = phi+theta;
   
   m[0] = 0;
-  v[0] = y[1];
+  v[0] = y[0];
   if (n >= 2) {
     for (int t = 1; t < n; t++) {
       m[t] = phi * m[t-1] + K * v[t-1];
