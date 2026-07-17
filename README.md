@@ -38,15 +38,12 @@ The forecasting methods are the following:
 
 The probabilistic forecasts produced by the implemented methods are
 [`distributional`](https://github.com/mitchelloharawild/distributional)
-objects. Among the predictive distribution used by the methods, there is
-the Tweedie distribution, for which `fable.intermittent` provides a
-novel implementation. It can be used in the following ways:
-
-- using the R `stats` package syntax: `dtweedie()`, `ptweedie()`,
-  `qtweedie()`, and `rtweedie()`.
-- using the `distributional` object `dist_tweedie()` and all its
-  methods, such as `density()`, `CDF()`, `quantile()`, `generate()`, and
-  others.
+objects. Among the predictive distributions used by the methods, there
+is the Tweedie distribution, provided by the
+[`tweedieDistr`](https://cran.r-project.org/package=tweedieDistr)
+package (both as the `stats`-style `dtweedie()`, `ptweedie()`,
+`qtweedie()`, `rtweedie()` functions and as the `distributional` object
+`dist_tweedie()`).
 
 Finally, the package releases two data sets in the
 [`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
