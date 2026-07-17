@@ -22,4 +22,4 @@ debugger.R
 exp_tweedie/
 experiment_cosmetic.R
 data/cosmetic.rda
-data-raw/Cosmetic.csv
+data-raw/
