@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (>= 3)](https://img.shields.io/badge/license-LGPL%20(%3E%3D%203)-yellow.svg)](https://www.gnu.org/licences/lgpl-3.0)
 <!-- badges: end -->
@@ -43,12 +44,6 @@ The probabilistic forecasts produced by the implemented methods are [`distributi
 
 Finally, the package releases two data sets in the [`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
 
-## News
-
-
-:boom: [2026-06-18] fable.intermittent v0.1.0: first release. 
-
-
 ## Installation
 
 You can install the **stable** version from CRAN:
@@ -63,6 +58,7 @@ You can install the **development** version from
 # install.packages("devtools")
 devtools::install_github("StefanoDamato/fable.intermittent", build_vignettes = TRUE, dependencies = TRUE)
 ```
+
 
 ## Usage
 
@@ -97,7 +93,7 @@ We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple usage e
         <a href="mailto:lorenzo.zambon@idsia.ch?subject=[fable.intermittent package]">Email</a>
       </td>
       <td align="center" valign="top" width="20%">
-        <a href="https://dazzimonti.github.io/dazzimonti/">
+        <a href="https://dazzimonti.github.io/">
         <img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
         <sub><b>Dario Azzimonti</b></sub></a><br />
         <sub>&nbsp;</sub><br />

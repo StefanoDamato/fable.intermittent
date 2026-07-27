@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (\>=
@@ -47,10 +49,6 @@ package (both as the `stats`-style `dtweedie()`, `ptweedie()`,
 
 Finally, the package releases two data sets in the
 [`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
-
-## News
-
-:boom: \[2026-06-19\] fable.intermittent v0.1.0: first release.
 
 ## Installation
 
@@ -110,7 +108,7 @@ the methods.
 
 <td align="center" valign="top" width="20%">
 
-<a href="https://dazzimonti.github.io/dazzimonti/">
+<a href="https://dazzimonti.github.io/">
 <img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
 <sub><b>Dario Azzimonti</b></sub></a><br /> <sub> </sub><br />
 <a href="mailto:dario.azzimonti@gmail.com?subject=[fable.intermittent package]">Email</a>
