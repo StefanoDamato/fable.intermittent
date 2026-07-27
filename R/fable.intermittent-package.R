@@ -4,6 +4,7 @@
 ## usethis namespace: start
 #' @useDynLib fable.intermittent
 #' @importFrom Rcpp sourceCpp
+#' @importFrom distributional generate
 #' @importFrom fabletools report
 #' @importFrom generics glance tidy
 #' @importFrom tibble tibble

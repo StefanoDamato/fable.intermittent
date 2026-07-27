@@ -1,6 +1,6 @@
 Package: fable.intermittent
 Title: Forecasting Models for Intermittent Time Series
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: 
     c(person(given  ="Stefano", 
              family ="Damato",
