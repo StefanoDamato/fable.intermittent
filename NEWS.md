@@ -1,3 +1,13 @@
+# fable.intermittent 0.2.0
+
+## New features
+
+* Released `pasta` hierarchical data set.
+
+## Deprecations
+
+* Dropped `dist_tweedie()` and `stats`-like Tweedie functions; moved them to standalone `tweedieDistr` package.
+
 # fable.intermittent 0.1.1
 
 ## New features
@@ -6,7 +16,7 @@
 
 * Details included in `model_sum()` for ES-based models and `STATICDISTR()`.
 
-## Bug fixes
+## Minor improvements and bug fixes
 
 * Fixed an error in the Tweedie quantile method (`quantile.dist_tweedie()`).
 

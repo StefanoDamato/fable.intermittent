@@ -51,6 +51,7 @@
 #' @importFrom distributional dist_sample
 #' @importFrom nloptr nloptr
 #' @importFrom stats median
+#' @importFrom tweedieDistr dist_tweedie dtweedie rtweedie
 #' @export
 TWEES <- function(formula, damped = TRUE, scaling = TRUE, ...) {
   twees_model <- new_model_class(

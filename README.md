@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (\>=
@@ -38,22 +40,15 @@ The forecasting methods are the following:
 
 The probabilistic forecasts produced by the implemented methods are
 [`distributional`](https://github.com/mitchelloharawild/distributional)
-objects. Among the predictive distribution used by the methods, there is
-the Tweedie distribution, for which `fable.intermittent` provides a
-novel implementation. It can be used in the following ways:
-
-- using the R `stats` package syntax: `dtweedie()`, `ptweedie()`,
-  `qtweedie()`, and `rtweedie()`.
-- using the `distributional` object `dist_tweedie()` and all its
-  methods, such as `density()`, `CDF()`, `quantile()`, `generate()`, and
-  others.
+objects. Among the predictive distributions used by the methods, there
+is the Tweedie distribution, provided by the
+[`tweedieDistr`](https://cran.r-project.org/package=tweedieDistr)
+package (both as the `stats`-style `dtweedie()`, `ptweedie()`,
+`qtweedie()`, `rtweedie()` functions and as the `distributional` object
+`dist_tweedie()`).
 
 Finally, the package releases two data sets in the
 [`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
-
-## News
-
-:boom: \[2026-06-19\] fable.intermittent v0.1.0: first release.
 
 ## Installation
 
@@ -113,7 +108,7 @@ the methods.
 
 <td align="center" valign="top" width="20%">
 
-<a href="https://dazzimonti.github.io/dazzimonti/">
+<a href="https://dazzimonti.github.io/">
 <img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
 <sub><b>Dario Azzimonti</b></sub></a><br /> <sub> </sub><br />
 <a href="mailto:dario.azzimonti@gmail.com?subject=[fable.intermittent package]">Email</a>
