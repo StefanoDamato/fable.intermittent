@@ -69,8 +69,9 @@ train_nnarma <-function(.data, specials, ...) {
   if (period < 1) {
     abort("The seasonal period must be greater than or equal to 1.")
   }
-  deseasonalized <- nnarma_deseasonalize(y, period = period,
-                                         max_prop_zeros = max_prop_zeros)
+  deseasonalized <- deseasonalize(y, period = period,
+                                  max_prop_zeros = max_prop_zeros,
+                                  normalize = TRUE)
   y_deseasonalized <- deseasonalized$y_deseasonalized
   seasons <- deseasonalized$seasons
   
@@ -106,40 +107,6 @@ train_nnarma <-function(.data, specials, ...) {
   )
 }
 
-nnarma_deseasonalize <- function(y, period, max_prop_zeros) {
-  
-  # Ignore the seasonality if there are too many zeros
-  if ((period <= 1) | ((length(y[y == 0]) / length(y)) >= max_prop_zeros)) {
-    return(list(y_deseasonalized = y, seasons = NULL))
-  }
-  
-  # Compute residuals of the moving average
-  moving_avg <- rep(NA, length(y))
-  for (i in 1:(length(y) - period + 1)) {
-    moving_avg[i + ((period + 1) / 2) - 1] <- mean(y[i:(i + period - 1)])
-  }
-  # All-zero windows carry no seasonal information: drop them (NA) rather
-  # than counting them as ratio 0, as in the reference implementation
-  resid <- ifelse(moving_avg > 0, y / moving_avg, NA)
-  
-  # Compute the seasonal factors and deseasonalise the data
-  seasons <- numeric(period)
-  for (s in 1:period) {
-    seasons[s] <- mean(resid[seq(s, length(y) - period + s, by = period)], na.rm = TRUE)
-  }
-  seasons <- seasons * period / sum(seasons)
-
-  # Only deseasonalize when all factors are strictly positive and finite,
-  # so training and forecasting always operate on the same scale
-  if (!all(is.finite(seasons)) || min(seasons) <= 0) {
-    return(list(y_deseasonalized = y, seasons = NULL))
-  }
-
-  y_deseasonalized <- y / rep(seasons, length.out = length(y))
-
-  list(y_deseasonalized = y_deseasonalized, seasons = seasons)
-}
-
 #' Forecast a NNARMA model
 #'
 #' Produces forecast distributions from a fitted NNARMA model.
@@ -167,21 +134,11 @@ forecast.NNARMA <- function(object, new_data, specials = NULL, ...) {
   if (!is.finite(var_v) || var_v < .NNARMA_EPSILON) {
     var_v <- .NNARMA_EPSILON
   }
-  mean_fc <- numeric(h)
-  mean_fc[1] <- object$phi * object$last_m + K * object$last_v
-  var_fc <- numeric(h)
-  var_fc[1] <- var_v
-  if (h > 1){
-    for (i in 2:h){
-      mean_fc[i] <- object$phi * mean_fc[i-1]
-      var_fc[i] <- var_fc[i-1] + object$phi^(2 * (i-2))*(K^2)*var_v
-    }
-  }
-  mean_fc <- mean_fc + object$co
-  
-  mean_fc_alt <- (object$phi * object$last_m + K * object$last_v)*object$phi^(0:(h-1)) + object$co
-  var_fc_alt <- c(0, K^2 * var_v * cumsum(object$phi^(2 * (0:(h-2))))) + var_v
-  
+  pows <- 2 * (seq_len(h - 1) - 1)
+  mean_fc <- (object$phi * object$last_m + K * object$last_v) * object$phi^(0:(h - 1)) +
+    object$co
+  var_fc <- c(0, K^2 * var_v * cumsum(object$phi^pows)) + var_v
+
   # Adjust for seasonality if necessary
   if (!is.null(object$seasons)) {
     s <- 1 + length(object$v_state) %% object$frequency

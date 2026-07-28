@@ -69,8 +69,9 @@ train_marwal <-function(.data, specials, ...) {
   if (period < 1) {
     abort("The seasonal period must be greater than or equal to 1.")
   }
-  deseasonalized <- marwal_deseasonalize(y, period = period,
-                                         max_prop_zeros = max_prop_zeros)
+  deseasonalized <- deseasonalize(y, period = period,
+                                  max_prop_zeros = max_prop_zeros,
+                                  normalize = FALSE)
   y_deseasonalized <- deseasonalized$y_deseasonalized
   seasons <- deseasonalized$seasons
 
@@ -100,7 +101,8 @@ train_marwal <-function(.data, specials, ...) {
   sigmasq <- ifelse(p < 1, ((-1 + lambda) * (1 + lambda - 2 * p) * p) / (-1 + p), 0)
 
   # Deseasonalize fitted values and residuals
-  fitted <- z * ifelse(is.null(seasons), 1, rep(seasons, length.out = length(y)))
+  fitted <- (occurrence * mean_demand + c(0, z[-length(z)])) *
+    if (is.null(seasons)) 1 else rep(seasons, length.out = length(y))
   residuals <- y - fitted
 
   structure(
@@ -113,7 +115,7 @@ train_marwal <-function(.data, specials, ...) {
       var_v = var_v,
       sigmasq = sigmasq,
       frequency = period,
-      seasons = if (period > 1) seasons else NULL,
+      seasons = seasons,
       last_z = z[length(z)],
       last_occurrence = occurrence[length(occurrence)],
       length_y = length(y),
@@ -140,7 +142,7 @@ marwal_transition_matrix <- function(occurrence, mean_y) {
   xi <- num[1, 2] / sum(num[1, ])
   p00 <- 1 - xi
   if (sum(num[1, ]) == 0) lambda <- 1
-  if (sum(num[2, ]) == 0) lambda <- 0
+  if (sum(num[2, ]) == 0) lambda <- .MARWAL_EPSILON
   delta <- p00 + lambda - 1
   if (lambda == 1) {
     xi <- 0
@@ -150,31 +152,6 @@ marwal_transition_matrix <- function(occurrence, mean_y) {
   list(lambda = lambda, xi = xi, delta = delta)
 }
 
-
-marwal_deseasonalize <- function(y, period, max_prop_zeros) {
-
-  # Ignore the seasonality if there are too many zeros
-  if ((period <= 1) | ((length(y[y == 0]) / length(y)) >= max_prop_zeros)) {
-    return(list(y_deseasonalized = y, seasons = NULL))
-  }
-
-  # Compute residuals of the moving average
-  moving_avg <- rep(NA, length(y))
-  for (i in 1:(length(y) - period + 1)) {
-    moving_avg[i + ((period + 1) / 2) - 1] <- mean(y[i:(i + period - 1)])
-  }
-  resid <- ifelse(moving_avg > 0, y / moving_avg, 0)
-
-  # Compute the seasonal factors and deseasonalise the data
-  seasons <- numeric(period)
-  for (s in 1:period) {
-    seasons[s] <- mean(resid[seq(s, length(y) - period + s, by = period)], na.rm = TRUE)
-  }
-  y_deseasonalized <- y / rep(seasons, length.out = length(y))
-  y_deseasonalized[!is.finite(y_deseasonalized)] <- 0
-
-  list(y_deseasonalized = y_deseasonalized, seasons = seasons)
-}
 
 #' Forecast a MARWAL model
 #'
@@ -215,8 +192,9 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
   }
 
   # Calculate forecast variance
-  delta_sum <- c(1, cumsum(object$delta^(2 * (0:(h - 2)))))
-  lambda_sum <- c(1, cumsum(object$lambda^(2 * (0:(h - 2)))))
+  pows <- 2 * (seq_len(h - 1) - 1)
+  delta_sum <- c(1, cumsum(object$delta^pows))
+  lambda_sum <- c(0, cumsum(object$lambda^pows))
   var_fc <- object$sigmasq * delta_sum * object$mean_demand^2 +
     object$var_v * (1 + object$k^2 * lambda_sum)
 

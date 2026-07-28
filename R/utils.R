@@ -40,6 +40,46 @@ get_freq <- function(.data, period = NULL, model_name = "Model") {
   period
 }
 
+# Classical multiplicative seasonal adjustment via centered moving average,
+# shared by NNARMA (normalize = TRUE, as in its reference implementation) and
+# MARWAL (normalize = FALSE, matching the Markov Walk reference)
+deseasonalize <- function(y, period, max_prop_zeros, normalize = FALSE) {
+
+  # Ignore the seasonality if there are too many zeros
+  if ((period <= 1) | ((length(y[y == 0]) / length(y)) >= max_prop_zeros)) {
+    return(list(y_deseasonalized = y, seasons = NULL))
+  }
+
+  # Compute residuals of the moving average
+  moving_avg <- rep(NA, length(y))
+  for (i in 1:(length(y) - period + 1)) {
+    moving_avg[i + ((period + 1) / 2) - 1] <- mean(y[i:(i + period - 1)])
+  }
+  # All-zero windows carry no seasonal information: drop them (NA) rather
+  # than counting them as ratio 0, as in the reference implementations
+  resid <- ifelse(moving_avg > 0, y / moving_avg, NA)
+
+  # Compute the seasonal factors and deseasonalise the data
+  seasons <- numeric(period)
+  for (s in 1:period) {
+    seasons[s] <- mean(resid[seq(s, length(y) - period + s, by = period)], na.rm = TRUE)
+  }
+  if (normalize) {
+    seasons <- seasons * period / sum(seasons)
+  }
+
+  # Only deseasonalize when all factors are strictly positive and finite,
+  # so training and forecasting always operate on the same scale
+  if (!all(is.finite(seasons)) || min(seasons) <= 0) {
+    return(list(y_deseasonalized = y, seasons = NULL))
+  }
+
+  list(
+    y_deseasonalized = y / rep(seasons, length.out = length(y)),
+    seasons = seasons
+  )
+}
+
 make_hurdle_shifted_distr <- function(distr, pzero){
   distr <- dist_transformed(distr, function(x) x + 1, function(x) x - 1)
   dist_inflated(distr, pzero, 0)
