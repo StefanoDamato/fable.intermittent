@@ -130,8 +130,8 @@ forecast.GAMPOISB <- function(object, new_data, specials = NULL, times = 10000, 
   }
 
   # Initialize Gamma parameters with forward propagation
-  a_forecast <- object$w * object$last_a + object$last_y
-  b_forecast <- object$w * object$last_b + 1
+  a_forecast <- object$w * (object$last_a + object$last_y)
+  b_forecast <- object$w * (object$last_b + 1)
   dist_first <- dist_negative_binomial(size = a_forecast, prob = b_forecast / (b_forecast + 1))
 
   if (h == 1) {
@@ -228,14 +228,8 @@ gampoisb_simulate <- function(object, h, times) {
   forecast_samples <- matrix(NA_real_, nrow = times, ncol = h)
 
   # Initialize Gamma parameters with forward propagation
-  a_state <- rep(
-    object$w * object$last_a + object$last_y,
-    times
-  )
-  b_state <- rep(
-    object$w * object$last_b + 1,
-    times
-  )
+  a_state <- rep(object$w * (object$last_a + object$last_y), times)
+  b_state <- rep(object$w * (object$last_b + 1), times)
 
   for (i in seq_len(h)) {
     # Sample lambda from Gamma prior
@@ -246,8 +240,8 @@ gampoisb_simulate <- function(object, h, times) {
     forecast_samples[, i] <- y_new
 
     # Update Gamma parameters
-    a_state <- object$w * a_state + y_new
-    b_state <- object$w * b_state + 1
+    a_state <- object$w * (a_state + y_new)
+    b_state <- object$w * (b_state + 1)
   }
 
   forecast_samples

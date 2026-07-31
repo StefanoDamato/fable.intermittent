@@ -222,14 +222,8 @@ betanbb_simulate <- function(object, h, times) {
   forecast_samples <- matrix(NA_real_, nrow = times, ncol = h)
 
   # Initialize Beta parameters with forward propagation of the last state
-  a_state <- rep(
-    object$w * object$last_a + (1 - object$w) + object$v,
-    times
-  )
-  b_state <- rep(
-    object$w * object$last_b + object$last_y,
-    times
-  )
+  a_state <- rep(object$w * (object$last_a + object$v) + (1 - object$w), times)
+  b_state <- rep(object$w * (object$last_b + object$last_y), times)
 
   for (i in seq_len(h)) {
     # Sample p from Beta prior
@@ -240,8 +234,8 @@ betanbb_simulate <- function(object, h, times) {
     forecast_samples[, i] <- y_new
 
     # Update Beta parameters
-    a_state <- object$w * a_state + (1 - object$w) + object$v
-    b_state <- object$w * b_state + y_new
+    a_state <- object$w * (a_state + object$v) + (1 - object$w)
+    b_state <- object$w * (b_state + y_new)
   }
 
   forecast_samples
