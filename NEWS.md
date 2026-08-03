@@ -1,3 +1,17 @@
+# fable 0.3.0
+
+## New features
+
+* Released `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
+
+* Added occurrence smoothing for `TWEES`.
+
+## Minor improvements and bug fixes
+
+* Changed recursion in `BETANBB` and `GAMPOISB`.
+
+* Increased test coverage.
+
 # fable.intermittent 0.2.0
 
 ## New features

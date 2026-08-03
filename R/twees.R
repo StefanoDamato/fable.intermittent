@@ -85,19 +85,23 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
   # Optionally scale the series for numerical stability
   scale_factor <- if (scaling && max(y) > 0) median(y[y > 0]) else 1
   y_scaled <- y / scale_factor
+  occurrence <- as.numeric(y_scaled > 0)
 
   # Optimise parameters using Tweedie log-likelihood
-  opt <- twees_optimize(y_scaled, damped)
+
+  opt <- twees_optimize(y_scaled, occurrence, damped)
   x <- opt$solution
-  phi <- x[1]
-  power <- x[2]
-  mu0 <- x[3]
-  alpha <- x[4]
-  theta <- if (damped) x[5] else 0
+  rho <- x[1]
+  p0 <- x[2]
+  alpha_p <- x[3]
+  mu0 <- x[4]
+  alpha_mu <- x[5]
+  theta_mu <- if (damped) x[6] else 0
 
   # Compute fitted values on the scaled series
-  mu <- dampedSES(y_scaled, mu0, alpha, theta)
-  mu <- pmax(mu, .TWEES_EPSILON)
+  mu <- pmax(dampedSES(y_scaled, mu0, alpha_mu, theta_mu), .TWEES_EPSILON)
+  p <- pmax(dampedSES(occurrence, p0, alpha_p, 0), .TWEES_EPSILON)
+
 
   # Back-transform fitted values and residuals
   fitted <- mu * scale_factor
@@ -105,14 +109,16 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 
   structure(
     list(
-      phi = phi,
-      power = power,
+      rho = rho,
       mu0 = mu0,
-      alpha = alpha,
-      theta = theta,
+      alpha_mu = alpha_mu,
+      theta_mu = theta_mu,
+      p0 = p0,
+      alpha_p = alpha_p,
       scale_factor = scale_factor,
       mean_y_scaled = mean(y_scaled),
       last_mu = mu[length(mu)],
+      last_p = p[length(p)],
       last_y_scaled = y_scaled[length(y_scaled)],
       fitted = fitted,
       residuals = residuals
@@ -149,14 +155,18 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
   }
 
   # For the first step use a direct tweedie forecast
-  mu_forecast <- object$alpha * object$last_y_scaled +
-    object$theta * object$mean_y_scaled +
-    (1 - object$alpha - object$theta) * object$last_mu
+  mu_forecast <- object$alpha_mu * object$last_y_scaled +
+    object$theta_mu * object$mean_y_scaled +
+    (1 - object$alpha_mu - object$theta_mu) * object$last_mu
   mu_forecast <- max(mu_forecast, .TWEES_EPSILON)
+  p_forecast <- object$alpha_p * as.integer(object$last_y_scaled > 0) +
+    (1 - object$alpha_p) * object$last_p
+  p_forecast <- max(p_forecast, .TWEES_EPSILON)
+  phi <- -(mu_forecast^(2 - object$rho)) / ((2 - object$rho) * log(1 - p_forecast))
   dist_first <- dist_tweedie(
     mean = mu_forecast * object$scale_factor,
-    dispersion = object$phi * object$scale_factor^(2 - object$power),
-    power = object$power
+    dispersion = phi * object$scale_factor^(2 - object$rho),
+    power = object$rho
   )
 
   if (h == 1) {
@@ -229,13 +239,13 @@ residuals.TWEES <- function(object, ...) {
 
 #' @export
 model_sum.TWEES <- function(x) {
-  if (x$theta != 0) "TWEES(d)" else "TWEES(u)"
+  if (x$theta_mu != 0) "TWEES(d)" else "TWEES(u)"
 }
 
 #' @export
 tidy.TWEES <- function(x, ...) {
-  terms <- c("alpha", if (x$theta != 0) "theta", "dispersion", "power", "mu[0]")
-  ests  <- c(x$alpha, if (x$theta != 0) x$theta, x$phi, x$power, x$mu0)
+  terms <- c("alpha_mu", if (x$theta_mu != 0) "theta_mu", "alpha_p", "power", "mu0", "p0")
+  ests  <- c(x$alpha_mu, if (x$theta_mu != 0) x$theta_mu, x$alpha_p, x$rho, x$mu0, x$p0)
   tibble(term = terms, estimate = ests)
 }
 
@@ -243,13 +253,14 @@ tidy.TWEES <- function(x, ...) {
 #' @export
 report.TWEES <- function(object, ...) {
   cat("  Smoothing parameters:\n")
-  cat(sprintf("    alpha = %g\n", object$alpha))
-  if (object$theta != 0) cat(sprintf("    theta = %g\n", object$theta))
+  cat(sprintf("    alpha_mu = %g\n", object$alpha_mu))
+  if (object$theta_mu != 0) cat(sprintf("    theta_mu = %g\n", object$theta_mu))
+  cat(sprintf("    alpha_p  = %g\n", object$alpha_p))
   cat("\n  Tweedie parameters:\n")
-  cat(sprintf("    dispersion (phi) = %g\n", object$phi))
-  cat(sprintf("    power            = %g\n", object$power))
+  cat(sprintf("    power            = %g\n", object$rho))
   cat("\n  Initial state:\n")
   cat(sprintf("    mu[0] = %g\n", object$mu0))
+  cat(sprintf("    p[0]  = %g\n", object$p0))
   if (object$scale_factor != 1)
     cat(sprintf("\n  Scale factor: %g\n", object$scale_factor))
   invisible(object)
@@ -260,67 +271,70 @@ twees_simulate <- function(object, h, times) {
 
   # Build the state vector for the first-step mean (scaled)
   mu_state <- rep(
-    object$alpha * object$last_y_scaled +
-      object$theta * object$mean_y_scaled +
-      (1 - object$alpha - object$theta) * object$last_mu,
+    object$alpha_mu * object$last_y_scaled +
+      object$theta_mu * object$mean_y_scaled +
+      (1 - object$alpha_mu - object$theta_mu) * object$last_mu,
     times
   )
   mu_state <- pmax(mu_state, .TWEES_EPSILON)
-
+  p_state <- rep(
+    object$alpha_p * as.integer(object$last_y_scaled > 0) +
+      (1 - object$alpha_p) * object$last_p,
+    times
+  )
+  p_state <- pmax(p_state, .TWEES_EPSILON)
   for (i in seq_len(h)) {
     # Sample from Tweedie on the original scale
+    phi <- -(mu_state^(2 - object$rho)) / ((2 - object$rho) * log(1 - p_state))
     y_new <- rtweedie(
       times,
       mean = mu_state,
-      dispersion = object$phi,
-      power = object$power
+      dispersion = phi,
+      power = object$rho
     )
     forecast_samples[, i] <- y_new
 
     # Update the state on the scaled series
-    mu_state <- object$alpha * y_new +
-      object$theta * object$mean_y_scaled +
-      (1 - object$alpha - object$theta) * mu_state
+    mu_state <- object$alpha_mu * y_new +
+      object$theta_mu * object$mean_y_scaled +
+      (1 - object$alpha_mu - object$theta_mu) * mu_state
     mu_state <- pmax(mu_state, .TWEES_EPSILON)
+    p_state <- object$alpha_p * as.integer(y_new > 0) +
+      (1 - object$alpha_p) * p_state
   }
 
   forecast_samples <- forecast_samples * object$scale_factor
   forecast_samples
 }
 
-twees_optimize <- function(y, damped) {
+twees_optimize <- function(y, occ, damped) {
 
   # Define the function to be optimised
-  twees_nll <- function(x, y) {
-    phi <- x[1]
-    power <- x[2]
-    mu0 <- x[3]
-    alpha <- x[4]
-    theta <- x[5]
+  twees_nll <- function(x, y, occ) {
+    rho <- x[1]
+    p0 <- x[2]
+    alpha_p <- x[3]
+    mu0 <- x[4]
+    alpha_mu <- x[5]
+    theta_mu <- x[6]
 
     # Fit the exponential smoothing and return the negative log-likkelihood
-    mu <- dampedSES(y, mu0, alpha, theta)
-    -mean(dtweedie(y, mean = mu, dispersion = phi, power = power, log = TRUE))
+    mu <- dampedSES(y, mu0, alpha_mu, theta_mu)
+    p <- dampedSES(occ, p0, alpha_p, 0)
+    phi <- -(mu^ (2 - rho)) / ((2 - rho) * log(1 - p))
+    -mean(dtweedie(y, mean = mu, dispersion = phi, power = rho, log = TRUE))
   }
-
-  # Define good starting values based on moments
-  mean_y <- mean(y)
-  var_y <- var(y)
-  max_y <- max(y[y > 0], na.rm = TRUE)
-  rho_init <- 1.5
-  phi_init <- (mean_y^rho_init) / var_y
-  phi_upper <- 10 * max(mean_y, mean_y^2) / var_y
 
   # In the undamped case specify the parameter vector with theta fixed to 0
   if (!damped) {
-    init_params <- c(phi_init, rho_init, max(mean_y, .TWEES_EPSILON), 0.3)
-    lb <- c(.TWEES_EPSILON, 1 + .TWEES_EPSILON, .TWEES_EPSILON, .TWEES_EPSILON)
-    ub <- c(phi_upper, 2 - .TWEES_EPSILON, max_y * 10, 1 - .TWEES_EPSILON)
+    init_params <- c(1.5, mean(occ), 0.2, max(mean(y), .TWEES_EPSILON), 0.3)
+    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 4))
+    ub <- c(2 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
 
     # Run the optimistion with bounds using nloptr
     opt <- nloptr(
       x0 = init_params,
-      eval_f = function(x) twees_nll(c(x, 0), y),
+      eval_f = function(x) twees_nll(c(x, 0), y, occ),
       lb = lb,
       ub = ub,
       opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
@@ -329,17 +343,17 @@ twees_optimize <- function(y, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(phi_init, rho_init, max(mean_y, .TWEES_EPSILON), 0.3, 0.1)
-    lb <- c(.TWEES_EPSILON, 1 + .TWEES_EPSILON, .TWEES_EPSILON, .TWEES_EPSILON, 0)
-    ub <- c(phi_upper, 2 - .TWEES_EPSILON, max_y * 10, 1 - .TWEES_EPSILON, 1)
+    init_params <- c(1.5, mean(occ), 0.2, max(mean(y), .TWEES_EPSILON), 0.3, 0.1)
+    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
+    ub <- c(2 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
 
     # Run the optimization with bounds and a linear constraint using nloptr
     opt <- nloptr(
       x0 = init_params,
-      eval_f = function(x) twees_nll(x, y),
+      eval_f = function(x) twees_nll(x, y, occ),
       lb = lb,
       ub = ub,
-      eval_g_ineq = function(x) x[4] + x[5] - 1 + .TWEES_EPSILON,
+      eval_g_ineq = function(x) x[5] + x[6] - 1 + .TWEES_EPSILON,
       opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
     )
   }
