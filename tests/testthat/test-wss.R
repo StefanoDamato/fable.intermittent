@@ -42,5 +42,51 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
   })
 }
+
+test_that("WSS validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_wss(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_wss(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_wss(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::train_wss(all_zero_ts(), specials = list()),
+    "all zero"
+  )
+  expect_error(
+    fable.intermittent:::no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  fit <- fabletools::model(base_ts(), WSS(value))
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 0),
+    "`times` must be a positive integer"
+  )
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 1.5),
+    "`times` must be a positive integer"
+  )
+})
+
+test_that("WSS handles a series that is never zero (unvisited occurrence state)", {
+  ts_never_zero <- base_ts()
+  ts_never_zero$value <- abs(ts_never_zero$value) + 1
+  expect_no_error({
+    fit <- fabletools::model(ts_never_zero, WSS(value))
+  })
+  fitted_vals <- stats::fitted(fit)$.fitted
+  expect_all_true(is.finite(fitted_vals[-1]))
+})

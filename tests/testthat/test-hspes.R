@@ -46,6 +46,51 @@ for (i in 1:length(test_data)){
       expect_s3_class(t, "tbl_df")
       expect_true(all(c("term", "estimate") %in% names(t)))
       expect_gt(nrow(t), 0L)
+
+      # Check report
+      expect_output(fabletools::report(fit))
     })
   }
 }
+
+test_that("HSPES validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_hspes(multivariate_ts(), specials = list(), damped = TRUE),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_hspes(all_na_ts(), specials = list(), damped = TRUE),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_hspes(some_na_ts(), specials = list(), damped = TRUE),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::train_hspes(all_zero_ts(), specials = list(), damped = TRUE),
+    "all zero"
+  )
+  expect_error(
+    fable.intermittent:::train_hspes(base_ts(), specials = list(), damped = "yes"),
+    "`damped` must be a boolean"
+  )
+  expect_error(
+    fable.intermittent:::hspes_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  fit <- fabletools::model(base_ts(), HSPES(value))
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 0),
+    "`times` must be a positive integer"
+  )
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 1.5),
+    "`times` must be a positive integer"
+  )
+
+  # h = 1 returns the analytic hurdle-shifted Poisson distribution directly
+  fc1 <- fabletools::forecast(fit, h = 1, times = 100)
+  fc_distr <- fc1[[fabletools::distribution_var(fc1)]]
+  expect_equal(unname(stats::family(fc_distr)), "inflated")
+})

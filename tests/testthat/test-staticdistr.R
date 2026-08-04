@@ -59,8 +59,59 @@ for (i in 1:length(test_data)){
       t <- generics::tidy(fit)
       expect_s3_class(t, "tbl_df")
       expect_true(all(c("term", "estimate") %in% names(t)))
+
+      # Check report
+      expect_output(fabletools::report(fit))
       })
     }
-  }    
+  }
 }
-  
+
+test_that("STATICDISTR validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_staticdistr(
+      multivariate_ts(), specials = list(), distr = "auto",
+      hot_start = FALSE, criterion = "aic"
+    ),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_staticdistr(
+      all_na_ts(), specials = list(), distr = "auto",
+      hot_start = FALSE, criterion = "aic"
+    ),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_staticdistr(
+      some_na_ts(), specials = list(), distr = "auto",
+      hot_start = FALSE, criterion = "aic"
+    ),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::staticdistr_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+  expect_error(
+    fable.intermittent:::staticdistr_information(
+      distributional::dist_poisson(1), y = c(1, 2, 3), criterion = "invalid"
+    ),
+    "Invalid criterion"
+  )
+})
+
+test_that("STATICDISTR supports the bic criterion", {
+  fit <- fabletools::model(base_ts(), STATICDISTR(value, distr = "auto", criterion = "bic"))
+  expect_s3_class(fit, "mdl_df")
+  expect_output(fabletools::report(fit))
+})
+
+test_that("STATICDISTR handles all-zero series (no positive demand to fit hsnb on)", {
+  for (distr in c("auto", "mixture", "hsnb")) {
+    fit <- fabletools::model(all_zero_ts(), STATICDISTR(value, distr = distr))
+    expect_s3_class(fit, "mdl_df")
+    expect_all_true(is.finite(stats::fitted(fit)$.fitted))
+  }
+})
+

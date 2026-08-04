@@ -42,5 +42,54 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
   })
 }
+
+test_that("NNARMA validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_nnarma(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_nnarma(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::train_nnarma(all_zero_ts(), specials = list()),
+    "all zero"
+  )
+  expect_error(
+    fable.intermittent:::nnarma_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  testthat::local_mocked_bindings(
+    get_freq = function(...) 0L,
+    .package = "fable.intermittent"
+  )
+  expect_error(
+    fable.intermittent:::train_nnarma(base_ts(), specials = list()),
+    "seasonal period must be greater than or equal to 1"
+  )
+})
+
+test_that("NNARMA forecast floors a degenerate (zero) error variance", {
+  object <- structure(
+    list(
+      phi = 0.5, theta = 0.1, co = 1,
+      frequency = 1L, seasons = NULL,
+      v_state = rep(0, 20), last_v = 0, last_m = 1, last_y = 1
+    ),
+    class = "NNARMA"
+  )
+  new_data <- tsibble::tsibble(
+    time = as.Date("2026-01-01") + seq_len(5),
+    index = time
+  )
+  fc <- fable.intermittent:::forecast.NNARMA(object, new_data)
+  expect_true(all(is.finite(distributional::variance(fc))))
+  expect_true(all(distributional::variance(fc) > 0))
+})

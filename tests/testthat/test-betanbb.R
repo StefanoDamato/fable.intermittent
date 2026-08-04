@@ -42,5 +42,37 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
   })
 }
+
+test_that("BETANBB validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_betanbb(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_betanbb(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_betanbb(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::betanbb_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  fit <- fabletools::model(base_ts(), BETANBB(value))
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 0),
+    "`times` must be a positive integer"
+  )
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 1.5),
+    "`times` must be a positive integer"
+  )
+})

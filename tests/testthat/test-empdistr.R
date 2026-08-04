@@ -44,6 +44,28 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
     })
   }
 }
+
+test_that("EMPDISTR validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_empdistr(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_empdistr(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_empdistr(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::empdistr_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+})
