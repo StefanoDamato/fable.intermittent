@@ -88,7 +88,6 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
   occurrence <- as.numeric(y_scaled > 0)
 
   # Optimise parameters using Tweedie log-likelihood
-
   opt <- twees_optimize(y_scaled, occurrence, damped)
   x <- opt$solution
   rho <- x[1]
@@ -161,8 +160,8 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
   mu_forecast <- max(mu_forecast, .TWEES_EPSILON)
   p_forecast <- object$alpha_p * as.integer(object$last_y_scaled > 0) +
     (1 - object$alpha_p) * object$last_p
-  p_forecast <- max(p_forecast, .TWEES_EPSILON)
-  phi <- -(mu_forecast^(2 - object$rho)) / ((2 - object$rho) * log(1 - p_forecast))
+  p_forecast <- min(max(p_forecast, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
+  phi <- -(mu_forecast^(2 - object$rho)) / ((2 - object$rho) * log1p(-p_forecast))
   dist_first <- dist_tweedie(
     mean = mu_forecast * object$scale_factor,
     dispersion = phi * object$scale_factor^(2 - object$rho),
@@ -282,10 +281,9 @@ twees_simulate <- function(object, h, times) {
       (1 - object$alpha_p) * object$last_p,
     times
   )
-  p_state <- pmax(p_state, .TWEES_EPSILON)
+  p_state <- pmin(pmax(p_state, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
   for (i in seq_len(h)) {
-    # Sample from Tweedie on the original scale
-    phi <- -(mu_state^(2 - object$rho)) / ((2 - object$rho) * log(1 - p_state))
+    phi <- -(mu_state^(2 - object$rho)) / ((2 - object$rho) * log1p(-p_state))
     y_new <- rtweedie(
       times,
       mean = mu_state,
@@ -301,6 +299,7 @@ twees_simulate <- function(object, h, times) {
     mu_state <- pmax(mu_state, .TWEES_EPSILON)
     p_state <- object$alpha_p * as.integer(y_new > 0) +
       (1 - object$alpha_p) * p_state
+    p_state <- pmin(pmax(p_state, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
   }
 
   forecast_samples <- forecast_samples * object$scale_factor
@@ -320,16 +319,16 @@ twees_optimize <- function(y, occ, damped) {
 
     # Fit the exponential smoothing and return the negative log-likkelihood
     mu <- dampedSES(y, mu0, alpha_mu, theta_mu)
-    p <- dampedSES(occ, p0, alpha_p, 0)
-    phi <- -(mu^ (2 - rho)) / ((2 - rho) * log(1 - p))
+    p <- pmin(pmax(dampedSES(occ, p0, alpha_p, 0), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
+    phi <- -(mu^ (2 - rho)) / ((2 - rho) * log1p(-p))
     -mean(dtweedie(y, mean = mu, dispersion = phi, power = rho, log = TRUE))
   }
 
   # In the undamped case specify the parameter vector with theta fixed to 0
   if (!damped) {
-    init_params <- c(1.5, mean(occ), 0.2, max(mean(y), .TWEES_EPSILON), 0.3)
+    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.3)
     lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 4))
-    ub <- c(2 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
+    ub <- c(1.8 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
 
     # Run the optimistion with bounds using nloptr
     opt <- nloptr(
@@ -343,9 +342,9 @@ twees_optimize <- function(y, occ, damped) {
   } else {
 
     # In the damped case, specify the full parameter vector
-    init_params <- c(1.5, mean(occ), 0.2, max(mean(y), .TWEES_EPSILON), 0.3, 0.1)
+    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.3, 0.1)
     lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
-    ub <- c(2 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
+    ub <- c(1.8 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
 
     # Run the optimization with bounds and a linear constraint using nloptr
     opt <- nloptr(
