@@ -324,39 +324,30 @@ twees_optimize <- function(y, occ, damped) {
     -mean(dtweedie(y, mean = mu, dispersion = phi, power = rho, log = TRUE))
   }
 
-  # In the undamped case specify the parameter vector with theta fixed to 0
+  # In the undamped case set the last parameter to 0
   if (!damped) {
-    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.3)
+    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.2)
     lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 4))
-    ub <- c(1.8 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
-
-    # Run the optimistion with bounds using nloptr
-    opt <- nloptr(
-      x0 = init_params,
-      eval_f = function(x) twees_nll(c(x, 0), y, occ),
-      lb = lb,
-      ub = ub,
-      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
-    )
-    opt$solution <- c(opt$solution, 0)
+    ub <- c(1.8 - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
+    eval_f <- function(x) twees_nll(c(x, 0), y, occ)
   } else {
 
-    # In the damped case, specify the full parameter vector
-    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.3, 0.1)
+    # Otherwise, learn the damping parameter with a simplex parametrisation
+    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.2, 0.1 / (1 - 0.2))
     lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
-    ub <- c(1.8 - .TWEES_EPSILON,  rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
-
-    # Run the optimization with bounds and a linear constraint using nloptr
-    opt <- nloptr(
-      x0 = init_params,
-      eval_f = function(x) twees_nll(x, y, occ),
-      lb = lb,
-      ub = ub,
-      eval_g_ineq = function(x) x[5] + x[6] - 1 + .TWEES_EPSILON,
-      opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
-    )
+    ub <- c(1.8 - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
+    eval_f <- function(x) twees_nll(c(x[1:5], (1 - x[5]) * x[6]), y, occ)
   }
 
+  # Run the optimisation loop in an unconstrained way
+  opt <- nloptr(
+    x0 = init_params,
+    eval_f = eval_f,
+    lb = lb,
+    ub = ub,
+    opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
+  )
+  opt$solution <- c(opt$solution[1:5], if (damped) (1 - opt$solution[5]) * opt$solution[6] else 0)
   opt
 }
 

@@ -342,38 +342,30 @@ hspes_optimize_occurrence <- function(occurrence, damped) {
     -mean(dbinom(occurrence, size = 1, prob = p, log = TRUE))
   }
 
-  # In the undamped case, set the last parameter to 0
+  # In the undamped case set the last parameter to 0
   if (!damped) {
     init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2)
     lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
     ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
-
-    # Run the optimization using nloptr with bounds
-    opt <- nloptr(
-      x0 = init_params,
-      eval_f = function(x) nll_occ(c(x, 0), occurrence),
-      lb = lb,
-      ub = ub,
-      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
-    )
+    eval_f <- function(x) nll_occ(c(x, 0), occurrence)
   } else {
 
-    # In the damped case, specify the full parameter vector
-    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2, 0.2)
+    # Otherwise, learn the damping parameter with a simplex parametrisation
+    init_params <- c(min(mean(occurrence), 1 - .HSPES_EPSILON), 0.2, 0.2 / (1 - 0.2))
     lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
     ub <- c(1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
-
-    # Run the optimization using nloptr with bounds and a linear constraint
-    opt <-nloptr(
-      x0 = init_params,
-      eval_f = function(x) nll_occ(x, occurrence),
-      lb = lb,
-      ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
-      opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
-    )
+    eval_f <- function(x) nll_occ(c(x[1:2], (1 - x[2]) * x[3]), occurrence)
   }
 
+  # Run the optimisation loop in an unconstrained way
+  opt <- nloptr(
+    x0 = init_params,
+    eval_f = eval_f,
+    lb = lb,
+    ub = ub,
+    opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
+  )
+  opt$solution <- c(opt$solution[1:2], if (damped) (1 - opt$solution[2]) * opt$solution[3] else 0)
   opt
 }
 
@@ -397,39 +389,30 @@ hspes_optimize_demand <- function(shifted_demand, damped) {
     return(opt)
   }
 
-  # In the undamped case, set the last parameter to 0
+  # In the undamped case set the last parameter to 0
   if (!damped) {
     init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2)
     lb <- c(.HSPES_EPSILON, .HSPES_EPSILON)
     ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON)
-
-    # Run the optimization using nloptr with bounds
-    opt <-nloptr(
-      x0 = init_params,
-      eval_f = function(x) nll_dem(c(x, 0), shifted_demand),
-      lb = lb,
-      ub = ub,
-      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
-    )
-    opt$solution <- c(opt$solution, 0)
+    eval_f <- function(x) nll_dem(c(x, 0), shifted_demand)
   } else {
 
-    # In the damped case, specify the full parameter vector
-    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2, 0.2)
+    # Otherwise, learn the damping parameter with a simplex parametrisation
+    init_params <- c(max(mean(shifted_demand), .HSPES_EPSILON), 0.2, 0.2 / (1 - 0.2))
     lb <- c(.HSPES_EPSILON, .HSPES_EPSILON, .HSPES_EPSILON)
     ub <- c(max(shifted_demand) * 10, 1 - .HSPES_EPSILON, 1 - .HSPES_EPSILON)
-
-    # run the optimization using nloptr with bounds and a linear constraint
-    opt <- nloptr(
-      x0 = init_params,
-      eval_f = function(x) nll_dem(x, shifted_demand),
-      lb = lb,
-      ub = ub,
-      eval_g_ineq = function(x) x[2] + x[3] - 1 + .HSPES_EPSILON,
-      opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
-    )
+    eval_f <- function(x) nll_dem(c(x[1:2], (1 - x[2]) * x[3]), shifted_demand)
   }
 
+  # Run the optimisation loop in an unconstrained way
+  opt <- nloptr(
+    x0 = init_params,
+    eval_f = eval_f,
+    lb = lb,
+    ub = ub,
+    opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
+  )
+  opt$solution <- c(opt$solution[1:2], if (damped) (1 - opt$solution[2]) * opt$solution[3] else 0)
   opt
 }
 

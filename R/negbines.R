@@ -285,37 +285,28 @@ negbines_optimize <- function(y, damped) {
 
   # In the undamped case set the last parameter to 0
   if (!damped) {
-    init_params <- c(0.5, mean(y), 0.3)
+    init_params <- c(0.5, mean(y), 0.2)
     lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON)
     ub <- c(1 - .NEGBINES_EPSILON, max(y) * 10, 1 - .NEGBINES_EPSILON)
+    eval_f <- function(x) negbines_nll(c(x, 0), y)
+  } else {
 
-    # Run the bounded optimization using nloptr
-    opt <- nloptr(
+    # Otherwise, learn the damping parameter with a simplex parametrisation
+    init_params <- c(0.5, mean(y), 0.2, 0.1 / (1 - 0.2))
+    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON)
+    ub <- c(1 - .NEGBINES_EPSILON, max(y), 1 - .NEGBINES_EPSILON, 1 - .NEGBINES_EPSILON)
+    eval_f <- function(x) negbines_nll(c(x[1:3], (1 - x[3]) * x[4]), y)
+  }
+
+  # Run the optimisation loop in an unconstrained way
+  opt <- nloptr(
       x0 = init_params,
-      eval_f = function(x) negbines_nll(c(x, 0), y),
+      eval_f = eval_f,
       lb = lb,
       ub = ub,
       opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
     )
-    opt$solution <- c(opt$solution, 0)
-  } else {
-
-    # In the damped case specify the full parameter vector
-    init_params <- c(0.5, mean(y), 0.3, 0.1)
-    lb <- c(.NEGBINES_EPSILON, .NEGBINES_EPSILON, .NEGBINES_EPSILON, 0)
-    ub <- c(1 - .NEGBINES_EPSILON, max(y), 1 - .NEGBINES_EPSILON, 1)
-
-    # run the bounded optimization with a linear constraint using nloptr
-    opt <- nloptr(
-      x0 = init_params,
-      eval_f = function(x) negbines_nll(x, y),
-      lb = lb,
-      ub = ub,
-      eval_g_ineq = function(x) x[3] + x[4] - 1 + .NEGBINES_EPSILON,
-      opts = list(algorithm = "NLOPT_LN_COBYLA", maxeval = 500)
-    )
-  }
-
+  opt$solution <- c(opt$solution[1:3],  if (damped) (1 - opt$solution[3]) * opt$solution[4] else 0)
   opt
 }
 
