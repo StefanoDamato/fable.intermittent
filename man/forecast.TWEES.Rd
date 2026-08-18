@@ -23,7 +23,8 @@ A distribution vector of forecasts: for h=1 the vector class is
 \code{dist_tweedie}; for h>1 the vector class is \code{dist_sample}.
 }
 \description{
-Produces forecast distributions from a fitted TWEES model using simulation.
+Produces forecast distributions from a fitted TWEES
+model using simulation.
 }
 \examples{
 ts <- tsibble::tsibble(

@@ -2,12 +2,14 @@
 #'
 #' Exponential smoothing state space model for intermittent demand with a
 #' Tweedie observation distribution. The conditional mean of the Tweedie
-#' is governed by a (optionally damped) exponential smoothing process.
-#' The power and dispersion parameter are estimated to maximise the likelihood.
-#' The Tweedie family naturally models both zeros and large spikes
-#' via its compound Poisson-Gamma nature. The first-step forecast follows
-#' a Tweedie distribution, and multi-step forecasts are obtained by simulating
-#' from the model forward in time. The model parameters are estimated by
+#' is governed by a (optionally damped) exponential smoothing process, and
+#' the dispersion parameter is derived by a second (optionally damped) 
+#' exponential smoothing process on the occurrence binary time series. 
+#' The Tweedie family naturally models both zeros and large spikes 
+#' via its compound Poisson-Gamma nature. The power parameter is optimised
+#' to maximise the likelihood. The first-step forecast follows a Tweedie 
+#' distribution, and multi-step forecasts are obtained by simulating 
+#' from the model forward in time.
 #'
 #' @param formula Model specification.
 #' @param damped Logical. If `TRUE` (default), the exponential smoothing
@@ -17,7 +19,7 @@
 #'   This improves numerical stability.
 #' @param object A fitted model object.
 #' @param ... Not used.
-#' 
+#'
 #' @references
 #'
 #' Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
@@ -87,20 +89,20 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
   y_scaled <- y / scale_factor
   occurrence <- as.numeric(y_scaled > 0)
 
-  # Optimise parameters using Tweedie log-likelihood
+  # Optimise parameters using Tweedie log-likelihood (p0 fixed, not estimated)
   opt <- twees_optimize(y_scaled, occurrence, damped)
   x <- opt$solution
   rho <- x[1]
-  p0 <- x[2]
-  alpha_p <- x[3]
+  alpha_p <- x[2]
+  theta_p <- if (damped) x[3] else 0
   mu0 <- x[4]
   alpha_mu <- x[5]
   theta_mu <- if (damped) x[6] else 0
 
   # Compute fitted values on the scaled series
   mu <- pmax(dampedSES(y_scaled, mu0, alpha_mu, theta_mu), .TWEES_EPSILON)
-  p <- pmax(dampedSES(occurrence, p0, alpha_p, 0), .TWEES_EPSILON)
-
+  p0 <- min(max(mean(occurrence), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
+  p <- pmin(pmax(dampedSES(occurrence, p0, alpha_p, theta_p), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
 
   # Back-transform fitted values and residuals
   fitted <- mu * scale_factor
@@ -114,8 +116,10 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
       theta_mu = theta_mu,
       p0 = p0,
       alpha_p = alpha_p,
+      theta_p = theta_p,
       scale_factor = scale_factor,
       mean_y_scaled = mean(y_scaled),
+      mean_occ = mean(occurrence),
       last_mu = mu[length(mu)],
       last_p = p[length(p)],
       last_y_scaled = y_scaled[length(y_scaled)],
@@ -128,7 +132,8 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 
 #' Forecast a TWEES model
 #'
-#' Produces forecast distributions from a fitted TWEES model using simulation.
+#' Produces forecast distributions from a fitted TWEES
+#' model using simulation.
 #'
 #' @inheritParams forecast.EMPDISTR
 #' @param times The number of sample paths to use in estimating the forecast
@@ -159,7 +164,8 @@ forecast.TWEES <- function(object, new_data, specials = NULL, times = 10000, ...
     (1 - object$alpha_mu - object$theta_mu) * object$last_mu
   mu_forecast <- max(mu_forecast, .TWEES_EPSILON)
   p_forecast <- object$alpha_p * as.integer(object$last_y_scaled > 0) +
-    (1 - object$alpha_p) * object$last_p
+    object$theta_p * object$mean_occ +
+    (1 - object$alpha_p - object$theta_p) * object$last_p
   p_forecast <- min(max(p_forecast, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
   phi <- -(mu_forecast^(2 - object$rho)) / ((2 - object$rho) * log1p(-p_forecast))
   dist_first <- dist_tweedie(
@@ -243,8 +249,10 @@ model_sum.TWEES <- function(x) {
 
 #' @export
 tidy.TWEES <- function(x, ...) {
-  terms <- c("alpha_mu", if (x$theta_mu != 0) "theta_mu", "alpha_p", "power", "mu0", "p0")
-  ests  <- c(x$alpha_mu, if (x$theta_mu != 0) x$theta_mu, x$alpha_p, x$rho, x$mu0, x$p0)
+  terms <- c("alpha_mu", if (x$theta_mu != 0) "theta_mu",
+             "alpha_p", if (x$theta_p != 0) "theta_p", "power", "mu0")
+  ests  <- c(x$alpha_mu, if (x$theta_mu != 0) x$theta_mu,
+             x$alpha_p, if (x$theta_p != 0) x$theta_p, x$rho, x$mu0)
   tibble(term = terms, estimate = ests)
 }
 
@@ -255,11 +263,12 @@ report.TWEES <- function(object, ...) {
   cat(sprintf("    alpha_mu = %g\n", object$alpha_mu))
   if (object$theta_mu != 0) cat(sprintf("    theta_mu = %g\n", object$theta_mu))
   cat(sprintf("    alpha_p  = %g\n", object$alpha_p))
+  if (object$theta_p != 0) cat(sprintf("    theta_p  = %g\n", object$theta_p))
   cat("\n  Tweedie parameters:\n")
   cat(sprintf("    power            = %g\n", object$rho))
   cat("\n  Initial state:\n")
   cat(sprintf("    mu[0] = %g\n", object$mu0))
-  cat(sprintf("    p[0]  = %g\n", object$p0))
+  cat(sprintf("    p[0]  = %g  (fixed at mean(occurrence), not estimated)\n", object$p0))
   if (object$scale_factor != 1)
     cat(sprintf("\n  Scale factor: %g\n", object$scale_factor))
   invisible(object)
@@ -278,7 +287,8 @@ twees_simulate <- function(object, h, times) {
   mu_state <- pmax(mu_state, .TWEES_EPSILON)
   p_state <- rep(
     object$alpha_p * as.integer(object$last_y_scaled > 0) +
-      (1 - object$alpha_p) * object$last_p,
+      object$theta_p * object$mean_occ +
+      (1 - object$alpha_p - object$theta_p) * object$last_p,
     times
   )
   p_state <- pmin(pmax(p_state, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
@@ -298,7 +308,8 @@ twees_simulate <- function(object, h, times) {
       (1 - object$alpha_mu - object$theta_mu) * mu_state
     mu_state <- pmax(mu_state, .TWEES_EPSILON)
     p_state <- object$alpha_p * as.integer(y_new > 0) +
-      (1 - object$alpha_p) * p_state
+      object$theta_p * object$mean_occ +
+      (1 - object$alpha_p - object$theta_p) * p_state
     p_state <- pmin(pmax(p_state, .TWEES_EPSILON), 1 - .TWEES_EPSILON)
   }
 
@@ -311,32 +322,32 @@ twees_optimize <- function(y, occ, damped) {
   # Define the function to be optimised
   twees_nll <- function(x, y, occ) {
     rho <- x[1]
-    p0 <- x[2]
-    alpha_p <- x[3]
+    alpha_p <- x[2]
+    theta_p <- x[3]
     mu0 <- x[4]
     alpha_mu <- x[5]
     theta_mu <- x[6]
 
-    # Fit the exponential smoothing and return the negative log-likkelihood
     mu <- dampedSES(y, mu0, alpha_mu, theta_mu)
-    p <- pmin(pmax(dampedSES(occ, p0, alpha_p, 0), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
-    phi <- -(mu^ (2 - rho)) / ((2 - rho) * log1p(-p))
+    p0 <- min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
+    p <- pmin(pmax(dampedSES(occ, p0, alpha_p, theta_p), .TWEES_EPSILON), 1 - .TWEES_EPSILON)
+    phi <- -(mu^(2 - rho)) / ((2 - rho) * log1p(-p))
     -mean(dtweedie(y, mean = mu, dispersion = phi, power = rho, log = TRUE))
   }
 
-  # In the undamped case set the last parameter to 0
+  # In the undamped case set both damping parameters to 0
   if (!damped) {
-    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.2)
-    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 4))
-    ub <- c(1.8 - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, 1 - .TWEES_EPSILON)
-    eval_f <- function(x) twees_nll(c(x, 0), y, occ)
+    init_params <- c(1.5, 0.2, max(mean(y), .TWEES_EPSILON), 0.2)
+    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 3))
+    ub <- c(1.8 - .TWEES_EPSILON, 1 - .TWEES_EPSILON, max(y) * 10, 1 - .TWEES_EPSILON)
+    eval_f <- function(x) twees_nll(c(x[1], x[2], 0, x[3], x[4], 0), y, occ)
   } else {
 
-    # Otherwise, learn the damping parameter with a simplex parametrisation
-    init_params <- c(1.5, min(max(mean(occ), .TWEES_EPSILON), 1 - .TWEES_EPSILON), 0.2, max(mean(y), .TWEES_EPSILON), 0.2, 0.1 / (1 - 0.2))
+    # Otherwise, learn both damping parameters with a simplex parametrisation
+    init_params <- c(1.5, 0.2, 0.1 / (1 - 0.2), max(mean(y), .TWEES_EPSILON), 0.2, 0.1 / (1 - 0.2))
     lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
     ub <- c(1.8 - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
-    eval_f <- function(x) twees_nll(c(x[1:5], (1 - x[5]) * x[6]), y, occ)
+    eval_f <- function(x) twees_nll(c(x[1], x[2], (1 - x[2]) * x[3], x[4], x[5], (1 - x[5]) * x[6]), y, occ)
   }
 
   # Run the optimisation loop in an unconstrained way
@@ -347,11 +358,15 @@ twees_optimize <- function(y, occ, damped) {
     ub = ub,
     opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
   )
-  opt$solution <- c(opt$solution[1:5], if (damped) (1 - opt$solution[5]) * opt$solution[6] else 0)
+
+  # Reparametrise the solution to the original parameterisation
+  opt$solution <- if (damped) c(
+    opt$solution[1], opt$solution[2], (1 - opt$solution[2]) * opt$solution[3],
+    opt$solution[4:5], (1 - opt$solution[5]) * opt$solution[6]
+  ) else c(opt$solution[1], opt$solution[2], 0, opt$solution[3:4], 0)
   opt
 }
 
 twees_no_xreg <- function(...) {
   abort("Exogenous regressors are not supported by TWEES.")
 }
-

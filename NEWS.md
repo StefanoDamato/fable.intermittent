@@ -4,11 +4,15 @@
 
 * Released `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
 
-* Added occurrence smoothing for `TWEES`.
+* Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
 ## Minor improvements and bug fixes
 
-* Changed recursion in `BETANBB` and `GAMPOISB`.
+* Changed optimisation strategy for damped exponential smoothing models.
+
+* Fixed recursion in `BETANBB` and `GAMPOISB`.
+
+* Implemented non-negative Gaussian forecast distribution for ARMA-based models.
 
 * Increased test coverage.
 
