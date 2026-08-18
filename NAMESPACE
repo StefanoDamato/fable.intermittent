@@ -97,49 +97,61 @@ export(TWEES)
 export(VZ)
 export(WSS)
 importFrom(Rcpp,sourceCpp)
-importFrom(distributional,covariance)
-importFrom(distributional,dist_inflated)
-importFrom(distributional,dist_negative_binomial)
-importFrom(distributional,dist_poisson)
-importFrom(distributional,dist_sample)
-importFrom(distributional,dist_transformed)
-importFrom(distributional,generate)
-importFrom(distributional,log_likelihood)
-importFrom(distributional,new_dist)
-importFrom(distributional,parameters)
-importFrom(fabletools,forecast)
-importFrom(fabletools,get_frequencies)
-importFrom(fabletools,model_sum)
-importFrom(fabletools,new_model_class)
-importFrom(fabletools,new_model_definition)
-importFrom(fabletools,new_specials)
-importFrom(fabletools,report)
-importFrom(generics,glance)
-importFrom(generics,tidy)
+importFrom(distributional,
+  covariance,
+  dist_inflated,
+  dist_negative_binomial,
+  dist_poisson,
+  dist_sample,
+  dist_transformed,
+  generate,
+  log_likelihood,
+  new_dist,
+  parameters
+)
+importFrom(fabletools,
+  forecast,
+  get_frequencies,
+  model_sum,
+  new_model_class,
+  new_model_definition,
+  new_specials,
+  report
+)
+importFrom(generics,
+  glance,
+  tidy
+)
 importFrom(nloptr,nloptr)
-importFrom(rlang,abort)
-importFrom(rlang,arg_match)
-importFrom(rlang,is_integerish)
-importFrom(stats,dbinom)
-importFrom(stats,density)
-importFrom(stats,dnbinom)
-importFrom(stats,dnorm)
-importFrom(stats,dpois)
-importFrom(stats,median)
-importFrom(stats,pnorm)
-importFrom(stats,qnorm)
-importFrom(stats,rbeta)
-importFrom(stats,rgamma)
-importFrom(stats,rnbinom)
-importFrom(stats,rnorm)
-importFrom(stats,rpois)
-importFrom(stats,runif)
-importFrom(stats,setNames)
-importFrom(stats,var)
+importFrom(rlang,
+  abort,
+  arg_match,
+  is_integerish
+)
+importFrom(stats,
+  dbinom,
+  density,
+  dnbinom,
+  dnorm,
+  dpois,
+  median,
+  pnorm,
+  qnorm,
+  rbeta,
+  rgamma,
+  rnbinom,
+  rnorm,
+  rpois,
+  runif,
+  setNames,
+  var
+)
 importFrom(tibble,tibble)
 importFrom(tsibble,measured_vars)
-importFrom(tweedieDistr,dist_tweedie)
-importFrom(tweedieDistr,dtweedie)
-importFrom(tweedieDistr,rtweedie)
+importFrom(tweedieDistr,
+  dist_tweedie,
+  dtweedie,
+  rtweedie
+)
 importFrom(utils,tail)
 useDynLib(fable.intermittent)

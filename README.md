@@ -52,7 +52,7 @@ Finally, the package releases two data sets in the
 
 ## News
 
-:boom: \[2026-06-19\] fable.intermittent v0.1.0: first release.
+:boom: \[2026-06-18\] fable.intermittent v0.1.0: first release.
 
 ## Installation
 
@@ -112,7 +112,7 @@ the methods.
 
 <td align="center" valign="top" width="20%">
 
-<a href="https://dazzimonti.github.io/dazzimonti/">
+<a href="https://dazzimonti.github.io/">
 <img src="https://github.com/dazzimonti.png" width="100px;" alt="Dario Azzimonti" style="border-radius:50%;border:1px solid #646464;"/><br />
 <sub><b>Dario Azzimonti</b></sub></a><br /> <sub> </sub><br />
 <a href="mailto:dario.azzimonti@gmail.com?subject=[fable.intermittent package]">Email</a>

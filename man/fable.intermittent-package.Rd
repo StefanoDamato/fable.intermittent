@@ -23,6 +23,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Stefano Damato \email{stefanodamato128@gmail.com} (\href{https://orcid.org/0009-0001-0225-3736}{ORCID}) [copyright holder]
   \item Lorenzo Zambon \email{lorenzo.zambon@idsia.ch} (\href{https://orcid.org/0000-0002-8939-993X}{ORCID})
   \item Dario Azzimonti \email{dario.azzimonti@gmail.com} (\href{https://orcid.org/0000-0001-5080-3061}{ORCID})
 }
