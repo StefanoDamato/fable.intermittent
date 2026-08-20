@@ -1,5 +1,5 @@
 for (i in 1:length(test_data)){
-  for (distr in c("auto", "mixture", "pois", "nbinom", "hsp", "hsnb", "mixture")) {
+  for (distr in c("auto", "mixture", "pois", "nbinom", "hsp", "hsnb", "mixture", "tweedie")) {
     for (hot_start in c(FALSE, TRUE)) {
     test_that(paste0("STATICDISTR ", "with ", distr, " distribution ",
                      ifelse(hot_start, "(hot start) ", "(cold start) "), 
@@ -46,6 +46,8 @@ for (i in 1:length(test_data)){
         expect_all_equal(fc_family, "negbin")
       } else if (distr %in% c("hsp", "hsnb")) {
         expect_all_equal(fc_family, "inflated")
+      } else if (distr == "tweedie") {
+        expect_all_equal(fc_family, "tweedie")
       } else if (distr == "auto") {
         expect_all_true(fc_family %in% c("poisson", "negbin", "inflated"))
       }
@@ -107,8 +109,49 @@ test_that("STATICDISTR supports the bic criterion", {
   expect_output(fabletools::report(fit))
 })
 
+test_that("STATICDISTR never selects the Tweedie for auto or mixture", {
+  for (i in seq_along(test_data)) {
+    for (distr in c("auto", "mixture")) {
+      fit <- fabletools::model(test_data[[i]], model = STATICDISTR(value, distr = distr))
+      mdl <- fit$model[[1]]$fit
+      expect_false(identical(mdl$selected_distr, "tweedie"))
+      expect_false("tweedie" %in% names(mdl$ic))
+      expect_no_match(fabletools::model_sum(fit$model[[1]]), "tweedie")
+    }
+  }
+})
+
+test_that("fit_tweedie keeps the power strictly inside its bounds on count data", {
+  # As the power approaches 1 the Tweedie degenerates to a Poisson, whose mass
+  # lies on the integer lattice: the Lebesgue density then becomes singular and
+  # the log-likelihood of integer data diverges to +Inf. The bounds prevent it.
+  for (y in list(stats::rpois(60, 1.3), stats::rnbinom(60, size = 1, prob = 0.3),
+                 c(rep(0, 39), 7), c(0, 0, 3, 0, 1, 5, 0, 2, 0, 0, 0, 4))) {
+    params <- fable.intermittent:::fit_tweedie(y)
+    expect_gt(params[["power"]], 1.2)
+    expect_lt(params[["power"]], 1.8)
+    expect_gt(params[["dispersion"]], 0)
+    expect_equal(params[["mean"]], mean(y))
+
+    d <- tweedieDistr::dist_tweedie(
+      params[["mean"]], params[["dispersion"]], params[["power"]]
+    )
+    loglik <- sum(distributional::log_likelihood(d, y))
+    expect_true(is.finite(loglik))
+    expect_lt(loglik, 0)
+  }
+})
+
+test_that("fit_tweedie falls back gracefully on an all-zero series", {
+  params <- fable.intermittent:::fit_tweedie(rep(0, 40))
+  expect_gt(params[["mean"]], 0)
+  expect_gt(params[["dispersion"]], 0)
+  expect_gt(params[["power"]], 1)
+  expect_lt(params[["power"]], 2)
+})
+
 test_that("STATICDISTR handles all-zero series (no positive demand to fit hsnb on)", {
-  for (distr in c("auto", "mixture", "hsnb")) {
+  for (distr in c("auto", "mixture", "hsnb", "tweedie")) {
     fit <- fabletools::model(all_zero_ts(), STATICDISTR(value, distr = distr))
     expect_s3_class(fit, "mdl_df")
     expect_all_true(is.finite(stats::fitted(fit)$.fitted))

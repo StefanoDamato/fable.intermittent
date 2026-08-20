@@ -7,7 +7,7 @@
 \usage{
 STATICDISTR(
   formula,
-  distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
+  distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture", "tweedie"),
   hot_start = FALSE,
   criterion = c("aic", "bic"),
   ...
@@ -19,7 +19,7 @@ STATICDISTR(
 \item{formula}{Model specification.}
 
 \item{distr}{Distribution choice: one of \code{"auto"}, \code{"pois"}, \code{"hsp"},
-\code{"nbinom"}, \code{"hsnb"}, or \code{"mixture"}.}
+\code{"nbinom"}, \code{"hsnb"}, \code{"mixture"}, or \code{"tweedie"}.}
 
 \item{hot_start}{Logical. If \code{TRUE}, leading zeros are removed from the
 time series before fitting.}
@@ -39,6 +39,16 @@ Kolassa (2016). The method fits several candidate distributions --- Poisson,
 hurdle-shifted Poisson, negative binomial, and hurdle-shifted negative
 binomial --- to the observed series and selects the best by AIC. A mixture
 option that blends all four predictive distributions is also available.
+}
+\details{
+A static Tweedie distribution (\code{distr = "tweedie"}) is also provided, for
+intermittent series that are not counts. Unlike the four candidates above it
+is continuous on the positive half-line, with an atom at zero, so its
+log-likelihood is a density rather than a probability mass and is not
+comparable with theirs on the same scale. It is therefore available only on
+explicit request: it is never selected by \code{distr = "auto"} and never blended
+into \code{distr = "mixture"}. Being continuous, it is also the only choice for
+which \code{\link[=generate.STATICDISTR]{generate.STATICDISTR()}} returns non-integer sample paths.
 }
 \examples{
 ts <- tsibble::tsibble(

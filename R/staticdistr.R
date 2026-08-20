@@ -6,9 +6,18 @@
 #' binomial --- to the observed series and selects the best by AIC. A mixture
 #' option that blends all four predictive distributions is also available.
 #'
+#' A static Tweedie distribution (`distr = "tweedie"`) is also provided, for
+#' intermittent series that are not counts. Unlike the four candidates above it
+#' is continuous on the positive half-line, with an atom at zero, so its
+#' log-likelihood is a density rather than a probability mass and is not
+#' comparable with theirs on the same scale. It is therefore available only on
+#' explicit request: it is never selected by `distr = "auto"` and never blended
+#' into `distr = "mixture"`. Being continuous, it is also the only choice for
+#' which [generate.STATICDISTR()] returns non-integer sample paths.
+#'
 #' @param formula Model specification.
 #' @param distr Distribution choice: one of `"auto"`, `"pois"`, `"hsp"`,
-#'   `"nbinom"`, `"hsnb"`, or `"mixture"`.
+#'   `"nbinom"`, `"hsnb"`, `"mixture"`, or `"tweedie"`.
 #' @param hot_start Logical. If `TRUE`, leading zeros are removed from the
 #'   time series before fitting.
 #' @param criterion Information criterion to use for model selection when `distr =
@@ -47,8 +56,10 @@
 #' @importFrom distributional dist_poisson dist_negative_binomial log_likelihood parameters dist_sample
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
+#' @importFrom tweedieDistr dist_tweedie
 #' @export
-STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
+STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb",
+                                           "mixture", "tweedie"),
                         hot_start = FALSE, criterion = c("aic", "bic"), ...) {
   distr <- arg_match(distr)
   criterion <- arg_match(criterion)
@@ -85,7 +96,9 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     start <- 1
   }
 
-  # Identify the distributions to be fitted
+  # Identify the distributions to be fitted. The Tweedie is deliberately absent
+  # from this list: its log-likelihood is a density, so it cannot be ranked
+  # against the discrete candidates by AIC/BIC, nor coherently mixed with them.
   if (distr %in% c("auto", "mixture")) {
     to_eval <- c("nbinom", "pois", "hsnb", "hsp")
   } else {
@@ -111,6 +124,9 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   }
   if ("hsnb" %in% to_eval) {
     fit_distr[["hsnb"]] <- staticdistr_fit_hsnb(occurrence, shifted_demand)
+  }
+  if ("tweedie" %in% to_eval) {
+    fit_distr[["tweedie"]] <- staticdistr_fit_tweedie(y)
   }
 
   # Select the distribution to use for forecasting
@@ -291,6 +307,11 @@ staticdistr_fit_hsnb <- function(occurrence, shifted_demand) {
   }
   pzero = mean(1 - occurrence)
   make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
+}
+
+staticdistr_fit_tweedie <- function(y) {
+  params <- fit_tweedie(y)
+  dist_tweedie(params[['mean']], params[['dispersion']], params[['power']])
 }
 
 

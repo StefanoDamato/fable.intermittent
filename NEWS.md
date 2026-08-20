@@ -6,6 +6,11 @@
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
+* Added a static Tweedie distribution to `STATICDISTR` via `distr = "tweedie"`,
+  for intermittent series that are not counts. Being continuous, it is not
+  comparable by AIC/BIC with the count candidates, so it is never selected by
+  `distr = "auto"` nor blended into `distr = "mixture"`.
+
 ## Minor improvements and bug fixes
 
 * Changed optimisation strategy for damped exponential smoothing models.

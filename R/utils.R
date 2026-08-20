@@ -4,6 +4,7 @@
 #' @importFrom fabletools get_frequencies
 #' @importFrom rlang abort
 #' @importFrom stats dnorm pnorm qnorm rnorm
+#' @importFrom tweedieDistr dtweedie
 NULL
 
 .BETANBB_EPSILON     <- 1e-4
@@ -14,6 +15,14 @@ NULL
 .NEGBINES_EPSILON    <- 1e-4
 .STATICDISTR_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
+
+# Bounds on the Tweedie power parameter, shared by TWEES and by the static
+# Tweedie fit of STATICDISTR. The interval must stay strictly inside (1, 2):
+# as the power approaches 1 the Tweedie degenerates to a Poisson, whose mass
+# sits on the integer lattice, so on count data the Lebesgue density used by
+# dtweedie() becomes singular and the likelihood diverges.
+.TWEEDIE_POWER_MIN <- 1.2
+.TWEEDIE_POWER_MAX <- 1.8
 
 crostons_decomp <- function(y) {
   occurrence <- ifelse(y > 0, 1L, 0L)
@@ -213,4 +222,35 @@ fit_nbinom <- function(y) {
   }
 
   c(size = fit$solution[1], prob = fit$solution[2])
+}
+
+# Static (IID) Tweedie fit used by STATICDISTR. The mean of an exponential
+# dispersion model is estimated in closed form by the sample mean, so only the
+# dispersion and the power are optimised numerically.
+fit_tweedie <- function(y) {
+  if (length(y) == 0 || all(y == 0)) {
+    return(c(mean = .STATICDISTR_EPSILON, dispersion = 1, power = 1.5))
+  }
+
+  mu <- max(mean(y), .STATICDISTR_EPSILON)
+  phi_start <- max(var(y) / mu, .STATICDISTR_EPSILON)
+
+  fit <- tryCatch(
+    nloptr(
+      x0 = c(phi_start, 1.5),
+      eval_f = function(x) {
+        -mean(dtweedie(y, mean = mu, dispersion = x[1], power = x[2], log = TRUE))
+      },
+      lb = c(.STATICDISTR_EPSILON, .TWEEDIE_POWER_MIN + .STATICDISTR_EPSILON),
+      ub = c(Inf, .TWEEDIE_POWER_MAX - .STATICDISTR_EPSILON),
+      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
+    ),
+    error = function(e) NULL
+  )
+
+  if (is.null(fit) || is.null(fit$solution)) {
+    return(c(mean = mu, dispersion = phi_start, power = 1.5))
+  }
+
+  c(mean = mu, dispersion = fit$solution[1], power = fit$solution[2])
 }
