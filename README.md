@@ -28,12 +28,12 @@ The forecasting methods are the following:
 | Method | Description |
 |----|----|
 | `BETANBB()` | Bayesian dynamic negative binomial model with a beta prior on the probability parameter. |
-| `EMPDISTR()` | Empirical resampling baseline that forecasts from the observed distribution. |
+| `EMPSD()` | Empirical resampling baseline that forecasts from the observed distribution. |
 | `GAMPOISB()` | Bayesian dynamic Poisson model with a gamma prior on the rate parameter. |
 | `HSPES()` | Exponential smoothing model with a hurdle-shifted Poisson forecast distribution. |
 | `MARWAL()` | ARMA model with a Markov walk on the occurrence and Gaussian forecast distribution. |
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
-| `STATICDISTR()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
+| `PARAMSD()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
 | `VZ()` | Bootstrap method based on Croston decomposition sampling demand sizes and intervals. |
 | `WSS()` | Bootstrap method with sampled demand sizes and a Markov-chain for the occurrence. |

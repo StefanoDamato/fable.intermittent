@@ -135,7 +135,7 @@ train_twees <- function(.data, specials, damped, scaling, ...) {
 #' Produces forecast distributions from a fitted TWEES
 #' model using simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -209,7 +209,7 @@ generate.TWEES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a TWEES model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -226,7 +226,7 @@ fitted.TWEES <- function(object, ...) {
 
 #' Extract residuals from a TWEES model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

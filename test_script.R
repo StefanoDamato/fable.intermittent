@@ -34,8 +34,8 @@ h <- 10
 model_builders <- list(
   gampoisb = function() GAMPOISB(value),
   betanbb = function() BETANBB(value),
-  empdistr = function() EMPDISTR(value),
-  staticdistr = function() STATICDISTR(value),
+  empsd = function() EMPSD(value),
+  paramsd = function() PARAMSD(value),
   negbines = function() NEGBINES(value),
   hspes = function() HSPES(value),
   wss = function() WSS(value),

@@ -111,7 +111,7 @@ train_negbines <- function(.data, specials, damped, ...) {
 #' Produces forecast distributions from a fitted NEGBINES model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -155,7 +155,7 @@ forecast.NEGBINES <- function(object, new_data, specials = NULL, times = 10000, 
 
 #' Extract fitted values from a NEGBINES model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -172,7 +172,7 @@ fitted.NEGBINES <- function(object, ...) {
 
 #' Extract residuals from a NEGBINES model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

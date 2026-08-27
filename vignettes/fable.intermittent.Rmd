@@ -68,7 +68,7 @@ fabletools::autoplot(one_series, value) +
 The package provides several models from the literature, including:
 
 - `BETANBB()`
-- `EMPDISTR()`
+- `EMPSD()`
 - `GAMPOISB()`
 - `HSPES()`
 - `MARWAL()`
@@ -79,7 +79,7 @@ The package provides several models from the literature, including:
 Moreover, two novel methods are implemented:
 
 - `TWEES()`
-- `STATICDISTR()`
+- `PARAMSD()`
 
 See the documentation for details on each function.
 
@@ -90,7 +90,7 @@ fit <- data |>
   dplyr::filter(index <= tsibble::yearmonth("2011 June")) |>
   fabletools::model(
     betanbb = BETANBB(value),
-    staticdistr = STATICDISTR(value),
+    paramsd = PARAMSD(value),
     twees = TWEES(value),
     wss = WSS(value)
   )

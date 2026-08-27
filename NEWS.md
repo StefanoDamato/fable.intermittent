@@ -32,7 +32,7 @@
 
 * Added `report()` and `tidy()` methods for all model classes.
 
-* Details included in `model_sum()` for ES-based models and `STATICDISTR()`.
+* Details included in `model_sum()` for ES-based models and `PARAMSD()`.
 
 ## Minor improvements and bug fixes
 

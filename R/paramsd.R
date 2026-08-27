@@ -31,7 +31,7 @@
 #' )
 #'
 #' fc_ts <- ts |>
-#'   model(STATICDISTR(value)) |>
+#'   model(PARAMSD(value)) |>
 #'   forecast(h = "7 days")
 #'
 #' fc_ts |> print()
@@ -48,25 +48,25 @@
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
 #' @export
-STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
+PARAMSD <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
                         hot_start = FALSE, criterion = c("aic", "bic"), ...) {
   distr <- arg_match(distr)
   criterion <- arg_match(criterion)
 
-  staticdistr_model <- new_model_class(
-    "STATICDISTR",
-    train = train_staticdistr,
+  paramsd_model <- new_model_class(
+    "PARAMSD",
+    train = train_paramsd,
     specials = new_specials(
-      xreg = staticdistr_no_xreg
+      xreg = paramsd_no_xreg
     )
   )
-  new_model_definition(staticdistr_model, {{ formula }}, distr = distr,
+  new_model_definition(paramsd_model, {{ formula }}, distr = distr,
                        hot_start = hot_start, criterion = criterion, ...)
 }
 
-train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...) {
+train_paramsd <- function(.data, specials, distr, hot_start, criterion, ...) {
   if (length(measured_vars(.data)) > 1) {
-    abort("Only univariate responses are supported by STATICDISTR.")
+    abort("Only univariate responses are supported by PARAMSD.")
   }
 
   y <- unclass(.data)[[measured_vars(.data)]]
@@ -75,7 +75,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     abort("All observations are missing, a model cannot be estimated without data.")
   }
   if (anyNA(y)) {
-    abort("Missing values are not supported by STATICDISTR.")
+    abort("Missing values are not supported by PARAMSD.")
   }
 
   if (hot_start) {
@@ -101,16 +101,16 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
   #Fit the distributions
   fit_distr <- list()
   if ("pois" %in% to_eval) {
-    fit_distr[["pois"]] <- staticdistr_fit_pois(y)
+    fit_distr[["pois"]] <- paramsd_fit_pois(y)
   }
   if ("hsp" %in% to_eval) {
-    fit_distr[["hsp"]] <- staticdistr_fit_hsp(occurrence, shifted_demand)
+    fit_distr[["hsp"]] <- paramsd_fit_hsp(occurrence, shifted_demand)
   }
   if ("nbinom" %in% to_eval) {
-    fit_distr[["nbinom"]] <- staticdistr_fit_nbinom(y)
+    fit_distr[["nbinom"]] <- paramsd_fit_nbinom(y)
   }
   if ("hsnb" %in% to_eval) {
-    fit_distr[["hsnb"]] <- staticdistr_fit_hsnb(occurrence, shifted_demand)
+    fit_distr[["hsnb"]] <- paramsd_fit_hsnb(occurrence, shifted_demand)
   }
 
   # Select the distribution to use for forecasting
@@ -119,7 +119,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     pred_distr <- do.call(distributional::dist_mixture, c(fit_distr, list(weights = w)))
     ic <- NULL
   } else if (distr == "auto") {
-    ic <- vapply(fit_distr, staticdistr_information, y = y, criterion = criterion, numeric(1))
+    ic <- vapply(fit_distr, paramsd_information, y = y, criterion = criterion, numeric(1))
     pred_distr <- fit_distr[[names(which.min(ic))]]
   } else {
     pred_distr <- fit_distr[[distr]]
@@ -140,18 +140,18 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
       fitted = fitted,
       residuals = residuals
     ),
-    class = "STATICDISTR"
+    class = "PARAMSD"
   )
 }
 
-#' Forecast a STATICDISTR model
+#' Forecast a PARAMSD model
 #'
-#' Produces forecast distributions from a fitted STATICDISTR model.
+#' Produces forecast distributions from a fitted PARAMSD model.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #'
 #' @return A distribution vector. The class depends on the static distribution
-#'    fitted by the `STATICDISTR` method.
+#'    fitted by the `PARAMSD` method.
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -159,19 +159,19 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, STATICDISTR(value))
+#' fit <- model(ts, PARAMSD(value))
 #' forecast(fit, h = "7 days")
 #'
 #' @export
-forecast.STATICDISTR <- function(object, new_data, specials = NULL, ...) {
+forecast.PARAMSD <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
   rep(object$pred_distr, h)
 }
 
-#' Generate sample paths from a STATICDISTR model
+#' Generate sample paths from a PARAMSD model
 #'
-#' @param x A fitted `STATICDISTR` model object.
-#' @inheritParams forecast.STATICDISTR
+#' @param x A fitted `PARAMSD` model object.
+#' @inheritParams forecast.PARAMSD
 #'
 #' @return A vector of future paths from a dataset using a fitted model.
 #'
@@ -181,18 +181,18 @@ forecast.STATICDISTR <- function(object, new_data, specials = NULL, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, STATICDISTR(value))
+#' fit <- model(ts, PARAMSD(value))
 #' generate(fit, new_data = tsibble::new_data(ts, 7))
 #' @export
-generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
+generate.PARAMSD <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
   new_data$.sim <- unlist(distributional::generate(x$pred_distr, h))
   new_data
 }
 
-#' Extract fitted values from a STATICDISTR model
+#' Extract fitted values from a PARAMSD model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -200,16 +200,16 @@ generate.STATICDISTR <- function(x, new_data, specials = NULL, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, STATICDISTR(value))
+#' fit <- model(ts, PARAMSD(value))
 #' fitted(fit)
 #' @export
-fitted.STATICDISTR <- function(object, ...) {
+fitted.PARAMSD <- function(object, ...) {
   object$fitted
 }
 
-#' Extract residuals from a STATICDISTR model
+#' Extract residuals from a PARAMSD model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -217,21 +217,21 @@ fitted.STATICDISTR <- function(object, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, STATICDISTR(value))
+#' fit <- model(ts, PARAMSD(value))
 #' residuals(fit)
 #' @export
-residuals.STATICDISTR <- function(object, ...) {
+residuals.PARAMSD <- function(object, ...) {
   object$residuals
 }
 
 
 #' @export
-model_sum.STATICDISTR <- function(x) {
-  paste0("STATICDISTR(", x$selected_distr, ")")
+model_sum.PARAMSD <- function(x) {
+  paste0("PARAMSD(", x$selected_distr, ")")
 }
 
 #' @export
-tidy.STATICDISTR <- function(x, ...) {
+tidy.PARAMSD <- function(x, ...) {
   tryCatch({
     params <- as.list(distributional::parameters(x$pred_distr))
     tibble(
@@ -244,9 +244,9 @@ tidy.STATICDISTR <- function(x, ...) {
   }, error = function(e) tibble(term = character(), estimate = numeric()))
 }
 
-#' @rdname STATICDISTR
+#' @rdname PARAMSD
 #' @export
-report.STATICDISTR <- function(object, ...) {
+report.PARAMSD <- function(object, ...) {
   tryCatch({
     params <- as.list(distributional::parameters(object$pred_distr))
     if (length(params) > 0) {
@@ -267,34 +267,34 @@ report.STATICDISTR <- function(object, ...) {
 }
 
 
-staticdistr_fit_pois <- function(y) {
+paramsd_fit_pois <- function(y) {
   lambda <- mean(y)
   distributional::dist_poisson(lambda)
 }
 
-staticdistr_fit_hsp <- function(occurrence, shifted_demand) {
+paramsd_fit_hsp <- function(occurrence, shifted_demand) {
   pzero = mean(1 - occurrence)
   lambda = ifelse(length(shifted_demand) > 0, mean(shifted_demand), 0)
   make_hurdle_shifted_distr(dist_poisson(lambda), pzero)
 }
 
-staticdistr_fit_nbinom <- function(y) {
+paramsd_fit_nbinom <- function(y) {
   params <- fit_nbinom(y)
   distributional::dist_negative_binomial(params[['size']], params[['prob']])
 }
 
-staticdistr_fit_hsnb <- function(occurrence, shifted_demand) {
+paramsd_fit_hsnb <- function(occurrence, shifted_demand) {
   if (length(shifted_demand) > 0) {
     params <- fit_nbinom(shifted_demand)
   } else {
-    params <- c(size = 100, prob = 1 - .STATICDISTR_EPSILON)
+    params <- c(size = 100, prob = 1 - .PARAMSD_EPSILON)
   }
   pzero = mean(1 - occurrence)
   make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
 }
 
 
-staticdistr_information <- function(distr, y, criterion){
+paramsd_information <- function(distr, y, criterion){
   loglik <- sum(distributional::log_likelihood(distr, y))
   n_obs <- length(y)
   n_params <- length(distributional::parameters(distr))
@@ -309,7 +309,7 @@ staticdistr_information <- function(distr, y, criterion){
 }
 
 
-staticdistr_no_xreg <- function(...) {
-  abort("Exogenous regressors are not supported by STATICDISTR.")
+paramsd_no_xreg <- function(...) {
+  abort("Exogenous regressors are not supported by PARAMSD.")
 }
 

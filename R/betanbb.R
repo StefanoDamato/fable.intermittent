@@ -110,7 +110,7 @@ train_betanbb <- function(.data, specials, ...) {
 #' Produces forecast distributions from a fitted BETANBB model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -162,7 +162,7 @@ generate.BETANBB <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a BETANBB model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #'
 #' @examples
@@ -180,7 +180,7 @@ fitted.BETANBB <- function(object, ...) {
 
 #' Extract residuals from a BETANBB model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

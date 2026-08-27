@@ -151,7 +151,7 @@ train_hspes <- function(.data, specials, damped, ...) {
 #' Produces forecast distributions from a fitted HSPES model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -225,7 +225,7 @@ generate.HSPES <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a HSPES model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -242,7 +242,7 @@ fitted.HSPES <- function(object, ...) {
 
 #' Extract residuals from a HSPES model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

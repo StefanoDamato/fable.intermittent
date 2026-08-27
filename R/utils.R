@@ -12,7 +12,7 @@ NULL
 .MARWAL_EPSILON      <- 1e-4
 .NNARMA_EPSILON      <- 1e-4
 .NEGBINES_EPSILON    <- 1e-4
-.STATICDISTR_EPSILON <- 1e-4
+.PARAMSD_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
 
 crostons_decomp <- function(y) {
@@ -186,15 +186,15 @@ covariance.dist_normal_nonneg <- function(x, ...) {
 
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
-    return(c(size = 100, prob = 1 - .STATICDISTR_EPSILON))
+    return(c(size = 100, prob = 1 - .PARAMSD_EPSILON))
   }
 
   fit <- tryCatch(
     nloptr(
-      x0 = c(max(mean(y), .STATICDISTR_EPSILON), 0.5),
+      x0 = c(max(mean(y), .PARAMSD_EPSILON), 0.5),
       eval_f = function(x) -mean(dnbinom(y, x[1], x[2], log = TRUE)),
-      lb = c(.STATICDISTR_EPSILON, .STATICDISTR_EPSILON),
-      ub = c(Inf, 1 - .STATICDISTR_EPSILON),
+      lb = c(.PARAMSD_EPSILON, .PARAMSD_EPSILON),
+      ub = c(Inf, 1 - .PARAMSD_EPSILON),
       opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
     ),
     error = function(e) NULL
@@ -203,12 +203,12 @@ fit_nbinom <- function(y) {
   if (is.null(fit) || is.null(fit$solution)) {
     mu <- mean(y)
     sigmasq <- var(y)
-    if (!is.na(sigmasq) && sigmasq > mu + .STATICDISTR_EPSILON) {
+    if (!is.na(sigmasq) && sigmasq > mu + .PARAMSD_EPSILON) {
       size <- (mu^2) / (sigmasq - mu)
     } else {
       size <- 100
     }
-    prob <- min(size / (size + mu), 1 - .STATICDISTR_EPSILON)
+    prob <- min(size / (size + mu), 1 - .PARAMSD_EPSILON)
     return(c(size = size, prob = prob))
   }
 
