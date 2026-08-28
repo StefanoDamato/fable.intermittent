@@ -6,12 +6,20 @@
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
-* Added a static Tweedie distribution to `STATICDISTR` via `distr = "tweedie"`,
-  for intermittent series that are not counts. Being continuous, it is not
-  comparable by AIC/BIC with the count candidates, so it is never selected by
-  `distr = "auto"` nor blended into `distr = "mixture"`.
+* Added a static Tweedie distribution to `STATICDISTR`, available on its own via
+  `distr = "tweedie"` and as a fifth candidate for `distr = "auto"` and
+  `distr = "mixture"`. The new `tweedie_discrete` argument (default `TRUE`)
+  rounds the Tweedie to the non-negative integers, putting its log-likelihood on
+  the same probability scale as the count distributions; `distr = "auto"`
+  requires it. Set it to `FALSE` with `distr = "mixture"` or `distr = "tweedie"`
+  to recover the continuous Tweedie for series that are not counts.
 
 ## Minor improvements and bug fixes
+
+* Fixed the parameter count used by `STATICDISTR`'s information criteria.
+  It was taken from `distributional::parameters()`, which for the hurdle
+  distributions returns the `dist_inflated` wrapper's fields and charged `hsp`
+  three parameters instead of two. Counts are now declared per candidate.
 
 * Changed optimisation strategy for damped exponential smoothing models.
 

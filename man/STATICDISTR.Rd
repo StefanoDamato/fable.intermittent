@@ -7,7 +7,7 @@
 \usage{
 STATICDISTR(
   formula,
-  distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture", "tweedie"),
+  distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "tweedie"),
   hot_start = FALSE,
   criterion = c("aic", "bic"),
   ...
@@ -19,7 +19,7 @@ STATICDISTR(
 \item{formula}{Model specification.}
 
 \item{distr}{Distribution choice: one of \code{"auto"}, \code{"pois"}, \code{"hsp"},
-\code{"nbinom"}, \code{"hsnb"}, \code{"mixture"}, or \code{"tweedie"}.}
+\code{"nbinom"}, \code{"hsnb"}, or \code{"tweedie"}.}
 
 \item{hot_start}{Logical. If \code{TRUE}, leading zeros are removed from the
 time series before fitting.}
@@ -37,18 +37,25 @@ A model specification.
 Static (IID) count distribution model for intermittent demand, following
 Kolassa (2016). The method fits several candidate distributions --- Poisson,
 hurdle-shifted Poisson, negative binomial, and hurdle-shifted negative
-binomial --- to the observed series and selects the best by AIC. A mixture
-option that blends all four predictive distributions is also available.
+binomial --- plus a Tweedie, to the observed series and selects the best by
+AIC.
 }
 \details{
-A static Tweedie distribution (\code{distr = "tweedie"}) is also provided, for
-intermittent series that are not counts. Unlike the four candidates above it
-is continuous on the positive half-line, with an atom at zero, so its
-log-likelihood is a density rather than a probability mass and is not
-comparable with theirs on the same scale. It is therefore available only on
-explicit request: it is never selected by \code{distr = "auto"} and never blended
-into \code{distr = "mixture"}. Being continuous, it is also the only choice for
-which \code{\link[=generate.STATICDISTR]{generate.STATICDISTR()}} returns non-integer sample paths.
+A Tweedie is continuous on the positive half-line with an atom at zero, so
+its log-likelihood is a density rather than a probability mass and cannot be
+ranked against the count candidates by AIC/BIC. The two entry points
+therefore use different forms of it, and are reported distinctly:
+\itemize{
+\item \code{distr = "auto"} ranks a \emph{discretised} Tweedie, obtained by rounding to the
+non-negative integers, with probability mass function
+\code{P(Y = 0) = F(0.5)} and \code{P(Y = k) = F(k + 0.5) - F(k - 0.5)}. This puts it
+on the same scale as the four count distributions. When it wins, the model
+is reported as \code{STATICDISTR(tweedie_discrete)}.
+\item \code{distr = "tweedie"} fits the \emph{continuous} Tweedie, for intermittent series
+that are not counts. It is reported as \code{STATICDISTR(tweedie)}, and is the
+only choice for which \code{\link[=generate.STATICDISTR]{generate.STATICDISTR()}} returns non-integer sample
+paths.
+}
 }
 \examples{
 ts <- tsibble::tsibble(

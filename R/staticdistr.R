@@ -6,18 +6,31 @@
 #' binomial --- to the observed series and selects the best by AIC. A mixture
 #' option that blends all four predictive distributions is also available.
 #'
-#' A static Tweedie distribution (`distr = "tweedie"`) is also provided, for
-#' intermittent series that are not counts. Unlike the four candidates above it
-#' is continuous on the positive half-line, with an atom at zero, so its
-#' log-likelihood is a density rather than a probability mass and is not
-#' comparable with theirs on the same scale. It is therefore available only on
-#' explicit request: it is never selected by `distr = "auto"` and never blended
-#' into `distr = "mixture"`. Being continuous, it is also the only choice for
-#' which [generate.STATICDISTR()] returns non-integer sample paths.
+#' A static Tweedie distribution (`distr = "tweedie"`) is also available, and
+#' takes part in `"auto"` and `"mixture"` as a fifth candidate. A Tweedie is
+#' continuous on the positive half-line with an atom at zero, so its
+#' log-likelihood is a density rather than a probability mass and cannot be
+#' ranked against the count candidates by AIC/BIC, nor coherently blended with
+#' them. `tweedie_discrete` resolves this by rounding the Tweedie to the
+#' non-negative integers, giving the proper probability mass function
+#' `P(Y = 0) = F(0.5)` and `P(Y = k) = F(k + 0.5) - F(k - 0.5)`.
+#'
+#' `distr = "auto"` therefore always uses the discretised form, and rejects
+#' `tweedie_discrete = FALSE`. `distr = "mixture"` and `distr = "tweedie"`
+#' honour the argument, so the continuous Tweedie remains reachable for
+#' intermittent series that are not counts --- at the cost, for the mixture, of
+#' blending a density with four probability masses.
 #'
 #' @param formula Model specification.
 #' @param distr Distribution choice: one of `"auto"`, `"pois"`, `"hsp"`,
 #'   `"nbinom"`, `"hsnb"`, `"mixture"`, or `"tweedie"`.
+#' @param tweedie Logical. If `TRUE` (the default) the Tweedie takes part in
+#'   `distr = "auto"` and `distr = "mixture"` as a fifth candidate. Set it to
+#'   `FALSE` to rank and blend only the four count distributions.
+#' @param tweedie_discrete Logical. If `TRUE` (the default) the Tweedie
+#'   candidate is discretised by rounding to the non-negative integers, keeping
+#'   it on the same probability scale as the count distributions. Ignored unless
+#'   the Tweedie is fitted, and required to be `TRUE` when `distr = "auto"`.
 #' @param hot_start Logical. If `TRUE`, leading zeros are removed from the
 #'   time series before fitting.
 #' @param criterion Information criterion to use for model selection when `distr =
@@ -60,9 +73,28 @@
 #' @export
 STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb",
                                            "mixture", "tweedie"),
-                        hot_start = FALSE, criterion = c("aic", "bic"), ...) {
+                        hot_start = FALSE, criterion = c("aic", "bic"),
+                        tweedie = TRUE, tweedie_discrete = TRUE, ...) {
   distr <- arg_match(distr)
   criterion <- arg_match(criterion)
+
+  if (!is.logical(tweedie) || length(tweedie) != 1L || is.na(tweedie)) {
+    abort("`tweedie` must be a single logical value.")
+  }
+  if (!is.logical(tweedie_discrete) || length(tweedie_discrete) != 1L ||
+      is.na(tweedie_discrete)) {
+    abort("`tweedie_discrete` must be a single logical value.")
+  }
+  if (distr == "tweedie" && !tweedie) {
+    abort("`distr = \"tweedie\"` is incompatible with `tweedie = FALSE`.")
+  }
+  if (distr == "auto" && !tweedie_discrete) {
+    abort(paste0(
+      "`distr = \"auto\"` requires `tweedie_discrete = TRUE`: the continuous ",
+      "Tweedie log-likelihood is a density, so it cannot be ranked against the ",
+      "count distributions by AIC/BIC."
+    ))
+  }
 
   staticdistr_model <- new_model_class(
     "STATICDISTR",
@@ -72,10 +104,12 @@ STATICDISTR <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsn
     )
   )
   new_model_definition(staticdistr_model, {{ formula }}, distr = distr,
-                       hot_start = hot_start, criterion = criterion, ...)
+                       hot_start = hot_start, criterion = criterion,
+                       tweedie = tweedie, tweedie_discrete = tweedie_discrete, ...)
 }
 
-train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...) {
+train_staticdistr <- function(.data, specials, distr, hot_start, criterion,
+                              tweedie = TRUE, tweedie_discrete = TRUE, ...) {
   if (length(measured_vars(.data)) > 1) {
     abort("Only univariate responses are supported by STATICDISTR.")
   }
@@ -96,14 +130,21 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     start <- 1
   }
 
-  # Identify the distributions to be fitted. The Tweedie is deliberately absent
-  # from this list: its log-likelihood is a density, so it cannot be ranked
-  # against the discrete candidates by AIC/BIC, nor coherently mixed with them.
+  # Identify the distributions to be fitted. The Tweedie joins the four count
+  # candidates; whether it enters in its discretised form is decided below.
   if (distr %in% c("auto", "mixture")) {
     to_eval <- c("nbinom", "pois", "hsnb", "hsp")
+    if (tweedie) {
+      to_eval <- c(to_eval, "tweedie")
+    }
   } else {
     to_eval <- distr
   }
+
+  # Ranking by AIC/BIC is only meaningful on a common probability scale, so the
+  # discretised Tweedie is mandatory for "auto". The mixture and the explicit
+  # choice leave it to the caller.
+  use_discrete <- if (distr == "auto") TRUE else tweedie_discrete
 
 
   # Apply Croston's decomposition
@@ -126,7 +167,7 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     fit_distr[["hsnb"]] <- staticdistr_fit_hsnb(occurrence, shifted_demand)
   }
   if ("tweedie" %in% to_eval) {
-    fit_distr[["tweedie"]] <- staticdistr_fit_tweedie(y)
+    fit_distr[["tweedie"]] <- staticdistr_fit_tweedie(y, discrete = use_discrete)
   }
 
   # Select the distribution to use for forecasting
@@ -135,7 +176,9 @@ train_staticdistr <- function(.data, specials, distr, hot_start, criterion, ...)
     pred_distr <- do.call(distributional::dist_mixture, c(fit_distr, list(weights = w)))
     ic <- NULL
   } else if (distr == "auto") {
-    ic <- vapply(fit_distr, staticdistr_information, y = y, criterion = criterion, numeric(1))
+    ic <- vapply(names(fit_distr), function(nm) {
+      staticdistr_information(fit_distr[[nm]], y, criterion, .STATICDISTR_NPARAMS[[nm]])
+    }, numeric(1))
     pred_distr <- fit_distr[[names(which.min(ic))]]
   } else {
     pred_distr <- fit_distr[[distr]]
@@ -309,16 +352,31 @@ staticdistr_fit_hsnb <- function(occurrence, shifted_demand) {
   make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
 }
 
-staticdistr_fit_tweedie <- function(y) {
-  params <- fit_tweedie(y)
-  dist_tweedie(params[['mean']], params[['dispersion']], params[['power']])
+staticdistr_fit_tweedie <- function(y, discrete = TRUE) {
+  params <- fit_tweedie(y, discrete = discrete)
+  if (discrete) {
+    dist_tweedie_discrete(params[['mean']], params[['dispersion']], params[['power']])
+  } else {
+    dist_tweedie(params[['mean']], params[['dispersion']], params[['power']])
+  }
 }
 
 
-staticdistr_information <- function(distr, y, criterion){
+# Free parameters per candidate. Deliberately not derived from parameters():
+# for the hurdle distributions that returns the dist_inflated wrapper's fields
+# (dist, x, p), which counts the fixed inflation point x = 0 and misses the
+# inner distribution's parameters -- so hsp is charged 3 instead of 2. See
+# https://github.com/mitchelloharawild/distributional/issues/161
+.STATICDISTR_NPARAMS <- c(pois = 1L, hsp = 2L, nbinom = 2L, hsnb = 3L, tweedie = 3L)
+
+# n_params defaults to the (unreliable) introspection so that direct calls
+# without a candidate name keep working.
+staticdistr_information <- function(distr, y, criterion, n_params = NULL){
   loglik <- sum(distributional::log_likelihood(distr, y))
   n_obs <- length(y)
-  n_params <- length(distributional::parameters(distr))
+  if (is.null(n_params)) {
+    n_params <- length(distributional::parameters(distr))
+  }
 
   if (criterion == "aic") {
     -2 * loglik + 2 * n_params
