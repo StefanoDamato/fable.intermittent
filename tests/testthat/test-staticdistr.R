@@ -1,5 +1,5 @@
 for (i in 1:length(test_data)){
-  for (distr in c("auto", "mixture", "pois", "nbinom", "hsp", "hsnb", "mixture", "tweedie")) {
+  for (distr in c("auto", "pois", "nbinom", "hsp", "hsnb", "tweedie")) {
     for (hot_start in c(FALSE, TRUE)) {
     test_that(paste0("STATICDISTR ", "with ", distr, " distribution ",
                      ifelse(hot_start, "(hot start) ", "(cold start) "), 
@@ -38,16 +38,14 @@ for (i in 1:length(test_data)){
       expect_equal(length(fc_distr), h)
       expect_all_true(is.finite(fc_mean))
       expect_true(inherits(fc_distr, "distribution"))
-      if (distr == "mixture") {
-        expect_all_equal(fc_family, "mixture")
-      } else if (distr == "pois") {
+      if (distr == "pois") {
         expect_all_equal(fc_family, "poisson")
       } else if (distr == "nbinom") {
         expect_all_equal(fc_family, "negbin")
       } else if (distr %in% c("hsp", "hsnb")) {
         expect_all_equal(fc_family, "inflated")
       } else if (distr == "tweedie") {
-        expect_all_equal(fc_family, "tweedie_discrete")
+        expect_all_equal(fc_family, "tweedie")
       } else if (distr == "auto") {
         expect_all_true(fc_family %in% c("poisson", "negbin", "inflated",
                                          "tweedie_discrete"))
@@ -110,18 +108,36 @@ test_that("STATICDISTR supports the bic criterion", {
   expect_output(fabletools::report(fit))
 })
 
-test_that("the Tweedie is a candidate for auto and a component of the mixture", {
+test_that("auto ranks the discretised Tweedie as a fifth candidate", {
   for (i in seq_along(test_data)) {
     fit <- fabletools::model(test_data[[i]], model = STATICDISTR(value, distr = "auto"))
     mdl <- fit$model[[1]]$fit
-    expect_true("tweedie" %in% names(mdl$ic))
+    expect_true("tweedie_discrete" %in% names(mdl$ic))
+    expect_false("tweedie" %in% names(mdl$ic))
     expect_length(mdl$ic, 5)
     expect_all_true(is.finite(mdl$ic))
     expect_identical(mdl$selected_distr, names(which.min(mdl$ic)))
+  }
+})
 
-    fit_mix <- fabletools::model(test_data[[i]], model = STATICDISTR(value, distr = "mixture"))
-    comps <- distributional::parameters(fit_mix$model[[1]]$fit$pred_distr)$dist[[1]]
-    expect_length(comps, 5)
+test_that("auto and explicit use different Tweedies, and say so", {
+  # auto ranks the discretised form (integer sample paths); distr = "tweedie"
+  # fits the continuous one (non-integer paths). They must be distinguishable.
+  set.seed(11)
+  fit_tw <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "tweedie"))
+  expect_identical(fabletools::model_sum(fit_tw$model[[1]]), "STATICDISTR(tweedie)")
+  expect_identical(fit_tw$model[[1]]$fit$selected_distr, "tweedie")
+  sims <- fabletools::generate(fit_tw, h = 500, times = 1)
+  expect_false(all(sims$.sim == round(sims$.sim)))
+
+  # a series where the Tweedie wins under auto, to exercise the discrete branch
+  fit_auto <- fabletools::model(test_data[[6]], model = STATICDISTR(value, distr = "auto"))
+  mdl <- fit_auto$model[[1]]$fit
+  if (identical(mdl$selected_distr, "tweedie_discrete")) {
+    expect_identical(fabletools::model_sum(fit_auto$model[[1]]),
+                     "STATICDISTR(tweedie_discrete)")
+    sims_auto <- fabletools::generate(fit_auto, h = 200, times = 1)
+    expect_all_true(sims_auto$.sim == round(sims_auto$.sim))
   }
 })
 
@@ -135,17 +151,12 @@ test_that("auto ranks all five candidates on a common probability scale", {
   expect_lt(max(ic) - min(ic), 1e4)
 })
 
-test_that("the default mixture stays discrete and tweedie_discrete = FALSE relaxes it", {
-  set.seed(7)
-  fit <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "mixture"))
-  sims <- fabletools::generate(fit, h = 200, times = 1)
-  expect_all_true(sims$.sim == round(sims$.sim))
-
-  fit_cont <- fabletools::model(
-    base_ts(), model = STATICDISTR(value, distr = "mixture", tweedie_discrete = FALSE)
-  )
-  sims_cont <- fabletools::generate(fit_cont, h = 500, times = 1)
-  expect_false(all(sims_cont$.sim == round(sims_cont$.sim)))
+test_that("removed options fail loudly rather than silently", {
+  expect_error(STATICDISTR(value, distr = "mixture"), "has been removed")
+  # `...` would otherwise swallow these, changing behaviour without a word
+  expect_error(STATICDISTR(value, tweedie = FALSE), "`tweedie` has been removed")
+  expect_error(STATICDISTR(value, tweedie_discrete = FALSE),
+               "`tweedie_discrete` has been removed")
 })
 
 test_that("the information criteria use free-parameter counts, not parameters()", {
@@ -162,47 +173,19 @@ test_that("the information criteria use free-parameter counts, not parameters()"
 
   # the table covers exactly the candidates auto can fit, with the right counts
   np <- fable.intermittent:::.STATICDISTR_NPARAMS
-  expect_setequal(names(np), c("pois", "hsp", "nbinom", "hsnb", "tweedie"))
+  expect_setequal(names(np), c("pois", "hsp", "nbinom", "hsnb", "tweedie_discrete"))
   expect_identical(np[["pois"]], 1L)
   expect_identical(np[["hsp"]], 2L)
   expect_identical(np[["nbinom"]], 2L)
   expect_identical(np[["hsnb"]], 3L)
-  expect_identical(np[["tweedie"]], 3L)
+  expect_identical(np[["tweedie_discrete"]], 3L)
 
   # auto reports one criterion value per fitted candidate, still named
   fit <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "auto"))
   expect_setequal(names(fit$model[[1]]$fit$ic), names(np))
 })
 
-test_that("tweedie = FALSE drops the Tweedie from auto and the mixture", {
-  fit <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "auto", tweedie = FALSE))
-  ic <- fit$model[[1]]$fit$ic
-  expect_length(ic, 4)
-  expect_false("tweedie" %in% names(ic))
-  expect_no_match(fabletools::model_sum(fit$model[[1]]), "tweedie")
-
-  fit_mix <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "mixture", tweedie = FALSE))
-  comps <- distributional::parameters(fit_mix$model[[1]]$fit$pred_distr)$dist[[1]]
-  expect_length(comps, 4)
-})
-
-test_that("STATICDISTR validates tweedie", {
-  expect_error(STATICDISTR(value, tweedie = "no"), "must be a single logical value")
-  expect_error(
-    STATICDISTR(value, distr = "tweedie", tweedie = FALSE),
-    "incompatible with `tweedie = FALSE`"
-  )
-})
-
-test_that("STATICDISTR validates tweedie_discrete", {
-  expect_error(
-    STATICDISTR(value, distr = "auto", tweedie_discrete = FALSE),
-    "requires `tweedie_discrete = TRUE`"
-  )
-  expect_error(
-    STATICDISTR(value, tweedie_discrete = "yes"),
-    "must be a single logical value"
-  )
+test_that("the discretised fit rejects non-integer observations", {
   expect_error(
     fable.intermittent:::fit_tweedie(c(0, 1.5, 2.25), discrete = TRUE),
     "non-negative integer observations"
@@ -273,7 +256,7 @@ test_that("fit_tweedie falls back gracefully on an all-zero series", {
 })
 
 test_that("STATICDISTR handles all-zero series (no positive demand to fit hsnb on)", {
-  for (distr in c("auto", "mixture", "hsnb", "tweedie")) {
+  for (distr in c("auto", "hsnb", "tweedie")) {
     fit <- fabletools::model(all_zero_ts(), STATICDISTR(value, distr = distr))
     expect_s3_class(fit, "mdl_df")
     expect_all_true(is.finite(stats::fitted(fit)$.fitted))

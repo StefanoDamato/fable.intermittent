@@ -6,13 +6,17 @@
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
-* Added a static Tweedie distribution to `STATICDISTR`, available on its own via
-  `distr = "tweedie"` and as a fifth candidate for `distr = "auto"` and
-  `distr = "mixture"`. The new `tweedie_discrete` argument (default `TRUE`)
-  rounds the Tweedie to the non-negative integers, putting its log-likelihood on
-  the same probability scale as the count distributions; `distr = "auto"`
-  requires it. Set it to `FALSE` with `distr = "mixture"` or `distr = "tweedie"`
-  to recover the continuous Tweedie for series that are not counts.
+* Added a static Tweedie distribution to `STATICDISTR`. `distr = "auto"` now
+  ranks it as a fifth candidate, in a discretised form obtained by rounding to
+  the non-negative integers so that its log-likelihood is a probability mass
+  comparable with the count distributions; when it wins the model is reported as
+  `STATICDISTR(tweedie_discrete)`. `distr = "tweedie"` fits the continuous
+  Tweedie, for intermittent series that are not counts.
+
+## Deprecations
+
+* Removed `distr = "mixture"` from `STATICDISTR`. Use `distr = "auto"` to select
+  a single distribution by AIC/BIC.
 
 ## Minor improvements and bug fixes
 
