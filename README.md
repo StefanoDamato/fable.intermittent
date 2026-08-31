@@ -43,16 +43,12 @@ The probabilistic forecasts produced by the implemented methods are
 objects. Among the predictive distributions used by the methods, there
 is the Tweedie distribution, provided by the
 [`tweedieDistr`](https://cran.r-project.org/package=tweedieDistr)
-package (both as the `stats`-style `dtweedie()`, `ptweedie()`,
-`qtweedie()`, `rtweedie()` functions and as the `distributional` object
-`dist_tweedie()`).
+package as the `stats`-style `dtweedie()`, `ptweedie()`, `qtweedie()`,
+`rtweedie()` functions).
 
-Finally, the package releases two data sets in the
-[`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
-
-## News
-
-:boom: \[2026-06-18\] fable.intermittent v0.1.0: first release.
+Finally, the package releases three data sets in the
+[`tsibble`](https://tsibble.tidyverts.org/) format: `auto`, `pasta`, and
+`raf`.
 
 ## Installation
 
@@ -81,6 +77,13 @@ The package follows the standard `fable` workflow:
 We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple
 usage example; refer to the package documentation for more details on
 the methods.
+
+## Acknowledgements
+
+Work on this package was supported by the Swiss National Science
+Foundation (SNSF) under grant number 200021_212164 ([“Probabilistic
+Forecasting: Global Models, Gaussian Processes and
+Hierarchies”](https://data.snf.ch/grants/grant/212164)).
 
 ## Contributors
 
