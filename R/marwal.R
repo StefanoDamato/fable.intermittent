@@ -157,7 +157,7 @@ marwal_transition_matrix <- function(occurrence, mean_y) {
 #'
 #' Produces forecast distributions from a fitted MARWAL model.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #'
 #' @return A distribution vector of class `dist_normal_nonneg`.
 #'
@@ -204,7 +204,7 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a MARWAL model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -222,7 +222,7 @@ fitted.MARWAL <- function(object, ...) {
 
 #' Extract residuals from a MARWAL model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

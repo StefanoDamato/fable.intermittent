@@ -106,7 +106,7 @@ train_gampoisb <- function(.data, specials, ...) {
 #' Produces forecast distributions from a fitted GAMPOISB model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -170,7 +170,7 @@ generate.GAMPOISB <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a GAMPOISB model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -187,7 +187,7 @@ fitted.GAMPOISB <- function(object, ...) {
 
 #' Extract residuals from a GAMPOISB model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

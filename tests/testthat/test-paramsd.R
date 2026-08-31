@@ -1,20 +1,20 @@
 for (i in 1:length(test_data)){
   for (distr in c("auto", "pois", "nbinom", "hsp", "hsnb", "tweedie")) {
     for (hot_start in c(FALSE, TRUE)) {
-    test_that(paste0("STATICDISTR ", "with ", distr, " distribution ",
+    test_that(paste0("PARAMSD ", "with ", distr, " distribution ",
                      ifelse(hot_start, "(hot start) ", "(cold start) "), 
                      "fits, forecasts, and generates on t.s. ", i), {
       test_ts <- test_data[[i]]
       
       # Check that the model fits correctly
       expect_no_error({
-       fit <- fabletools::model(test_ts, model = STATICDISTR(value,  distr = distr, hot_start = hot_start))
+       fit <- fabletools::model(test_ts, model = PARAMSD(value,  distr = distr, hot_start = hot_start))
       })
       expect_s3_class(fit, "mdl_df")
       if (distr == "auto") {
-        expect_match(fabletools::model_sum(fit$model[[1]]), "^STATICDISTR\\(")
+        expect_match(fabletools::model_sum(fit$model[[1]]), "^PARAMSD\\(")
       } else {
-        expect_identical(fabletools::model_sum(fit$model[[1]]), paste0("STATICDISTR(", distr, ")"))
+        expect_identical(fabletools::model_sum(fit$model[[1]]), paste0("PARAMSD(", distr, ")"))
       }
 
       # Check that fitted values and residuals are returned correctly
@@ -68,49 +68,49 @@ for (i in 1:length(test_data)){
   }
 }
 
-test_that("STATICDISTR validates inputs and rejects unsupported options", {
+test_that("PARAMSD validates inputs and rejects unsupported options", {
   expect_error(
-    fable.intermittent:::train_staticdistr(
+    fable.intermittent:::train_paramsd(
       multivariate_ts(), specials = list(), distr = "auto",
       hot_start = FALSE, criterion = "aic"
     ),
     "Only univariate responses"
   )
   expect_error(
-    fable.intermittent:::train_staticdistr(
+    fable.intermittent:::train_paramsd(
       all_na_ts(), specials = list(), distr = "auto",
       hot_start = FALSE, criterion = "aic"
     ),
     "All observations are missing"
   )
   expect_error(
-    fable.intermittent:::train_staticdistr(
+    fable.intermittent:::train_paramsd(
       some_na_ts(), specials = list(), distr = "auto",
       hot_start = FALSE, criterion = "aic"
     ),
     "Missing values are not supported"
   )
   expect_error(
-    fable.intermittent:::staticdistr_no_xreg(),
+    fable.intermittent:::paramsd_no_xreg(),
     "Exogenous regressors are not supported"
   )
   expect_error(
-    fable.intermittent:::staticdistr_information(
+    fable.intermittent:::paramsd_information(
       distributional::dist_poisson(1), y = c(1, 2, 3), criterion = "invalid"
     ),
     "Invalid criterion"
   )
 })
 
-test_that("STATICDISTR supports the bic criterion", {
-  fit <- fabletools::model(base_ts(), STATICDISTR(value, distr = "auto", criterion = "bic"))
+test_that("PARAMSD supports the bic criterion", {
+  fit <- fabletools::model(base_ts(), PARAMSD(value, distr = "auto", criterion = "bic"))
   expect_s3_class(fit, "mdl_df")
   expect_output(fabletools::report(fit))
 })
 
 test_that("auto ranks the discretised Tweedie as a fifth candidate", {
   for (i in seq_along(test_data)) {
-    fit <- fabletools::model(test_data[[i]], model = STATICDISTR(value, distr = "auto"))
+    fit <- fabletools::model(test_data[[i]], model = PARAMSD(value, distr = "auto"))
     mdl <- fit$model[[1]]$fit
     expect_true("tweedie_discrete" %in% names(mdl$ic))
     expect_false("tweedie" %in% names(mdl$ic))
@@ -124,18 +124,18 @@ test_that("auto and explicit use different Tweedies, and say so", {
   # auto ranks the discretised form (integer sample paths); distr = "tweedie"
   # fits the continuous one (non-integer paths). They must be distinguishable.
   set.seed(11)
-  fit_tw <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "tweedie"))
-  expect_identical(fabletools::model_sum(fit_tw$model[[1]]), "STATICDISTR(tweedie)")
+  fit_tw <- fabletools::model(base_ts(), model = PARAMSD(value, distr = "tweedie"))
+  expect_identical(fabletools::model_sum(fit_tw$model[[1]]), "PARAMSD(tweedie)")
   expect_identical(fit_tw$model[[1]]$fit$selected_distr, "tweedie")
   sims <- fabletools::generate(fit_tw, h = 500, times = 1)
   expect_false(all(sims$.sim == round(sims$.sim)))
 
   # a series where the Tweedie wins under auto, to exercise the discrete branch
-  fit_auto <- fabletools::model(test_data[[6]], model = STATICDISTR(value, distr = "auto"))
+  fit_auto <- fabletools::model(test_data[[6]], model = PARAMSD(value, distr = "auto"))
   mdl <- fit_auto$model[[1]]$fit
   if (identical(mdl$selected_distr, "tweedie_discrete")) {
     expect_identical(fabletools::model_sum(fit_auto$model[[1]]),
-                     "STATICDISTR(tweedie_discrete)")
+                     "PARAMSD(tweedie_discrete)")
     sims_auto <- fabletools::generate(fit_auto, h = 200, times = 1)
     expect_all_true(sims_auto$.sim == round(sims_auto$.sim))
   }
@@ -144,7 +144,7 @@ test_that("auto and explicit use different Tweedies, and say so", {
 test_that("auto ranks all five candidates on a common probability scale", {
   # The discretised Tweedie contributes a probability mass, so every candidate
   # log-likelihood is negative and the AIC values are mutually comparable.
-  fit <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "auto"))
+  fit <- fabletools::model(base_ts(), model = PARAMSD(value, distr = "auto"))
   ic <- fit$model[[1]]$fit$ic
   expect_all_true(ic > 0)
   expect_all_true(is.finite(ic))
@@ -152,10 +152,10 @@ test_that("auto ranks all five candidates on a common probability scale", {
 })
 
 test_that("removed options fail loudly rather than silently", {
-  expect_error(STATICDISTR(value, distr = "mixture"), "has been removed")
+  expect_error(PARAMSD(value, distr = "mixture"), "has been removed")
   # `...` would otherwise swallow these, changing behaviour without a word
-  expect_error(STATICDISTR(value, tweedie = FALSE), "`tweedie` has been removed")
-  expect_error(STATICDISTR(value, tweedie_discrete = FALSE),
+  expect_error(PARAMSD(value, tweedie = FALSE), "`tweedie` has been removed")
+  expect_error(PARAMSD(value, tweedie_discrete = FALSE),
                "`tweedie_discrete` has been removed")
 })
 
@@ -166,13 +166,13 @@ test_that("the information criteria use free-parameter counts, not parameters()"
   y <- c(0, 0, 3, 0, 1, 5, 0, 2)
   expect_length(distributional::parameters(d), 3)   # the upstream miscount
   expect_equal(
-    fable.intermittent:::staticdistr_information(d, y, "aic", 3L) -
-      fable.intermittent:::staticdistr_information(d, y, "aic", 2L),
+    fable.intermittent:::paramsd_information(d, y, "aic", 3L) -
+      fable.intermittent:::paramsd_information(d, y, "aic", 2L),
     2
   )
 
   # the table covers exactly the candidates auto can fit, with the right counts
-  np <- fable.intermittent:::.STATICDISTR_NPARAMS
+  np <- fable.intermittent:::.PARAMSD_NPARAMS
   expect_setequal(names(np), c("pois", "hsp", "nbinom", "hsnb", "tweedie_discrete"))
   expect_identical(np[["pois"]], 1L)
   expect_identical(np[["hsp"]], 2L)
@@ -181,7 +181,7 @@ test_that("the information criteria use free-parameter counts, not parameters()"
   expect_identical(np[["tweedie_discrete"]], 3L)
 
   # auto reports one criterion value per fitted candidate, still named
-  fit <- fabletools::model(base_ts(), model = STATICDISTR(value, distr = "auto"))
+  fit <- fabletools::model(base_ts(), model = PARAMSD(value, distr = "auto"))
   expect_setequal(names(fit$model[[1]]$fit$ic), names(np))
 })
 
@@ -255,9 +255,9 @@ test_that("fit_tweedie falls back gracefully on an all-zero series", {
   expect_lt(params[["power"]], 2)
 })
 
-test_that("STATICDISTR handles all-zero series (no positive demand to fit hsnb on)", {
+test_that("PARAMSD handles all-zero series (no positive demand to fit hsnb on)", {
   for (distr in c("auto", "hsnb", "tweedie")) {
-    fit <- fabletools::model(all_zero_ts(), STATICDISTR(value, distr = distr))
+    fit <- fabletools::model(all_zero_ts(), PARAMSD(value, distr = distr))
     expect_s3_class(fit, "mdl_df")
     expect_all_true(is.finite(stats::fitted(fit)$.fitted))
   }

@@ -98,7 +98,7 @@ train_vz <- function(.data, specials, ...) {
 #'
 #' Produces forecast distributions from a fitted VZ model using simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -149,7 +149,7 @@ generate.VZ <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a VZ model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -166,7 +166,7 @@ fitted.VZ <- function(object, ...) {
 
 #' Extract residuals from a VZ model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(

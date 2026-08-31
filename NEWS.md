@@ -6,21 +6,21 @@
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
-* Added a static Tweedie distribution to `STATICDISTR`. `distr = "auto"` now
+* Added a static Tweedie distribution to `PARAMSD`. `distr = "auto"` now
   ranks it as a fifth candidate, in a discretised form obtained by rounding to
   the non-negative integers so that its log-likelihood is a probability mass
   comparable with the count distributions; when it wins the model is reported as
-  `STATICDISTR(tweedie_discrete)`. `distr = "tweedie"` fits the continuous
+  `PARAMSD(tweedie_discrete)`. `distr = "tweedie"` fits the continuous
   Tweedie, for intermittent series that are not counts.
 
 ## Deprecations
 
-* Removed `distr = "mixture"` from `STATICDISTR`. Use `distr = "auto"` to select
+* Removed `distr = "mixture"` from `PARAMSD`. Use `distr = "auto"` to select
   a single distribution by AIC/BIC.
 
 ## Minor improvements and bug fixes
 
-* Fixed the parameter count used by `STATICDISTR`'s information criteria.
+* Fixed the parameter count used by `PARAMSD`'s information criteria.
   It was taken from `distributional::parameters()`, which for the hurdle
   distributions returns the `dist_inflated` wrapper's fields and charged `hsp`
   three parameters instead of two. Counts are now declared per candidate.
@@ -49,7 +49,7 @@
 
 * Added `report()` and `tidy()` methods for all model classes.
 
-* Details included in `model_sum()` for ES-based models and `STATICDISTR()`.
+* Details included in `model_sum()` for ES-based models and `PARAMSD()`.
 
 ## Minor improvements and bug fixes
 

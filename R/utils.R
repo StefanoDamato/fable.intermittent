@@ -13,11 +13,11 @@ NULL
 .MARWAL_EPSILON      <- 1e-4
 .NNARMA_EPSILON      <- 1e-4
 .NEGBINES_EPSILON    <- 1e-4
-.STATICDISTR_EPSILON <- 1e-4
+.PARAMSD_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
 
 # Bounds on the Tweedie power parameter, shared by TWEES and by the static
-# Tweedie fit of STATICDISTR. The interval must stay strictly inside (1, 2):
+# Tweedie fit of PARAMSD. The interval must stay strictly inside (1, 2):
 # as the power approaches 1 the Tweedie degenerates to a Poisson, whose mass
 # sits on the integer lattice, so on count data the Lebesgue density used by
 # dtweedie() becomes singular and the likelihood diverges.
@@ -196,7 +196,7 @@ covariance.dist_normal_nonneg <- function(x, ...) {
 # Discretised ("rounded") Tweedie: the distribution of round(X) for a Tweedie X.
 # The continuous Tweedie is a density on the positive half-line with an atom at
 # zero, so its log-likelihood cannot be compared with the count candidates of
-# STATICDISTR by AIC/BIC, nor coherently blended with them into a mixture.
+# PARAMSD by AIC/BIC, nor coherently blended with them into a mixture.
 # Rounding puts it on a common probability scale:
 #   P(Y = 0) = F(0.5)  and  P(Y = k) = F(k + 0.5) - F(k - 0.5) for k >= 1,
 # which is a proper pmf on the non-negative integers.
@@ -328,15 +328,15 @@ covariance.dist_tweedie_discrete <- function(x, ...) {
 
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
-    return(c(size = 100, prob = 1 - .STATICDISTR_EPSILON))
+    return(c(size = 100, prob = 1 - .PARAMSD_EPSILON))
   }
 
   fit <- tryCatch(
     nloptr(
-      x0 = c(max(mean(y), .STATICDISTR_EPSILON), 0.5),
+      x0 = c(max(mean(y), .PARAMSD_EPSILON), 0.5),
       eval_f = function(x) -mean(dnbinom(y, x[1], x[2], log = TRUE)),
-      lb = c(.STATICDISTR_EPSILON, .STATICDISTR_EPSILON),
-      ub = c(Inf, 1 - .STATICDISTR_EPSILON),
+      lb = c(.PARAMSD_EPSILON, .PARAMSD_EPSILON),
+      ub = c(Inf, 1 - .PARAMSD_EPSILON),
       opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
     ),
     error = function(e) NULL
@@ -345,19 +345,19 @@ fit_nbinom <- function(y) {
   if (is.null(fit) || is.null(fit$solution)) {
     mu <- mean(y)
     sigmasq <- var(y)
-    if (!is.na(sigmasq) && sigmasq > mu + .STATICDISTR_EPSILON) {
+    if (!is.na(sigmasq) && sigmasq > mu + .PARAMSD_EPSILON) {
       size <- (mu^2) / (sigmasq - mu)
     } else {
       size <- 100
     }
-    prob <- min(size / (size + mu), 1 - .STATICDISTR_EPSILON)
+    prob <- min(size / (size + mu), 1 - .PARAMSD_EPSILON)
     return(c(size = size, prob = prob))
   }
 
   c(size = fit$solution[1], prob = fit$solution[2])
 }
 
-# Static (IID) Tweedie fit used by STATICDISTR.
+# Static (IID) Tweedie fit used by PARAMSD.
 #
 # With `discrete = FALSE` the continuous Tweedie likelihood is maximised. The
 # mean of an exponential dispersion model is then the sample mean in closed
@@ -372,11 +372,11 @@ fit_nbinom <- function(y) {
 # series, which is around two orders of magnitude cheaper.
 fit_tweedie <- function(y, discrete = FALSE) {
   if (length(y) == 0 || all(y == 0)) {
-    return(c(mean = .STATICDISTR_EPSILON, dispersion = 1, power = 1.5))
+    return(c(mean = .PARAMSD_EPSILON, dispersion = 1, power = 1.5))
   }
 
-  mu <- max(mean(y), .STATICDISTR_EPSILON)
-  phi_start <- max(var(y) / mu, .STATICDISTR_EPSILON)
+  mu <- max(mean(y), .PARAMSD_EPSILON)
+  phi_start <- max(var(y) / mu, .PARAMSD_EPSILON)
 
   if (discrete) {
     if (any(y < 0) || any(y != round(y))) {
@@ -394,16 +394,16 @@ fit_tweedie <- function(y, discrete = FALSE) {
       -sum(weights * log(pmax(pmf, .Machine$double.xmin))) / length(y)
     }
     x0 <- c(mu, phi_start, 1.5)
-    lb <- c(.STATICDISTR_EPSILON, .STATICDISTR_EPSILON,
-            .TWEEDIE_POWER_MIN + .STATICDISTR_EPSILON)
-    ub <- c(max(y) * 10 + 1, Inf, .TWEEDIE_POWER_MAX - .STATICDISTR_EPSILON)
+    lb <- c(.PARAMSD_EPSILON, .PARAMSD_EPSILON,
+            .TWEEDIE_POWER_MIN + .PARAMSD_EPSILON)
+    ub <- c(max(y) * 10 + 1, Inf, .TWEEDIE_POWER_MAX - .PARAMSD_EPSILON)
   } else {
     eval_f <- function(x) {
       -mean(dtweedie(y, mean = mu, dispersion = x[1], power = x[2], log = TRUE))
     }
     x0 <- c(phi_start, 1.5)
-    lb <- c(.STATICDISTR_EPSILON, .TWEEDIE_POWER_MIN + .STATICDISTR_EPSILON)
-    ub <- c(Inf, .TWEEDIE_POWER_MAX - .STATICDISTR_EPSILON)
+    lb <- c(.PARAMSD_EPSILON, .TWEEDIE_POWER_MIN + .PARAMSD_EPSILON)
+    ub <- c(Inf, .TWEEDIE_POWER_MAX - .PARAMSD_EPSILON)
   }
 
   fit <- tryCatch(

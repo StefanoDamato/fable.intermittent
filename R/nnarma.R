@@ -111,7 +111,7 @@ train_nnarma <-function(.data, specials, ...) {
 #'
 #' Produces forecast distributions from a fitted NNARMA model.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #'
 #' @return A distribution vector of class `dist_normal_nonneg`.
 #'
@@ -154,7 +154,7 @@ forecast.NNARMA <- function(object, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a NNARMA model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -172,7 +172,7 @@ fitted.NNARMA <- function(object, ...) {
 
 #' Extract residuals from a NNARMA model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
