@@ -50,10 +50,10 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort is_integerish
-#' @importFrom distributional dist_sample
+#' @importFrom distributional dist_sample dist_tweedie
 #' @importFrom nloptr nloptr
 #' @importFrom stats median
-#' @importFrom tweedieDistr dist_tweedie dtweedie rtweedie
+#' @importFrom tweedieDistr dtweedie rtweedie
 #' @export
 TWEES <- function(formula, damped = TRUE, scaling = TRUE, ...) {
   twees_model <- new_model_class(

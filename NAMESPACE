@@ -104,6 +104,7 @@ importFrom(distributional,
   dist_poisson,
   dist_sample,
   dist_transformed,
+  dist_tweedie,
   generate,
   log_likelihood,
   new_dist,
@@ -149,7 +150,6 @@ importFrom(stats,
 importFrom(tibble,tibble)
 importFrom(tsibble,measured_vars)
 importFrom(tweedieDistr,
-  dist_tweedie,
   dtweedie,
   rtweedie
 )
