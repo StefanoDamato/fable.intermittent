@@ -2,6 +2,8 @@
 
 ## New features
 
+* Released `tinyM5` data set, a subset of the M5 dataset.
+
 * Released `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.

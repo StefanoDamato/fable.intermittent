@@ -103,6 +103,21 @@ if (file.exists(pasta_csv) && file.size(pasta_csv) > 0) {
   datasets[["pasta"]] <- pasta_to_tsibble(pasta_csv)
 }
 
+# tinyM5 comes from the `m5` package's tiny_m5 data.table, not a local CSV.
+# The original has multiple rows per item/date combination, so a single key
+# on item_id would not be sufficient for a valid tsibble -- key on item_id
+# and store_id instead. Requires the `m5` package (CRAN) to be installed.
+if (requireNamespace("m5", quietly = TRUE)) {
+  utils::data("tiny_m5", package = "m5")
+
+  tinyM5 <- tiny_m5 |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(date = as.Date(date)) |>
+    tsibble::as_tsibble(index = date, key = c(item_id, store_id))
+
+  datasets[["tinyM5"]] <- tinyM5
+}
+
 if (!dir.exists("data")) {
   dir.create("data", recursive = TRUE)
 }
