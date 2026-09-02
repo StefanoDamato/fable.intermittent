@@ -3,12 +3,27 @@
 #' Static (IID) count distribution model for intermittent demand, following
 #' Kolassa (2016). The method fits several candidate distributions --- Poisson,
 #' hurdle-shifted Poisson, negative binomial, and hurdle-shifted negative
-#' binomial --- to the observed series and selects the best by AIC. A mixture
-#' option that blends all four predictive distributions is also available.
+#' binomial --- plus a Tweedie, to the observed series and selects the best by
+#' AIC.
+#'
+#' A Tweedie is continuous on the positive half-line with an atom at zero, so
+#' its log-likelihood is a density rather than a probability mass and cannot be
+#' ranked against the count candidates by AIC/BIC. The two entry points
+#' therefore use different forms of it, and are reported distinctly:
+#'
+#' * `distr = "auto"` ranks a *discretised* Tweedie, obtained by rounding to the
+#'   non-negative integers, with probability mass function
+#'   `P(Y = 0) = F(0.5)` and `P(Y = k) = F(k + 0.5) - F(k - 0.5)`. This puts it
+#'   on the same scale as the four count distributions. When it wins, the model
+#'   is reported as `PARAMSD(tweedie_discrete)`.
+#' * `distr = "tweedie"` fits the *continuous* Tweedie, for intermittent series
+#'   that are not counts. It is reported as `PARAMSD(tweedie)`, and is the
+#'   only choice for which [generate.PARAMSD()] returns non-integer sample
+#'   paths.
 #'
 #' @param formula Model specification.
 #' @param distr Distribution choice: one of `"auto"`, `"pois"`, `"hsp"`,
-#'   `"nbinom"`, `"hsnb"`, or `"mixture"`.
+#'   `"nbinom"`, `"hsnb"`, or `"tweedie"`.
 #' @param hot_start Logical. If `TRUE`, leading zeros are removed from the
 #'   time series before fitting.
 #' @param criterion Information criterion to use for model selection when `distr =
@@ -47,9 +62,28 @@
 #' @importFrom distributional dist_poisson dist_negative_binomial log_likelihood parameters dist_sample
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
+#' @importFrom tweedieDistr dist_tweedie
 #' @export
-PARAMSD <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "mixture"),
+PARAMSD <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "tweedie"),
                         hot_start = FALSE, criterion = c("aic", "bic"), ...) {
+  # Caught before arg_match() so the message names the removal rather than only
+  # listing the values that remain.
+  if (identical(distr, "mixture")) {
+    abort(paste0(
+      "`distr = \"mixture\"` has been removed from PARAMSD. Use ",
+      "`distr = \"auto\"` to select a single distribution by AIC/BIC."
+    ))
+  }
+  # Same treatment for the removed arguments: `...` would otherwise swallow them
+  # silently, so old code would keep running with different behaviour.
+  removed <- intersect(names(list(...)), c("tweedie", "tweedie_discrete"))
+  if (length(removed) > 0) {
+    abort(paste0(
+      "`", removed[1], "` has been removed from PARAMSD. `distr = \"auto\"` ",
+      "always ranks the discretised Tweedie; `distr = \"tweedie\"` always fits ",
+      "the continuous one."
+    ))
+  }
   distr <- arg_match(distr)
   criterion <- arg_match(criterion)
 
@@ -85,13 +119,14 @@ train_paramsd <- function(.data, specials, distr, hot_start, criterion, ...) {
     start <- 1
   }
 
-  # Identify the distributions to be fitted
-  if (distr %in% c("auto", "mixture")) {
-    to_eval <- c("nbinom", "pois", "hsnb", "hsp")
+  # Identify the distributions to be fitted. Ranking by AIC/BIC is only
+  # meaningful on a common probability scale, so "auto" ranks the discretised
+  # Tweedie; the explicit `distr = "tweedie"` fits the continuous one.
+  if (distr == "auto") {
+    to_eval <- c("nbinom", "pois", "hsnb", "hsp", "tweedie_discrete")
   } else {
     to_eval <- distr
   }
-
 
   # Apply Croston's decomposition
   decomp <- crostons_decomp(y)
@@ -112,6 +147,18 @@ train_paramsd <- function(.data, specials, distr, hot_start, criterion, ...) {
   if ("hsnb" %in% to_eval) {
     fit_distr[["hsnb"]] <- paramsd_fit_hsnb(occurrence, shifted_demand)
   }
+  if ("tweedie_discrete" %in% to_eval) {
+    fit_distr[["tweedie_discrete"]] <- paramsd_fit_tweedie(y, discrete = TRUE)
+  }
+  if ("tweedie" %in% to_eval) {
+    fit_distr[["tweedie"]] <- paramsd_fit_tweedie(y, discrete = FALSE)
+  }
+  if ("tweedie_discrete" %in% to_eval) {
+    fit_distr[["tweedie_discrete"]] <- paramsd_fit_tweedie(y, discrete = TRUE)
+  }
+  if ("tweedie" %in% to_eval) {
+    fit_distr[["tweedie"]] <- paramsd_fit_tweedie(y, discrete = FALSE)
+  }
 
   # Select the distribution to use for forecasting
   if (distr == "mixture") {
@@ -119,7 +166,10 @@ train_paramsd <- function(.data, specials, distr, hot_start, criterion, ...) {
     pred_distr <- do.call(distributional::dist_mixture, c(fit_distr, list(weights = w)))
     ic <- NULL
   } else if (distr == "auto") {
-    ic <- vapply(fit_distr, paramsd_information, y = y, criterion = criterion, numeric(1))
+    ic <- vapply(names(fit_distr), function(nm) {
+      paramsd_information(fit_distr[[nm]], 
+      y, criterion, .PARAMSD_NPARAMS[[nm]])
+    }, numeric(1))
     pred_distr <- fit_distr[[names(which.min(ic))]]
   } else {
     pred_distr <- fit_distr[[distr]]
@@ -293,11 +343,32 @@ paramsd_fit_hsnb <- function(occurrence, shifted_demand) {
   make_hurdle_shifted_distr(dist_negative_binomial(params[['size']], params[['prob']]), pzero)
 }
 
+paramsd_fit_tweedie <- function(y, discrete = TRUE) {
+  params <- fit_tweedie(y, discrete = discrete)
+  if (discrete) {
+    dist_tweedie_discrete(params[['mean']], params[['dispersion']], params[['power']])
+  } else {
+    dist_tweedie(params[['mean']], params[['dispersion']], params[['power']])
+  }
+}
 
-paramsd_information <- function(distr, y, criterion){
+
+# Free parameters per candidate. Deliberately not derived from parameters():
+# for the hurdle distributions that returns the dist_inflated wrapper's fields
+# (dist, x, p), which counts the fixed inflation point x = 0 and misses the
+# inner distribution's parameters -- so hsp is charged 3 instead of 2. See
+# https://github.com/mitchelloharawild/distributional/issues/161
+.PARAMSD_NPARAMS <- c(pois = 1L, hsp = 2L, nbinom = 2L, hsnb = 3L,
+                          tweedie_discrete = 3L)
+
+# n_params defaults to the (unreliable) introspection so that direct calls
+# without a candidate name keep working.
+paramsd_information <- function(distr, y, criterion, n_params = NULL){
   loglik <- sum(distributional::log_likelihood(distr, y))
   n_obs <- length(y)
-  n_params <- length(distributional::parameters(distr))
+  if (is.null(n_params)) {
+    n_params <- length(distributional::parameters(distr))
+  }
 
   if (criterion == "aic") {
     -2 * loglik + 2 * n_params

@@ -338,15 +338,15 @@ twees_optimize <- function(y, occ, damped) {
   # In the undamped case set both damping parameters to 0
   if (!damped) {
     init_params <- c(1.5, 0.2, max(mean(y), .TWEES_EPSILON), 0.2)
-    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 3))
-    ub <- c(1.8 - .TWEES_EPSILON, 1 - .TWEES_EPSILON, max(y) * 10, 1 - .TWEES_EPSILON)
+    lb <- c(.TWEEDIE_POWER_MIN + .TWEES_EPSILON, rep(.TWEES_EPSILON, 3))
+    ub <- c(.TWEEDIE_POWER_MAX - .TWEES_EPSILON, 1 - .TWEES_EPSILON, max(y) * 10, 1 - .TWEES_EPSILON)
     eval_f <- function(x) twees_nll(c(x[1], x[2], 0, x[3], x[4], 0), y, occ)
   } else {
 
     # Otherwise, learn both damping parameters with a simplex parametrisation
     init_params <- c(1.5, 0.2, 0.1 / (1 - 0.2), max(mean(y), .TWEES_EPSILON), 0.2, 0.1 / (1 - 0.2))
-    lb <- c(1.2 + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
-    ub <- c(1.8 - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
+    lb <- c(.TWEEDIE_POWER_MIN + .TWEES_EPSILON, rep(.TWEES_EPSILON, 5))
+    ub <- c(.TWEEDIE_POWER_MAX - .TWEES_EPSILON, rep(1 - .TWEES_EPSILON, 2), max(y) * 10, rep(1 - .TWEES_EPSILON, 2))
     eval_f <- function(x) twees_nll(c(x[1], x[2], (1 - x[2]) * x[3], x[4], x[5], (1 - x[5]) * x[6]), y, occ)
   }
 

@@ -4,6 +4,7 @@
 #' @importFrom fabletools get_frequencies
 #' @importFrom rlang abort
 #' @importFrom stats dnorm pnorm qnorm rnorm
+#' @importFrom tweedieDistr dtweedie ptweedie qtweedie rtweedie
 NULL
 
 .BETANBB_EPSILON     <- 1e-4
@@ -14,6 +15,14 @@ NULL
 .NEGBINES_EPSILON    <- 1e-4
 .PARAMSD_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
+
+# Bounds on the Tweedie power parameter, shared by TWEES and by the static
+# Tweedie fit of PARAMSD. The interval must stay strictly inside (1, 2):
+# as the power approaches 1 the Tweedie degenerates to a Poisson, whose mass
+# sits on the integer lattice, so on count data the Lebesgue density used by
+# dtweedie() becomes singular and the likelihood diverges.
+.TWEEDIE_POWER_MIN <- 1.2
+.TWEEDIE_POWER_MAX <- 1.8
 
 crostons_decomp <- function(y) {
   occurrence <- ifelse(y > 0, 1L, 0L)
@@ -184,6 +193,139 @@ covariance.dist_normal_nonneg <- function(x, ...) {
   x[["sigma"]]^2
 }
 
+# Discretised ("rounded") Tweedie: the distribution of round(X) for a Tweedie X.
+# The continuous Tweedie is a density on the positive half-line with an atom at
+# zero, so its log-likelihood cannot be compared with the count candidates of
+# PARAMSD by AIC/BIC, nor coherently blended with them into a mixture.
+# Rounding puts it on a common probability scale:
+#   P(Y = 0) = F(0.5)  and  P(Y = k) = F(k + 0.5) - F(k - 0.5) for k >= 1,
+# which is a proper pmf on the non-negative integers.
+dist_tweedie_discrete <- function(mean = 1, dispersion = 1, power = 1.5) {
+  mean <- as.double(mean)
+  dispersion <- as.double(dispersion)
+  power <- as.double(power)
+
+  if (any(mean <= 0, na.rm = TRUE)) {
+    abort("The mean parameter of a discretised Tweedie distribution must be strictly positive.")
+  }
+  if (any(dispersion <= 0, na.rm = TRUE)) {
+    abort("The dispersion parameter of a discretised Tweedie distribution must be strictly positive.")
+  }
+  if (any(power <= 1 | power >= 2, na.rm = TRUE)) {
+    abort("The power parameter of a discretised Tweedie distribution must be in (1, 2).")
+  }
+
+  new_dist(mu = mean, phi = dispersion, p = power, class = "dist_tweedie_discrete")
+}
+
+# Probability mass of the rounded Tweedie on the non-negative integers. Shared
+# by the density method and by the discrete branch of fit_tweedie().
+tweedie_discrete_pmf <- function(k, mu, phi, power) {
+  out <- numeric(length(k))
+  ok <- is.finite(k) & k >= 0 & k == round(k)
+  if (any(ok)) {
+    kk <- k[ok]
+    upper <- ptweedie(kk + 0.5, mean = mu, dispersion = phi, power = power)
+    lower <- ptweedie(pmax(kk - 0.5, 0), mean = mu, dispersion = phi, power = power)
+    lower[kk == 0] <- 0
+    out[ok] <- pmax(upper - lower, 0)
+  }
+  out
+}
+
+# Integer grid covering the effective support, used for the moments. The
+# variance of a Tweedie is phi * mu^power, so mu + n_sd standard deviations
+# leaves a negligible tail.
+tweedie_discrete_support <- function(mu, phi, power, n_sd = 15, max_k = 1e5) {
+  sd <- sqrt(phi * mu^power)
+  0:min(max_k, max(10, ceiling(mu + n_sd * sd)))
+}
+
+#' @noRd
+#' @export
+format.dist_tweedie_discrete <- function(x, digits = 2, ...) {
+  sprintf(
+    "TweedieD(%s, %s, %s)",
+    format(x[["mu"]], digits = digits, ...),
+    format(x[["phi"]], digits = digits, ...),
+    format(x[["p"]], digits = digits, ...)
+  )
+}
+
+#' @importFrom stats density
+#' @exportS3Method distributional::density
+#' @export
+#' @noRd
+density.dist_tweedie_discrete <- function(x, at, ...) {
+  tweedie_discrete_pmf(at, x[["mu"]], x[["phi"]], x[["p"]])
+}
+
+#' @importFrom distributional generate
+#' @exportS3Method distributional::generate
+#' @noRd
+generate.dist_tweedie_discrete <- function(x, times, ...) {
+  # Rounding the variates is exactly the discretisation above
+  round(rtweedie(times, mean = x[["mu"]], dispersion = x[["phi"]], power = x[["p"]]))
+}
+
+#' @exportS3Method distributional::cdf
+#' @noRd
+cdf.dist_tweedie_discrete <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) {
+  cdf <- ptweedie(pmax(floor(q) + 0.5, 0), mean = x[["mu"]],
+                  dispersion = x[["phi"]], power = x[["p"]])
+  cdf[q < 0] <- 0
+  if (!lower.tail) {
+    cdf <- 1 - cdf
+  }
+  if (log.p) {
+    cdf <- log(cdf)
+  }
+  cdf
+}
+
+#' @exportS3Method distributional::quantile
+#' @noRd
+quantile.dist_tweedie_discrete <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
+  if (log.p) {
+    p <- exp(p)
+  }
+  if (!lower.tail) {
+    p <- 1 - p
+  }
+  mu <- x[["mu"]]
+  phi <- x[["phi"]]
+  power <- x[["p"]]
+
+  step_cdf <- function(k) ptweedie(k + 0.5, mean = mu, dispersion = phi, power = power)
+
+  vapply(p, function(pi) {
+    if (is.na(pi)) return(NA_real_)
+    if (pi <= 0) return(0)
+    if (pi >= 1) return(Inf)
+    # Start from the continuous quantile, then step onto the integer lattice
+    k <- max(0, round(qtweedie(pi, mean = mu, dispersion = phi, power = power)))
+    while (k > 0 && step_cdf(k - 1) >= pi) k <- k - 1
+    while (step_cdf(k) < pi) k <- k + 1
+    as.double(k)
+  }, numeric(1))
+}
+
+#' @export
+#' @noRd
+mean.dist_tweedie_discrete <- function(x, ...) {
+  k <- tweedie_discrete_support(x[["mu"]], x[["phi"]], x[["p"]])
+  sum(k * tweedie_discrete_pmf(k, x[["mu"]], x[["phi"]], x[["p"]]))
+}
+
+#' @export
+#' @noRd
+covariance.dist_tweedie_discrete <- function(x, ...) {
+  k <- tweedie_discrete_support(x[["mu"]], x[["phi"]], x[["p"]])
+  pk <- tweedie_discrete_pmf(k, x[["mu"]], x[["phi"]], x[["p"]])
+  m <- sum(k * pk)
+  sum(k^2 * pk) - m^2
+}
+
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
     return(c(size = 100, prob = 1 - .PARAMSD_EPSILON))
@@ -213,4 +355,72 @@ fit_nbinom <- function(y) {
   }
 
   c(size = fit$solution[1], prob = fit$solution[2])
+}
+
+# Static (IID) Tweedie fit used by PARAMSD.
+#
+# With `discrete = FALSE` the continuous Tweedie likelihood is maximised. The
+# mean of an exponential dispersion model is then the sample mean in closed
+# form, so only the dispersion and the power are optimised numerically.
+#
+# With `discrete = TRUE` the likelihood of the *rounded* Tweedie is maximised
+# instead, so that the resulting log-likelihood is a probability mass and can
+# be compared with the count candidates by AIC/BIC. The sample mean is no
+# longer the exact maximiser, so all three parameters are optimised. Intermittent
+# counts take few distinct values, so the likelihood is accumulated over the
+# unique observations weighted by their frequencies rather than over the whole
+# series, which is around two orders of magnitude cheaper.
+fit_tweedie <- function(y, discrete = FALSE) {
+  if (length(y) == 0 || all(y == 0)) {
+    return(c(mean = .PARAMSD_EPSILON, dispersion = 1, power = 1.5))
+  }
+
+  mu <- max(mean(y), .PARAMSD_EPSILON)
+  phi_start <- max(var(y) / mu, .PARAMSD_EPSILON)
+
+  if (discrete) {
+    if (any(y < 0) || any(y != round(y))) {
+      abort(paste0(
+        "The discretised Tweedie requires non-negative integer observations. ",
+        "For a non-count series use `tweedie_discrete = FALSE` together with ",
+        "`distr = \"mixture\"` or `distr = \"tweedie\"`."
+      ))
+    }
+    counts <- table(y)
+    vals <- as.numeric(names(counts))
+    weights <- as.numeric(counts)
+    eval_f <- function(x) {
+      pmf <- tweedie_discrete_pmf(vals, x[1], x[2], x[3])
+      -sum(weights * log(pmax(pmf, .Machine$double.xmin))) / length(y)
+    }
+    x0 <- c(mu, phi_start, 1.5)
+    lb <- c(.PARAMSD_EPSILON, .PARAMSD_EPSILON,
+            .TWEEDIE_POWER_MIN + .PARAMSD_EPSILON)
+    ub <- c(max(y) * 10 + 1, Inf, .TWEEDIE_POWER_MAX - .PARAMSD_EPSILON)
+  } else {
+    eval_f <- function(x) {
+      -mean(dtweedie(y, mean = mu, dispersion = x[1], power = x[2], log = TRUE))
+    }
+    x0 <- c(phi_start, 1.5)
+    lb <- c(.PARAMSD_EPSILON, .TWEEDIE_POWER_MIN + .PARAMSD_EPSILON)
+    ub <- c(Inf, .TWEEDIE_POWER_MAX - .PARAMSD_EPSILON)
+  }
+
+  fit <- tryCatch(
+    nloptr(
+      x0 = x0, eval_f = eval_f, lb = lb, ub = ub,
+      opts = list(algorithm = "NLOPT_LN_BOBYQA", maxeval = 500)
+    ),
+    error = function(e) NULL
+  )
+
+  if (is.null(fit) || is.null(fit$solution)) {
+    return(c(mean = mu, dispersion = phi_start, power = 1.5))
+  }
+
+  if (discrete) {
+    c(mean = fit$solution[1], dispersion = fit$solution[2], power = fit$solution[3])
+  } else {
+    c(mean = mu, dispersion = fit$solution[1], power = fit$solution[2])
+  }
 }
