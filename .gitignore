@@ -21,6 +21,7 @@ CRAN-SUBMISSION
 debugger.R
 exp_tweedie/
 experiment_cosmetic.R
+staticdistr_tweedie_notes.md
 data/cosmetic.rda
 data-raw/
 *.tar.gz

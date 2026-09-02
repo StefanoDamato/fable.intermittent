@@ -2,8 +2,9 @@
 # GLOBAL PARAMETERS (EPSILON) TO AVOID NUMERICAL ISSUES IN COMPUTATIONS
 #' @importFrom distributional dist_inflated dist_transformed new_dist covariance
 #' @importFrom fabletools get_frequencies
+#' @importFrom nloptr nloptr
 #' @importFrom rlang abort
-#' @importFrom stats dnorm pnorm qnorm rnorm
+#' @importFrom stats dnbinom dnorm pnorm qnorm rnorm var
 #' @importFrom tweedieDistr dtweedie ptweedie qtweedie rtweedie
 NULL
 
@@ -16,11 +17,7 @@ NULL
 .PARAMSD_EPSILON <- 1e-4
 .TWEES_EPSILON       <- 1e-4
 
-# Bounds on the Tweedie power parameter, shared by TWEES and by the static
-# Tweedie fit of PARAMSD. The interval must stay strictly inside (1, 2):
-# as the power approaches 1 the Tweedie degenerates to a Poisson, whose mass
-# sits on the integer lattice, so on count data the Lebesgue density used by
-# dtweedie() becomes singular and the likelihood diverges.
+
 .TWEEDIE_POWER_MIN <- 1.2
 .TWEEDIE_POWER_MAX <- 1.8
 
@@ -37,6 +34,8 @@ crostons_decomp <- function(y) {
   )
 }
 
+#' @importFrom fabletools get_frequencies
+#' @importFrom rlang abort
 get_freq <- function(.data, period = NULL, model_name = "Model") {
   period <- get_frequencies(period, .data)
   period <- round(as.numeric(period[[1]]))
@@ -49,9 +48,6 @@ get_freq <- function(.data, period = NULL, model_name = "Model") {
   period
 }
 
-# Classical multiplicative seasonal adjustment via centered moving average,
-# shared by NNARMA (normalize = TRUE, as in its reference implementation) and
-# MARWAL (normalize = FALSE, matching the Markov Walk reference)
 deseasonalize <- function(y, period, max_prop_zeros, normalize = FALSE) {
 
   # Ignore the seasonality if there are too many zeros
@@ -64,8 +60,6 @@ deseasonalize <- function(y, period, max_prop_zeros, normalize = FALSE) {
   for (i in 1:(length(y) - period + 1)) {
     moving_avg[i + ((period + 1) / 2) - 1] <- mean(y[i:(i + period - 1)])
   }
-  # All-zero windows carry no seasonal information: drop them (NA) rather
-  # than counting them as ratio 0, as in the reference implementations
   resid <- ifelse(moving_avg > 0, y / moving_avg, NA)
 
   # Compute the seasonal factors and deseasonalise the data
@@ -77,8 +71,7 @@ deseasonalize <- function(y, period, max_prop_zeros, normalize = FALSE) {
     seasons <- seasons * period / sum(seasons)
   }
 
-  # Only deseasonalize when all factors are strictly positive and finite,
-  # so training and forecasting always operate on the same scale
+  # Only deseasonalize when all factors are strictly positive and finite
   if (!all(is.finite(seasons)) || min(seasons) <= 0) {
     return(list(y_deseasonalized = y, seasons = NULL))
   }
@@ -89,28 +82,15 @@ deseasonalize <- function(y, period, max_prop_zeros, normalize = FALSE) {
   )
 }
 
+#' @importFrom distributional dist_transformed dist_inflated
 make_hurdle_shifted_distr <- function(distr, pzero){
   distr <- dist_transformed(distr, function(x) x + 1, function(x) x - 1)
   dist_inflated(distr, pzero, 0)
 }
 
-# Former generic construction of the censored distribution, replaced by
-# dist_normal_nonneg below. Unlike the class, its mean() was the coherent
-# expectation E[max(X, 0)] rather than the clamped max(mu, 0).
-# negative_mass_to_zero <- function(distr) {
-#   do.call(c, lapply(as.list(distr), \(d) {
-#     p0 <- cdf(d, 0)[[1]]
-#     dist_truncated(d, lower = 0) |> dist_inflated(prob = p0)
-#   }))
-# }
 
-# Gaussian forecast distribution with its negative part collapsed to zero,
-# used by NNARMA and MARWAL. Quantiles, cdf, and samples are those of the
-# rectified Gaussian max(X, 0); as a deliberate reporting choice, mean() is
-# the clamped max(mu, 0) (the distribution's median) rather than the coherent
-# expectation E[max(X, 0)], so point forecasts match the clamped Gaussian mean
-# of the reference literature. variance() is the Gaussian sigma^2. Hence
-# mean() does not match the average of generate() samples when P(X < 0) > 0.
+#' @importFrom rlang abort
+#' @importFrom distributional new_dist
 dist_normal_nonneg <- function(mu = 0, sigma = 1) {
   mu <- as.double(mu)
   sigma <- as.double(sigma)
@@ -132,7 +112,7 @@ format.dist_normal_nonneg <- function(x, digits = 2, ...) {
   )
 }
 
-#' @importFrom stats density
+#' @importFrom stats density dnorm pnorm
 #' @exportS3Method distributional::density
 #' @export
 #' @noRd
@@ -150,12 +130,14 @@ density.dist_normal_nonneg <- function(x, at, ...) {
 }
 
 #' @importFrom distributional generate
+#' @importFrom stats rnorm
 #' @exportS3Method distributional::generate
 #' @noRd
 generate.dist_normal_nonneg <- function(x, times, ...) {
   pmax(rnorm(times, x[["mu"]], x[["sigma"]]), 0)
 }
 
+#' @importFrom stats pnorm
 #' @exportS3Method distributional::cdf
 #' @noRd
 cdf.dist_normal_nonneg <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) {
@@ -169,6 +151,7 @@ cdf.dist_normal_nonneg <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) 
   cdf
 }
 
+#' @importFrom stats qnorm
 #' @exportS3Method distributional::quantile
 #' @noRd
 quantile.dist_normal_nonneg <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
@@ -193,13 +176,9 @@ covariance.dist_normal_nonneg <- function(x, ...) {
   x[["sigma"]]^2
 }
 
-# Discretised ("rounded") Tweedie: the distribution of round(X) for a Tweedie X.
-# The continuous Tweedie is a density on the positive half-line with an atom at
-# zero, so its log-likelihood cannot be compared with the count candidates of
-# PARAMSD by AIC/BIC, nor coherently blended with them into a mixture.
-# Rounding puts it on a common probability scale:
-#   P(Y = 0) = F(0.5)  and  P(Y = k) = F(k + 0.5) - F(k - 0.5) for k >= 1,
-# which is a proper pmf on the non-negative integers.
+
+#' @importFrom rlang abort
+#' @importFrom distributional new_dist
 dist_tweedie_discrete <- function(mean = 1, dispersion = 1, power = 1.5) {
   mean <- as.double(mean)
   dispersion <- as.double(dispersion)
@@ -218,8 +197,8 @@ dist_tweedie_discrete <- function(mean = 1, dispersion = 1, power = 1.5) {
   new_dist(mu = mean, phi = dispersion, p = power, class = "dist_tweedie_discrete")
 }
 
-# Probability mass of the rounded Tweedie on the non-negative integers. Shared
-# by the density method and by the discrete branch of fit_tweedie().
+
+#' @importFrom tweedieDistr ptweedie
 tweedie_discrete_pmf <- function(k, mu, phi, power) {
   out <- numeric(length(k))
   ok <- is.finite(k) & k >= 0 & k == round(k)
@@ -233,9 +212,7 @@ tweedie_discrete_pmf <- function(k, mu, phi, power) {
   out
 }
 
-# Integer grid covering the effective support, used for the moments. The
-# variance of a Tweedie is phi * mu^power, so mu + n_sd standard deviations
-# leaves a negligible tail.
+
 tweedie_discrete_support <- function(mu, phi, power, n_sd = 15, max_k = 1e5) {
   sd <- sqrt(phi * mu^power)
   0:min(max_k, max(10, ceiling(mu + n_sd * sd)))
@@ -261,13 +238,14 @@ density.dist_tweedie_discrete <- function(x, at, ...) {
 }
 
 #' @importFrom distributional generate
+#' @importFrom tweedieDistr rtweedie
 #' @exportS3Method distributional::generate
 #' @noRd
 generate.dist_tweedie_discrete <- function(x, times, ...) {
-  # Rounding the variates is exactly the discretisation above
   round(rtweedie(times, mean = x[["mu"]], dispersion = x[["phi"]], power = x[["p"]]))
 }
 
+#' @importFrom tweedieDistr ptweedie
 #' @exportS3Method distributional::cdf
 #' @noRd
 cdf.dist_tweedie_discrete <- function(x, q, lower.tail = TRUE, log.p = FALSE, ...) {
@@ -283,6 +261,7 @@ cdf.dist_tweedie_discrete <- function(x, q, lower.tail = TRUE, log.p = FALSE, ..
   cdf
 }
 
+#' @importFrom tweedieDistr ptweedie qtweedie
 #' @exportS3Method distributional::quantile
 #' @noRd
 quantile.dist_tweedie_discrete <- function(x, p, lower.tail = TRUE, log.p = FALSE, ...) {
@@ -326,6 +305,8 @@ covariance.dist_tweedie_discrete <- function(x, ...) {
   sum(k^2 * pk) - m^2
 }
 
+#' @importFrom nloptr nloptr
+#' @importFrom stats dnbinom var
 fit_nbinom <- function(y) {
   if (length(y) == 0 || all(y == 0)) {
     return(c(size = 100, prob = 1 - .PARAMSD_EPSILON))
@@ -357,19 +338,11 @@ fit_nbinom <- function(y) {
   c(size = fit$solution[1], prob = fit$solution[2])
 }
 
-# Static (IID) Tweedie fit used by PARAMSD.
-#
-# With `discrete = FALSE` the continuous Tweedie likelihood is maximised. The
-# mean of an exponential dispersion model is then the sample mean in closed
-# form, so only the dispersion and the power are optimised numerically.
-#
-# With `discrete = TRUE` the likelihood of the *rounded* Tweedie is maximised
-# instead, so that the resulting log-likelihood is a probability mass and can
-# be compared with the count candidates by AIC/BIC. The sample mean is no
-# longer the exact maximiser, so all three parameters are optimised. Intermittent
-# counts take few distinct values, so the likelihood is accumulated over the
-# unique observations weighted by their frequencies rather than over the whole
-# series, which is around two orders of magnitude cheaper.
+
+#' @importFrom rlang abort
+#' @importFrom nloptr nloptr
+#' @importFrom stats var
+#' @importFrom tweedieDistr dtweedie
 fit_tweedie <- function(y, discrete = FALSE) {
   if (length(y) == 0 || all(y == 0)) {
     return(c(mean = .PARAMSD_EPSILON, dispersion = 1, power = 1.5))

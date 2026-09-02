@@ -4,28 +4,21 @@
 
 * Released `tinyM5` data set, a subset of the M5 dataset.
 
-* Released `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
+* Included `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 
-* Added a static Tweedie distribution to `PARAMSD`. `distr = "auto"` now
-  ranks it as a fifth candidate, in a discretised form obtained by rounding to
-  the non-negative integers so that its log-likelihood is a probability mass
-  comparable with the count distributions; when it wins the model is reported as
-  `PARAMSD(tweedie_discrete)`. `distr = "tweedie"` fits the continuous
-  Tweedie, for intermittent series that are not counts.
+* Added Tweedie distribution as an option in the parametric distribution model.
 
 ## Deprecations
 
-* Removed `distr = "mixture"` from `PARAMSD`. Use `distr = "auto"` to select
-  a single distribution by AIC/BIC.
+* Renamed `EMPDISTR` and `PARAMDISTR` to `EMPSD` and `PARAMSD`.
+
+* Dropped mixture of distribution in `PARAMSD`.
 
 ## Minor improvements and bug fixes
 
-* Fixed the parameter count used by `PARAMSD`'s information criteria.
-  It was taken from `distributional::parameters()`, which for the hurdle
-  distributions returns the `dist_inflated` wrapper's fields and charged `hsp`
-  three parameters instead of two. Counts are now declared per candidate.
+* Fixed a bug in the information criteria in `PARAMSD`.
 
 * Changed optimisation strategy for damped exponential smoothing models.
 
