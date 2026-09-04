@@ -33,6 +33,7 @@ The forecasting methods are the following:
 | `HSPES()` | Exponential smoothing model with a hurdle-shifted Poisson forecast distribution. |
 | `MARWAL()` | ARMA model with a Markov walk on the occurrence and Gaussian forecast distribution. |
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
+| `NNARMA()` | Non-negative ARMA model with a non-negative Gaussian forecast distribution. |
 | `PARAMSD()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
 | `VZ()` | Bootstrap method based on Croston decomposition sampling demand sizes and intervals. |
@@ -46,9 +47,9 @@ is the Tweedie distribution, provided by the
 package as the `stats`-style `dtweedie()`, `ptweedie()`, `qtweedie()`,
 `rtweedie()` functions).
 
-Finally, the package releases three data sets in the
-[`tsibble`](https://tsibble.tidyverts.org/) format: `auto`, `pasta`, and
-`raf`.
+Finally, the package releases four data sets in the
+[`tsibble`](https://tsibble.tidyverts.org/) format: `auto`, `pasta`,
+`raf`, and `tinyM5`.
 
 ## Installation
 

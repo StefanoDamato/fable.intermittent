@@ -1,10 +1,10 @@
-# fable 0.3.0
+# fable.intermittent 0.3.0
 
 ## New features
 
 * Released `tinyM5` data set, a subset of the M5 dataset.
 
-* Included `NNARMA` (non-negative autoregressive moving average) model by Sbrana (2026).
+* Included `NNARMA` (non-negative autoregressive moving average) model by Sbrana & Babai (2026).
 
 * Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
 

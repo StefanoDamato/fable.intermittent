@@ -30,7 +30,8 @@ Description: Extends the 'fable' framework to support forecasting methods
     Kolassa (2016) <doi:10.1016/j.ijforecast.2015.12.004>,
     Hasni, Aguir, Babai, Jemai (2019) <doi:10.1080/00207543.2018.1424375>,
     Damato, Azzimonti, Corani (2025) <doi:10.1016/j.ijforecast.2025.10.001>,
-    Sbrana (2025) <doi:10.1080/01605682.2025.2569661>.
+    Sbrana (2025) <doi:10.1080/01605682.2025.2569661>,
+    Sbrana, Babai (2026) <doi:10.1016/j.ejor.2026.06.009>.
 License: LGPL (>= 3)
 Encoding: UTF-8
 LazyData: true
