@@ -59,10 +59,9 @@
 #' @importFrom fabletools new_model_class new_specials new_model_definition
 #' @importFrom tsibble measured_vars
 #' @importFrom rlang abort arg_match is_integerish
-#' @importFrom distributional dist_poisson dist_negative_binomial log_likelihood parameters dist_sample
+#' @importFrom distributional dist_poisson dist_negative_binomial log_likelihood parameters dist_sample dist_tweedie
 #' @importFrom nloptr nloptr
 #' @importFrom stats dpois dnbinom rpois rnbinom runif var setNames
-#' @importFrom tweedieDistr dist_tweedie
 #' @export
 PARAMSD <- function(formula, distr = c("auto", "pois", "hsp", "nbinom", "hsnb", "tweedie"),
                         hot_start = FALSE, criterion = c("aic", "bic"), ...) {
