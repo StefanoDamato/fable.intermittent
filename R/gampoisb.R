@@ -208,11 +208,14 @@ model_sum.GAMPOISB <- function(x) {
   "GAMPOISB"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.GAMPOISB <- function(x, ...) {
   tibble(term = c("w", "a[0]", "b[0]"), estimate = c(x$w, x$a0, x$b0))
 }
 
+#' @importFrom fabletools report
 #' @rdname GAMPOISB
 #' @export
 report.GAMPOISB <- function(object, ...) {

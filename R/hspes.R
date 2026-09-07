@@ -263,6 +263,8 @@ model_sum.HSPES <- function(x) {
   if (x$phi_occ != 0) "HSPES(d)" else "HSPES(u)"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.HSPES <- function(x, ...) {
   terms <- c("alpha_occ", if (x$phi_occ != 0) "phi_occ",
@@ -274,6 +276,7 @@ tidy.HSPES <- function(x, ...) {
   tibble(term = terms, estimate = ests)
 }
 
+#' @importFrom fabletools report
 #' @rdname HSPES
 #' @export
 report.HSPES <- function(object, ...) {

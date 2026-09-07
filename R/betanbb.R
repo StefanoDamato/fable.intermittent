@@ -201,11 +201,14 @@ model_sum.BETANBB <- function(x) {
   "BETANBB"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.BETANBB <- function(x, ...) {
   tibble(term = c("v", "w", "a[0]", "b[0]"), estimate = c(x$v, x$w, x$a0, x$b0))
 }
 
+#' @importFrom fabletools report
 #' @rdname BETANBB
 #' @export
 report.BETANBB <- function(object, ...) {

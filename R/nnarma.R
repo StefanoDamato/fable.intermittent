@@ -193,6 +193,8 @@ model_sum.NNARMA <- function(x) {
   "NNARMA"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.NNARMA <- function(x, ...) {
   tibble(
@@ -201,6 +203,7 @@ tidy.NNARMA <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname NNARMA
 #' @export
 report.NNARMA <- function(object, ...) {

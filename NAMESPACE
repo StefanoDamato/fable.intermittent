@@ -104,7 +104,6 @@ export(PARAMSD)
 export(TWEES)
 export(VZ)
 export(WSS)
-importFrom(Rcpp,sourceCpp)
 importFrom(distributional,
   covariance,
   dist_inflated,
@@ -127,10 +126,7 @@ importFrom(fabletools,
   new_specials,
   report
 )
-importFrom(generics,
-  glance,
-  tidy
-)
+importFrom(generics,tidy)
 importFrom(nloptr,nloptr)
 importFrom(rlang,
   abort,

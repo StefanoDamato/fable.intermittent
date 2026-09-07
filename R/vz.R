@@ -187,6 +187,8 @@ model_sum.VZ <- function(x) {
   "VZ"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.VZ <- function(x, ...) {
   tibble(
@@ -195,6 +197,7 @@ tidy.VZ <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname VZ
 #' @export
 report.VZ <- function(object, ...) {

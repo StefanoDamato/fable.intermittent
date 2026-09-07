@@ -184,6 +184,8 @@ model_sum.EMPSD <- function(x) {
   "EMPSD"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.EMPSD <- function(x, ...) {
   tibble(
@@ -192,6 +194,7 @@ tidy.EMPSD <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname EMPSD
 #' @export
 report.EMPSD <- function(object, ...) {

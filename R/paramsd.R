@@ -279,6 +279,8 @@ model_sum.PARAMSD <- function(x) {
   paste0("PARAMSD(", x$selected_distr, ")")
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.PARAMSD <- function(x, ...) {
   tryCatch({
@@ -293,6 +295,7 @@ tidy.PARAMSD <- function(x, ...) {
   }, error = function(e) tibble(term = character(), estimate = numeric()))
 }
 
+#' @importFrom fabletools report
 #' @rdname PARAMSD
 #' @export
 report.PARAMSD <- function(object, ...) {

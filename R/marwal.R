@@ -243,6 +243,8 @@ model_sum.MARWAL <- function(x) {
   "MARWAL"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.MARWAL <- function(x, ...) {
   tibble(
@@ -251,6 +253,7 @@ tidy.MARWAL <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname MARWAL
 #' @export
 report.MARWAL <- function(object, ...) {

@@ -200,6 +200,8 @@ model_sum.WSS <- function(x) {
   "WSS"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.WSS <- function(x, ...) {
   tibble(
@@ -208,6 +210,7 @@ tidy.WSS <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname WSS
 #' @export
 report.WSS <- function(object, ...) {

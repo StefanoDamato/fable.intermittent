@@ -193,6 +193,8 @@ model_sum.NEGBINES <- function(x) {
   if (x$phi != 0) "NEGBINES(d)" else "NEGBINES(u)"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.NEGBINES <- function(x, ...) {
   terms <- c("prob", "alpha", if (x$phi != 0) "phi", "mu[0]")
@@ -200,6 +202,7 @@ tidy.NEGBINES <- function(x, ...) {
   tibble(term = terms, estimate = ests)
 }
 
+#' @importFrom fabletools report
 #' @rdname NEGBINES
 #' @export
 report.NEGBINES <- function(object, ...) {

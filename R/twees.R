@@ -247,6 +247,8 @@ model_sum.TWEES <- function(x) {
   if (x$theta_mu != 0) "TWEES(d)" else "TWEES(u)"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.TWEES <- function(x, ...) {
   terms <- c("alpha_mu", if (x$theta_mu != 0) "theta_mu",
@@ -256,6 +258,7 @@ tidy.TWEES <- function(x, ...) {
   tibble(term = terms, estimate = ests)
 }
 
+#' @importFrom fabletools report
 #' @rdname TWEES
 #' @export
 report.TWEES <- function(object, ...) {
