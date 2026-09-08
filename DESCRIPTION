@@ -44,7 +44,7 @@ Depends:
     fabletools (>= 0.6.0)
 Imports:
     tsibble (>= 1.0.0),
-    distributional (>= 0.6.0),
+    distributional (>= 0.9.0),
     nloptr (>= 2.0.0),
     rlang (>= 1.0.0),
     generics (>= 0.1.0),
