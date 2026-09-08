@@ -6,8 +6,13 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
+
 [![Coverage
 Status](https://coveralls.io/repos/github/StefanoDamato/fable.intermittent/badge.svg?branch=main)](https://coveralls.io/github/StefanoDamato/fable.intermittent?branch=main)
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
+
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (\>=

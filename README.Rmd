@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/StefanoDamato/fable.intermittent/badge.svg?branch=main)](https://coveralls.io/github/StefanoDamato/fable.intermittent?branch=main)
+[![CRAN status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (>= 3)](https://img.shields.io/badge/license-LGPL%20(%3E%3D%203)-yellow.svg)](https://www.gnu.org/licences/lgpl-3.0)
 <!-- badges: end -->
@@ -59,6 +60,7 @@ You can install the **development** version from
 # install.packages("devtools")
 devtools::install_github("StefanoDamato/fable.intermittent", build_vignettes = TRUE, dependencies = TRUE)
 ```
+
 
 ## Usage
 
