@@ -134,6 +134,9 @@
 #'   Extracted with the \pkg{m5} package
 #'   (\url{https://cran.r-project.org/package=m5}), now removed from CRAN.
 #'
+#'   Use of the data is subject to the M5 Forecasting - Accuracy competition
+#'   rules: \url{https://www.kaggle.com/c/m5-forecasting-accuracy/rules}.
+#'
 #' @examples
 #' library(tsibble)
 #' tinyM5

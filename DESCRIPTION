@@ -36,7 +36,9 @@ License: LGPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: 
+  Rcpp, 
+  RcppArmadillo
 Depends: 
     R (>= 4.1.0),
     fabletools (>= 0.6.0)
@@ -45,7 +47,6 @@ Imports:
     distributional (>= 0.9.0),
     nloptr (>= 2.0.0),
     rlang (>= 1.0.0),
-    Rcpp (>= 1.0.0),
     generics (>= 0.1.0),
     tibble (>= 3.0.0),
     tweedieDistr (>= 0.2.0)
