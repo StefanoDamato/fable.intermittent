@@ -11,7 +11,7 @@
 
 \item{new_data}{A tsibble containing future index values to forecast.}
 
-\item{specials}{Passed by \code{\link[fabletools:forecast]{fabletools::forecast.mdl_df()}}.}
+\item{specials}{Passed by \code{\link[fabletools:forecast.mdl_df]{fabletools::forecast.mdl_df()}}.}
 
 \item{times}{The number of sample paths to use in estimating the forecast
 distribution.}
@@ -23,7 +23,8 @@ A distribution vector of forecasts: for h=1 the vector class is
 \code{dist_tweedie}; for h>1 the vector class is \code{dist_sample}.
 }
 \description{
-Produces forecast distributions from a fitted TWEES model using simulation.
+Produces forecast distributions from a fitted TWEES
+model using simulation.
 }
 \examples{
 ts <- tsibble::tsibble(

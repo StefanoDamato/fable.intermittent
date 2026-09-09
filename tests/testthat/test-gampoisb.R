@@ -43,5 +43,42 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
   })
 }
+
+test_that("GAMPOISB validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_gampoisb(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_gampoisb(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_gampoisb(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::gampoisb_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  fit <- fabletools::model(base_ts(), GAMPOISB(value))
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 0),
+    "`times` must be a positive integer"
+  )
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 1.5),
+    "`times` must be a positive integer"
+  )
+
+  # h = 1 returns the analytic negative binomial distribution directly
+  fc1 <- fabletools::forecast(fit, h = 1, times = 100)
+  fc_distr <- fc1[[fabletools::distribution_var(fc1)]]
+  expect_equal(unname(stats::family(fc_distr)), "negbin")
+})

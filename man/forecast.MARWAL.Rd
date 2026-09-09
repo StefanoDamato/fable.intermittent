@@ -11,12 +11,12 @@
 
 \item{new_data}{A tsibble containing future index values to forecast.}
 
-\item{specials}{Passed by \code{\link[fabletools:forecast]{fabletools::forecast.mdl_df()}}.}
+\item{specials}{Passed by \code{\link[fabletools:forecast.mdl_df]{fabletools::forecast.mdl_df()}}.}
 
 \item{...}{Other arguments passed to methods}
 }
 \value{
-A distribution vector of class \code{dist_normal}.
+A distribution vector of class \code{dist_normal_nonneg}.
 }
 \description{
 Produces forecast distributions from a fitted MARWAL model.

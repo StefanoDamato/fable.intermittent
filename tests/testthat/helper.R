@@ -62,4 +62,43 @@ ts6 <- tsibble::tsibble(
   key = "series"
 )
 
-test_data = list(ts1, ts2, ts3, ts4, ts5, ts6) 
+test_data = list(ts1, ts2, ts3, ts4, ts5, ts6)
+
+# Fixtures for input validation / error-handling tests, shared across models
+base_ts <- function() {
+  tsibble::tsibble(
+    time = as.Date("2026-01-01") + seq_len(40),
+    value = stats::rnbinom(40, size = 1, prob = 0.3),
+    index = time
+  )
+}
+
+multivariate_ts <- function() {
+  ts <- base_ts()
+  ts$value2 <- ts$value
+  ts
+}
+
+all_na_ts <- function() {
+  ts <- base_ts()
+  ts$value <- NA_real_
+  ts
+}
+
+some_na_ts <- function() {
+  ts <- base_ts()
+  ts$value[1] <- NA_real_
+  ts
+}
+
+all_zero_ts <- function() {
+  ts <- base_ts()
+  ts$value <- 0
+  ts
+}
+
+xreg_ts <- function() {
+  ts <- base_ts()
+  ts$x1 <- stats::rnorm(nrow(ts))
+  ts
+}

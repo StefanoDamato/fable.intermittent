@@ -1,20 +1,20 @@
 for (i in 1:length(test_data)){
-  for (distr in c("auto", "mixture", "pois", "nbinom", "hsp", "hsnb", "mixture")) {
+  for (distr in c("auto", "pois", "nbinom", "hsp", "hsnb", "tweedie")) {
     for (hot_start in c(FALSE, TRUE)) {
-    test_that(paste0("STATICDISTR ", "with ", distr, " distribution ",
+    test_that(paste0("PARAMSD ", "with ", distr, " distribution ",
                      ifelse(hot_start, "(hot start) ", "(cold start) "), 
                      "fits, forecasts, and generates on t.s. ", i), {
       test_ts <- test_data[[i]]
       
       # Check that the model fits correctly
       expect_no_error({
-       fit <- fabletools::model(test_ts, model = STATICDISTR(value,  distr = distr, hot_start = hot_start))
+       fit <- fabletools::model(test_ts, model = PARAMSD(value,  distr = distr, hot_start = hot_start))
       })
       expect_s3_class(fit, "mdl_df")
       if (distr == "auto") {
-        expect_match(fabletools::model_sum(fit$model[[1]]), "^STATICDISTR\\(")
+        expect_match(fabletools::model_sum(fit$model[[1]]), "^PARAMSD\\(")
       } else {
-        expect_identical(fabletools::model_sum(fit$model[[1]]), paste0("STATICDISTR(", distr, ")"))
+        expect_identical(fabletools::model_sum(fit$model[[1]]), paste0("PARAMSD(", distr, ")"))
       }
 
       # Check that fitted values and residuals are returned correctly
@@ -38,16 +38,17 @@ for (i in 1:length(test_data)){
       expect_equal(length(fc_distr), h)
       expect_all_true(is.finite(fc_mean))
       expect_true(inherits(fc_distr, "distribution"))
-      if (distr == "mixture") {
-        expect_all_equal(fc_family, "mixture")
-      } else if (distr == "pois") {
+      if (distr == "pois") {
         expect_all_equal(fc_family, "poisson")
       } else if (distr == "nbinom") {
         expect_all_equal(fc_family, "negbin")
       } else if (distr %in% c("hsp", "hsnb")) {
         expect_all_equal(fc_family, "inflated")
+      } else if (distr == "tweedie") {
+        expect_all_equal(fc_family, "tweedie")
       } else if (distr == "auto") {
-        expect_all_true(fc_family %in% c("poisson", "negbin", "inflated"))
+        expect_all_true(fc_family %in% c("poisson", "negbin", "inflated",
+                                         "tweedie_discrete"))
       }
       
       # Check that simulation runs without error
@@ -59,8 +60,10 @@ for (i in 1:length(test_data)){
       t <- generics::tidy(fit)
       expect_s3_class(t, "tbl_df")
       expect_true(all(c("term", "estimate") %in% names(t)))
+
+      # Check report
+      expect_output(fabletools::report(fit))
       })
     }
-  }    
+  }
 }
-  

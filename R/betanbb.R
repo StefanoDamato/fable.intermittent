@@ -110,7 +110,7 @@ train_betanbb <- function(.data, specials, ...) {
 #' Produces forecast distributions from a fitted BETANBB model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -162,7 +162,7 @@ generate.BETANBB <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a BETANBB model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #'
 #' @examples
@@ -180,7 +180,7 @@ fitted.BETANBB <- function(object, ...) {
 
 #' Extract residuals from a BETANBB model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -201,11 +201,14 @@ model_sum.BETANBB <- function(x) {
   "BETANBB"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.BETANBB <- function(x, ...) {
   tibble(term = c("v", "w", "a[0]", "b[0]"), estimate = c(x$v, x$w, x$a0, x$b0))
 }
 
+#' @importFrom fabletools report
 #' @rdname BETANBB
 #' @export
 report.BETANBB <- function(object, ...) {
@@ -222,14 +225,8 @@ betanbb_simulate <- function(object, h, times) {
   forecast_samples <- matrix(NA_real_, nrow = times, ncol = h)
 
   # Initialize Beta parameters with forward propagation of the last state
-  a_state <- rep(
-    object$w * object$last_a + (1 - object$w) + object$v,
-    times
-  )
-  b_state <- rep(
-    object$w * object$last_b + object$last_y,
-    times
-  )
+  a_state <- rep(object$w * (object$last_a + object$v) + (1 - object$w), times)
+  b_state <- rep(object$w * (object$last_b + object$last_y), times)
 
   for (i in seq_len(h)) {
     # Sample p from Beta prior
@@ -240,8 +237,8 @@ betanbb_simulate <- function(object, h, times) {
     forecast_samples[, i] <- y_new
 
     # Update Beta parameters
-    a_state <- object$w * a_state + (1 - object$w) + object$v
-    b_state <- object$w * b_state + y_new
+    a_state <- object$w * (a_state + object$v) + (1 - object$w)
+    b_state <- object$w * (b_state + y_new)
   }
 
   forecast_samples

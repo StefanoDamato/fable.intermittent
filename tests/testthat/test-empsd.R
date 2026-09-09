@@ -1,15 +1,15 @@
 for (i in 1:length(test_data)){
   for (hot_start in c(FALSE, TRUE)) {
-      test_that(paste0("EMPDISTR ", ifelse(hot_start, "(hot start) ", "(cold start) "), 
+      test_that(paste0("EMPSD ", ifelse(hot_start, "(hot start) ", "(cold start) "), 
                        "fits, forecasts, and generates on t.s. ", i), {
     test_ts <- test_data[[i]]
     
     # Check that the model fits correctly
     expect_no_error({
-     fit <- fabletools::model(test_ts, model = EMPDISTR(value, hot_start = hot_start))
+     fit <- fabletools::model(test_ts, model = EMPSD(value, hot_start = hot_start))
     })
     expect_s3_class(fit, "mdl_df")
-    expect_identical(fabletools::model_sum(fit$model[[1]]), "EMPDISTR")
+    expect_identical(fabletools::model_sum(fit$model[[1]]), "EMPSD")
     
     # Check that fitted values and residuals are returned correctly
     fitted_vals <- stats::fitted(fit)
@@ -44,6 +44,28 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
     })
   }
 }
+
+test_that("EMPSD validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_empsd(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_empsd(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_empsd(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::empsd_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+})

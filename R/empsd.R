@@ -27,7 +27,7 @@
 #' )
 #'
 #' fc_ts <- ts |>
-#'   model(EMPDISTR(value)) |>
+#'   model(EMPSD(value)) |>
 #'   forecast(h = "7 days")
 #'
 #' fc_ts |> print()
@@ -42,20 +42,20 @@
 #' @importFrom rlang abort is_integerish
 #' @importFrom distributional dist_sample
 #' @export
-EMPDISTR <- function(formula, hot_start = FALSE, ...) {
-  empdistr_model <- new_model_class(
-    "EMPDISTR",
-    train = train_empdistr,
+EMPSD <- function(formula, hot_start = FALSE, ...) {
+  empsd_model <- new_model_class(
+    "EMPSD",
+    train = train_empsd,
     specials = new_specials(
-      xreg = empdistr_no_xreg
+      xreg = empsd_no_xreg
     )
   )
-  new_model_definition(empdistr_model, {{ formula }}, hot_start = hot_start, ...)
+  new_model_definition(empsd_model, {{ formula }}, hot_start = hot_start, ...)
 }
 
-train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
+train_empsd <- function(.data, specials, hot_start = FALSE, ...) {
   if (length(measured_vars(.data)) > 1) {
-    abort("Only univariate responses are supported by empdistr.")
+    abort("Only univariate responses are supported by empsd.")
   }
 
   y <- unclass(.data)[[measured_vars(.data)]]
@@ -64,7 +64,7 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
     abort("All observations are missing, a model cannot be estimated without data.")
   }
   if (anyNA(y)) {
-    abort("Missing values are not supported by empdistr.")
+    abort("Missing values are not supported by empsd.")
   }
 
   # Remove leading zeros for hot_start
@@ -81,11 +81,11 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
       fitted = fitted,
       residuals = residuals
     ),
-    class = "EMPDISTR"
+    class = "EMPSD"
   )
 }
 
-#' Forecast an EMPDISTR model
+#' Forecast an EMPSD model
 #'
 #' Produces forecast distributions by repeating the empirical distribution
 #' estimated from the training data at each forecast horizon.
@@ -102,23 +102,23 @@ train_empdistr <- function(.data, specials, hot_start = FALSE, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, EMPDISTR(value))
+#' fit <- model(ts, EMPSD(value))
 #' forecast(fit, h = "7 days")
 #' @export
-forecast.EMPDISTR <- function(object, new_data, specials = NULL, ...) {
+forecast.EMPSD <- function(object, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
   samples <- rep(list(object$y_emp), h)
   dist_sample(samples)
 }
 
-#' Generate sample paths from an EMPDISTR model
+#' Generate sample paths from an EMPSD model
 #'
-#' @param x A fitted `EMPDISTR` model object.
+#' @param x A fitted `EMPSD` model object.
 #' Simulates future observations by resampling with replacement from the
 #' empirical support learned during training.
 #'
-#' @inheritParams forecast.EMPDISTR
-#' @param x A fitted `EMPDISTR` model object.
+#' @inheritParams forecast.EMPSD
+#' @param x A fitted `EMPSD` model object.
 #'
 #' @return A `new_data` tibble with a `.sim` column of simulated values.
 #'
@@ -128,17 +128,17 @@ forecast.EMPDISTR <- function(object, new_data, specials = NULL, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, EMPDISTR(value))
+#' fit <- model(ts, EMPSD(value))
 #' generate(fit, h = 7)
 #' @export
-generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
+generate.EMPSD <- function(x, new_data, specials = NULL, ...) {
   h <- nrow(new_data)
   sim <- sample(x$y_emp, size = h, replace = TRUE)
   new_data$.sim <- as.numeric(sim)
   new_data
 }
 
-#' Extract fitted values from an EMPDISTR model
+#' Extract fitted values from an EMPSD model
 #'
 #' @param object A model for which fitted values are required.
 #' @param ... Not used.
@@ -151,14 +151,14 @@ generate.EMPDISTR <- function(x, new_data, specials = NULL, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, EMPDISTR(value))
+#' fit <- model(ts, EMPSD(value))
 #' fitted(fit)
 #' @export
-fitted.EMPDISTR <- function(object, ...) {
+fitted.EMPSD <- function(object, ...) {
   object$fitted
 }
 
-#' Extract residuals from an EMPDISTR model
+#' Extract residuals from an EMPSD model
 #'
 #' @param object A model for which residuals are required.
 #' @param ... Not used.
@@ -171,34 +171,37 @@ fitted.EMPDISTR <- function(object, ...) {
 #'   value = rnbinom(40, size = 1, prob = 0.3),
 #'   index = time
 #' )
-#' fit <- model(ts, EMPDISTR(value))
+#' fit <- model(ts, EMPSD(value))
 #' residuals(fit)
 #' @export
-residuals.EMPDISTR <- function(object, ...) {
+residuals.EMPSD <- function(object, ...) {
   object$residuals
 }
 
 #' @importFrom fabletools model_sum
 #' @export
-model_sum.EMPDISTR <- function(x) {
-  "EMPDISTR"
+model_sum.EMPSD <- function(x) {
+  "EMPSD"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
-tidy.EMPDISTR <- function(x, ...) {
+tidy.EMPSD <- function(x, ...) {
   tibble(
     term     = c("mean", "variance"),
     estimate = c(mean(x$y_emp), var(x$y_emp))
   )
 }
 
-#' @rdname EMPDISTR
+#' @importFrom fabletools report
+#' @rdname EMPSD
 #' @export
-report.EMPDISTR <- function(object, ...) {
+report.EMPSD <- function(object, ...) {
   cat(sprintf("  Empirical distribution based on %d observations.\n", length(object$y_emp)))
   invisible(object)
 }
 
-empdistr_no_xreg <- function(...) {
-  abort("Exogenous regressors are not supported by EMPDISTR.")
+empsd_no_xreg <- function(...) {
+  abort("Exogenous regressors are not supported by EMPSD.")
 }

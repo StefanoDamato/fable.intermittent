@@ -29,12 +29,14 @@ A model specification.
 \description{
 Exponential smoothing state space model for intermittent demand with a
 Tweedie observation distribution. The conditional mean of the Tweedie
-is governed by a (optionally damped) exponential smoothing process.
-The power and dispersion parameter are estimated to maximise the likelihood.
+is governed by a (optionally damped) exponential smoothing process, and
+the dispersion parameter is derived by a second (optionally damped)
+exponential smoothing process on the occurrence binary time series.
 The Tweedie family naturally models both zeros and large spikes
-via its compound Poisson-Gamma nature. The first-step forecast follows
-a Tweedie distribution, and multi-step forecasts are obtained by simulating
-from the model forward in time. The model parameters are estimated by
+via its compound Poisson-Gamma nature. The power parameter is optimised
+to maximise the likelihood. The first-step forecast follows a Tweedie
+distribution, and multi-step forecasts are obtained by simulating
+from the model forward in time.
 }
 \examples{
 ts <- tsibble::tsibble(

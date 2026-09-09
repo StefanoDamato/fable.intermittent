@@ -110,7 +110,7 @@ train_wss <- function(.data, specials, ...) {
 #'
 #' Produces forecast distributions from a fitted WSS model using simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -162,7 +162,7 @@ generate.WSS <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a WSS model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -179,7 +179,7 @@ fitted.WSS <- function(object, ...) {
 
 #' Extract residuals from a WSS model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -200,6 +200,8 @@ model_sum.WSS <- function(x) {
   "WSS"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.WSS <- function(x, ...) {
   tibble(
@@ -208,6 +210,7 @@ tidy.WSS <- function(x, ...) {
   )
 }
 
+#' @importFrom fabletools report
 #' @rdname WSS
 #' @export
 report.WSS <- function(object, ...) {

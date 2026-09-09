@@ -1,3 +1,33 @@
+# fable.intermittent 0.3.0
+
+## New features
+
+* Released `tinyM5` data set, a subset of the M5 dataset.
+
+* Included `NNARMA` (non-negative autoregressive moving average) model by Sbrana & Babai (2026).
+
+* Added occurrence smoothing for `TWEES` to determine the dispersion parameter.
+
+* Added Tweedie distribution as an option in the parametric distribution model.
+
+## Deprecations
+
+* Renamed `EMPDISTR` and `PARAMDISTR` to `EMPSD` and `PARAMSD`.
+
+* Dropped mixture of distribution in `PARAMSD`.
+
+## Minor improvements and bug fixes
+
+* Fixed a bug in the information criteria in `PARAMSD`.
+
+* Changed optimisation strategy for damped exponential smoothing models.
+
+* Fixed recursion in `BETANBB` and `GAMPOISB`.
+
+* Implemented non-negative Gaussian forecast distribution for ARMA-based models.
+
+* Increased test coverage.
+
 # fable.intermittent 0.2.0
 
 ## New features
@@ -14,7 +44,7 @@
 
 * Added `report()` and `tidy()` methods for all model classes.
 
-* Details included in `model_sum()` for ES-based models and `STATICDISTR()`.
+* Details included in `model_sum()` for ES-based models and `PARAMSD()`.
 
 ## Minor improvements and bug fixes
 

@@ -106,7 +106,7 @@ train_gampoisb <- function(.data, specials, ...) {
 #' Produces forecast distributions from a fitted GAMPOISB model using
 #' simulation.
 #'
-#' @inheritParams forecast.EMPDISTR
+#' @inheritParams forecast.EMPSD
 #' @param times The number of sample paths to use in estimating the forecast
 #'   distribution.
 #'
@@ -130,8 +130,8 @@ forecast.GAMPOISB <- function(object, new_data, specials = NULL, times = 10000, 
   }
 
   # Initialize Gamma parameters with forward propagation
-  a_forecast <- object$w * object$last_a + object$last_y
-  b_forecast <- object$w * object$last_b + 1
+  a_forecast <- object$w * (object$last_a + object$last_y)
+  b_forecast <- object$w * (object$last_b + 1)
   dist_first <- dist_negative_binomial(size = a_forecast, prob = b_forecast / (b_forecast + 1))
 
   if (h == 1) {
@@ -170,7 +170,7 @@ generate.GAMPOISB <- function(x, new_data, specials = NULL, ...) {
 
 #' Extract fitted values from a GAMPOISB model
 #'
-#' @inherit fitted.EMPDISTR
+#' @inherit fitted.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -187,7 +187,7 @@ fitted.GAMPOISB <- function(object, ...) {
 
 #' Extract residuals from a GAMPOISB model
 #'
-#' @inherit residuals.EMPDISTR
+#' @inherit residuals.EMPSD
 #'
 #' @examples
 #' ts <- tsibble::tsibble(
@@ -208,11 +208,14 @@ model_sum.GAMPOISB <- function(x) {
   "GAMPOISB"
 }
 
+#' @importFrom generics tidy
+#' @importFrom tibble tibble
 #' @export
 tidy.GAMPOISB <- function(x, ...) {
   tibble(term = c("w", "a[0]", "b[0]"), estimate = c(x$w, x$a0, x$b0))
 }
 
+#' @importFrom fabletools report
 #' @rdname GAMPOISB
 #' @export
 report.GAMPOISB <- function(object, ...) {
@@ -228,14 +231,8 @@ gampoisb_simulate <- function(object, h, times) {
   forecast_samples <- matrix(NA_real_, nrow = times, ncol = h)
 
   # Initialize Gamma parameters with forward propagation
-  a_state <- rep(
-    object$w * object$last_a + object$last_y,
-    times
-  )
-  b_state <- rep(
-    object$w * object$last_b + 1,
-    times
-  )
+  a_state <- rep(object$w * (object$last_a + object$last_y), times)
+  b_state <- rep(object$w * (object$last_b + 1), times)
 
   for (i in seq_len(h)) {
     # Sample lambda from Gamma prior
@@ -246,8 +243,8 @@ gampoisb_simulate <- function(object, h, times) {
     forecast_samples[, i] <- y_new
 
     # Update Gamma parameters
-    a_state <- object$w * a_state + y_new
-    b_state <- object$w * b_state + 1
+    a_state <- object$w * (a_state + y_new)
+    b_state <- object$w * (b_state + 1)
   }
 
   forecast_samples

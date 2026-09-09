@@ -42,5 +42,41 @@ for (i in 1:length(test_data)){
     expect_s3_class(t, "tbl_df")
     expect_true(all(c("term", "estimate") %in% names(t)))
     expect_gt(nrow(t), 0L)
+
+    # Check report
+    expect_output(fabletools::report(fit))
   })
 }
+
+test_that("VZ validates inputs and rejects unsupported options", {
+  expect_error(
+    fable.intermittent:::train_vz(multivariate_ts(), specials = list()),
+    "Only univariate responses"
+  )
+  expect_error(
+    fable.intermittent:::train_vz(all_na_ts(), specials = list()),
+    "All observations are missing"
+  )
+  expect_error(
+    fable.intermittent:::train_vz(some_na_ts(), specials = list()),
+    "Missing values are not supported"
+  )
+  expect_error(
+    fable.intermittent:::train_vz(all_zero_ts(), specials = list()),
+    "all zero"
+  )
+  expect_error(
+    fable.intermittent:::vz_no_xreg(),
+    "Exogenous regressors are not supported"
+  )
+
+  fit <- fabletools::model(base_ts(), VZ(value))
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 0),
+    "`times` must be a positive integer"
+  )
+  expect_error(
+    fabletools::forecast(fit, h = 5, times = 1.5),
+    "`times` must be a positive integer"
+  )
+})

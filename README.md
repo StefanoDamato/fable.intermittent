@@ -6,8 +6,13 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
+
+[![Coverage
+Status](https://coveralls.io/repos/github/StefanoDamato/fable.intermittent/badge.svg?branch=main)](https://coveralls.io/github/StefanoDamato/fable.intermittent?branch=main)
+
 [![CRAN
 status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
+
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (\>=
@@ -28,12 +33,13 @@ The forecasting methods are the following:
 | Method | Description |
 |----|----|
 | `BETANBB()` | Bayesian dynamic negative binomial model with a beta prior on the probability parameter. |
-| `EMPDISTR()` | Empirical resampling baseline that forecasts from the observed distribution. |
+| `EMPSD()` | Empirical resampling baseline that forecasts from the observed distribution. |
 | `GAMPOISB()` | Bayesian dynamic Poisson model with a gamma prior on the rate parameter. |
 | `HSPES()` | Exponential smoothing model with a hurdle-shifted Poisson forecast distribution. |
 | `MARWAL()` | ARMA model with a Markov walk on the occurrence and Gaussian forecast distribution. |
 | `NEGBINES()` | Exponential smoothing model with a negative binomial forecast distribution. |
-| `STATICDISTR()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
+| `NNARMA()` | Non-negative ARMA model with a non-negative Gaussian forecast distribution. |
+| `PARAMSD()` | Static count-distribution model that selects among candidate distributions by AIC or BIC. |
 | `TWEES()` | Exponential smoothing model with a Tweedie forecast distribution. |
 | `VZ()` | Bootstrap method based on Croston decomposition sampling demand sizes and intervals. |
 | `WSS()` | Bootstrap method with sampled demand sizes and a Markov-chain for the occurrence. |
@@ -43,12 +49,12 @@ The probabilistic forecasts produced by the implemented methods are
 objects. Among the predictive distributions used by the methods, there
 is the Tweedie distribution, provided by the
 [`tweedieDistr`](https://cran.r-project.org/package=tweedieDistr)
-package (both as the `stats`-style `dtweedie()`, `ptweedie()`,
-`qtweedie()`, `rtweedie()` functions and as the `distributional` object
-`dist_tweedie()`).
+package as the `stats`-style `dtweedie()`, `ptweedie()`, `qtweedie()`,
+`rtweedie()` functions).
 
-Finally, the package releases two data sets in the
-[`tsibble`](https://tsibble.tidyverts.org/) format: `auto` and `raf`.
+Finally, the package releases four data sets in the
+[`tsibble`](https://tsibble.tidyverts.org/) format: `auto`, `pasta`,
+`raf`, and `tinyM5`.
 
 ## Installation
 
@@ -77,6 +83,13 @@ The package follows the standard `fable` workflow:
 We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple
 usage example; refer to the package documentation for more details on
 the methods.
+
+## Acknowledgements
+
+Work on this package was supported by the Swiss National Science
+Foundation (SNSF) under grant number 200021_212164 ([“Probabilistic
+Forecasting: Global Models, Gaussian Processes and
+Hierarchies”](https://data.snf.ch/grants/grant/212164)).
 
 ## Contributors
 
