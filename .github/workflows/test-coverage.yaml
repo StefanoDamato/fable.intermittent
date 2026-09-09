@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      COVERALLS_TOKEN: ${{ secrets.COVERALL_REPO_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
@@ -31,9 +30,13 @@ jobs:
 
       - name: Test coverage
         run: |
-          covr::coveralls(
-            repo_token = Sys.getenv("COVERALLS_TOKEN"),
-            service_name = "github-actions",
-            quiet = FALSE
-          )
+          cov <- covr::package_coverage(quiet = FALSE)
+          print(cov)
+          covr::to_cobertura(cov)
         shell: Rscript {0}
+
+      - uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: cobertura.xml
+          format: cobertura
