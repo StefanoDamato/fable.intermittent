@@ -139,6 +139,7 @@ marwal_transition_matrix <- function(occurrence, mean_y) {
 
   # Extract transition probabilities
   lambda <- max(num[2, 2] / sum(num[2, ]), .MARWAL_EPSILON)
+  lambda <- min(lambda, 1 - .MARWAL_EPSILON)
   xi <- num[1, 2] / sum(num[1, ])
   p00 <- 1 - xi
   if (sum(num[1, ]) == 0) lambda <- 1
@@ -197,6 +198,7 @@ forecast.MARWAL <- function(object, new_data, specials = NULL, ...) {
   lambda_sum <- c(0, cumsum(object$lambda^pows))
   var_fc <- object$sigmasq * delta_sum * object$mean_demand^2 +
     object$var_v * (1 + object$k^2 * lambda_sum)
+  var_fc <- pmax(var_fc, .MARWAL_EPSILON)
 
   # Return the Gaussian forecast distribution
   dist_normal_nonneg(mean_fc, sqrt(var_fc))

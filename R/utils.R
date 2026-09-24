@@ -95,8 +95,8 @@ dist_normal_nonneg <- function(mu = 0, sigma = 1) {
   mu <- as.double(mu)
   sigma <- as.double(sigma)
 
-  if (any(sigma <= 0, na.rm = TRUE)) {
-    abort("The sigma parameter of a non-negative Gaussian distribution must be strictly positive.")
+  if (!all(is.finite(sigma)) || any(sigma <= 0)) {
+    abort("The sigma parameter of a non-negative Gaussian distribution must be finite and strictly positive.")
   }
 
   new_dist(mu = mu, sigma = sigma, class = "dist_normal_nonneg")

@@ -1,3 +1,9 @@
+# fable.intermittent 0.3.1
+
+## Minor improvements and bug fixes
+
+* Fixed minor bug in `MARWAL`'s Markov Chain parameter estimation.
+
 # fable.intermittent 0.3.0
 
 ## New features
