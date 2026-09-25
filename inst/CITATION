@@ -1,0 +1,23 @@
+citHeader("To cite fable.intermittent in publications, please use:")
+
+bibentry(
+  bibtype       = "Misc",
+  key           = "damato2026fable",
+  title         = "{fable.intermittent}: benchmarking probabilistic forecasting methods for intermittent time series",
+  author        = c(person(given = "Stefano", family = "Damato"),
+                    person(given = "Lorenzo", family = "Zambon"),
+                    person(given = "Giorgio", family = "Corani"),
+                    person(given = "Dario",   family = "Azzimonti")),
+  year          = "2026",
+  eprint        = "2609.28607",
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG",
+  doi           = "10.48550/arXiv.2609.28607",
+  url           = "https://arxiv.org/abs/2609.28607",
+  textVersion   = paste(
+    "Stefano Damato, Lorenzo Zambon, Giorgio Corani, Dario Azzimonti (2026).",
+    "fable.intermittent: benchmarking probabilistic forecasting methods for",
+    "intermittent time series. arXiv:2609.28607.",
+    "doi:10.48550/arXiv.2609.28607."
+  )
+)

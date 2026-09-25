@@ -72,6 +72,23 @@ The package follows the standard `fable` workflow:
 
 We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple usage example; refer to the package documentation for more details on the methods.
 
+## Citation
+
+To ackownledge the use of this package in publications, please cite the following [ArXiv preprint](https://arxiv.org/abs/2609.28607):
+
+```bibtex
+@Misc{damato2026fable,
+  title = {{fable.intermittent}: benchmarking probabilistic forecasting methods for intermittent time series},
+  author = {Stefano Damato and Lorenzo Zambon and Giorgio Corani and Dario Azzimonti},
+  year = {2026},
+  eprint = {2609.28607},
+  archiveprefix = {arXiv},
+  primaryclass = {cs.LG},
+  doi = {10.48550/arXiv.2609.28607},
+  url = {https://arxiv.org/abs/2609.28607},
+}
+```
+
 ## Acknowledgements
  
 Work on this package was supported by the Swiss National Science Foundation (SNSF) under grant number 200021_212164 (["Probabilistic Forecasting: Global Models, Gaussian Processes and Hierarchies"](https://data.snf.ch/grants/grant/212164)).

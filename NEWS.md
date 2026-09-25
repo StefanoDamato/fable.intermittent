@@ -4,6 +4,8 @@
 
 * Fixed minor bug in `MARWAL`'s Markov Chain parameter estimation.
 
+* Added references to the package paper and a contribution guide.
+
 # fable.intermittent 0.3.0
 
 ## New features

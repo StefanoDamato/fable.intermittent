@@ -8,7 +8,13 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values. All methods produce probabilistic forecasts returned as 'distributional' objects. The returned forecasts can be used to evaluate accuracy, plot and print the results seamlessly with 'fable'. The methods include: Harvey, Fernandes (1989) \doi{10.1080/07350015.1989.10509750}, Willemain, Smart, Schwarz (2004) \doi{10.1016/S0169-2070(03)00013-X}, Zhou, Viswanathan (2011) \doi{10.1016/j.ijpe.2010.09.021}, Snyder, Ord, Beaumont (2012) \doi{10.1016/j.ijforecast.2011.03.009}, Kolassa (2016) \doi{10.1016/j.ijforecast.2015.12.004}, Hasni, Aguir, Babai, Jemai (2019) \doi{10.1080/00207543.2018.1424375}, Damato, Azzimonti, Corani (2025) \doi{10.1016/j.ijforecast.2025.10.001}, Sbrana (2025) \doi{10.1080/01605682.2025.2569661}, Sbrana, Babai (2026) \doi{10.1016/j.ejor.2026.06.009}.
+Extends the 'fable' framework to support forecasting methods specifically designed for intermittent time series data, where demand occurs sporadically with many zero values. All methods produce probabilistic forecasts returned as 'distributional' objects. The returned forecasts can be used to evaluate accuracy, plot and print the results seamlessly with 'fable'. The package also releases four intermittent demand data sets. The implemented methods, the data sets and a benchmark comparing them are described in Damato, Zambon, Corani, Azzimonti (2026) \doi{10.48550/arXiv.2609.28607}.
+}
+\references{
+Damato, S., Zambon, L., Corani, G., & Azzimonti, D. (2026).
+fable.intermittent: benchmarking probabilistic forecasting methods for
+intermittent time series. \emph{arXiv preprint} arXiv:2609.28607.
+\doi{10.48550/arXiv.2609.28607}.
 }
 \seealso{
 Useful links:

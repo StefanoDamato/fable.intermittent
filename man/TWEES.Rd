@@ -58,8 +58,8 @@ if (requireNamespace("ggtime", quietly = TRUE)) {
 }
 }
 \references{
-Damato, S., Azzimonti, D., & Corani, G. (2025). Forecasting intermittent
-time series with Gaussian Processes and Tweedie likelihood.
-\emph{International Journal of Forecasting}  (in press).
-\doi{10.1016/j.ijforecast.2025.10.001}.
+Damato, S., Zambon, L., Corani, G., & Azzimonti, D. (2026).
+fable.intermittent: benchmarking probabilistic forecasting methods for
+intermittent time series. \emph{arXiv preprint} arXiv:2609.28607.
+\doi{10.48550/arXiv.2609.28607}.
 }

@@ -6,13 +6,10 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/StefanoDamato/fable.intermittent/actions/workflows/R-CMD-check.yaml)
-
 [![Coverage
 Status](https://coveralls.io/repos/github/StefanoDamato/fable.intermittent/badge.svg?branch=main)](https://coveralls.io/github/StefanoDamato/fable.intermittent?branch=main)
-
 [![CRAN
 status](https://www.r-pkg.org/badges/version/fable.intermittent)](https://CRAN.R-project.org/package=fable.intermittent)
-
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: LGPL (\>=
@@ -83,6 +80,24 @@ The package follows the standard `fable` workflow:
 We provide in [this vignette](vignettes/fable.intermittent.Rmd) a simple
 usage example; refer to the package documentation for more details on
 the methods.
+
+## Citation
+
+To ackownledge the use of this package in publications, please cite the
+following [ArXiv preprint](https://arxiv.org/abs/2609.28607):
+
+``` bibtex
+@Misc{damato2026fable,
+  title = {{fable.intermittent}: benchmarking probabilistic forecasting methods for intermittent time series},
+  author = {Stefano Damato and Lorenzo Zambon and Giorgio Corani and Dario Azzimonti},
+  year = {2026},
+  eprint = {2609.28607},
+  archiveprefix = {arXiv},
+  primaryclass = {cs.LG},
+  doi = {10.48550/arXiv.2609.28607},
+  url = {https://arxiv.org/abs/2609.28607},
+}
+```
 
 ## Acknowledgements
 
