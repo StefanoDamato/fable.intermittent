@@ -8,7 +8,7 @@ for (i in 1:length(test_data)){
     expect_no_error({
      fit <- fabletools::model(test_ts, model = EMPSD(value, hot_start = hot_start))
     })
-    expect_s3_class(fit, "mdl_df")
+    expect_true(fabletools::is_mable(fit))
     expect_identical(fabletools::model_sum(fit$model[[1]]), "EMPSD")
     
     # Check that fitted values and residuals are returned correctly
